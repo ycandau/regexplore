@@ -238,8 +238,8 @@ class Parser {
   }
 }
 
-// export { Parser };
+export { Parser };
 
-const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-parser.generateRPN();
-parser.log();
+// const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
+// parser.generateRPN();
+// parser.log();

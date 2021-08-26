@@ -1,0 +1,13 @@
+.re_string {
+  font-family: 'Fira Code', monospace;
+  font-size: 30px;
+}
+
+.re_char {
+  color: red;
+  display: inline;
+}
+
+.highlight {
+  background-color: gold;
+}

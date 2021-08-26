@@ -1,23 +1,42 @@
+import { useState } from 'react';
+
 import './App.css';
 
-function App() {
+import { Parser } from '../re/re';
+
+import ReSearchExpression from './ReSearchExpression';
+import Display from './Display';
+
+//------------------------------------------------------------------------------
+
+const App = () => {
+  const [fragment, setFragment] = useState({});
+  // const reString = 'a(b|c)+ef*g';
+  const reString = '[^]a-e246-]';
+
+  const parser = new Parser(reString);
+  parser.readBracketExpression();
+  // console.log(parser, parser.parsed);
+
+  const onHover = (src) => {
+    setFragment(() => src);
+  };
+
+  const onHoverOff = (src) => {
+    setFragment(() => 'Empty');
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <ReSearchExpression
+        reString={reString}
+        i={fragment.index}
+        onHover={onHover}
+        onHoverOff={onHoverOff}
+      />
+      <Display info={fragment} />
+    </>
   );
-}
+};
 
 export default App;
