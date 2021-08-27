@@ -2,8 +2,7 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import Tokens from './re_tokens.js';
-import Descriptions from './re_descriptions.js';
+import tokens from './re_tokens.js';
 import { last, logHeading } from './re_helpers.js';
 
 //------------------------------------------------------------------------------
@@ -46,13 +45,15 @@ class Parser {
   }
 
   logStr() {
-    logHeading('Input', this.input);
+    logHeading('Input');
+    console.log(`  ${this.input}`);
   }
 
   log() {
     this.logStr();
-    this.logRPN();
-    // console.log(`RPN:       ${this.rpn}`);
+    this.logTokens();
+    this.logDescriptions();
+
     // console.log(`Fragments [${this.fragments.length}]: ${this.fragments}`);
     // console.log(`Operators [${this.operators.length}]: ${this.operators}`);
     // console.log('Graph');
@@ -68,21 +69,25 @@ class Parser {
     // Escaped characters
     if (ch === '\\') {
       const label = this.slice(2);
+      const token = tokens[label] || tokens.escapedChar(label);
+      token.pos = this.pos;
+      this.pushDescription(label, token.id);
       this.pos += 2;
-      return Tokens.types[label] || Tokens.escapedLiteral(label);
+      return token;
     }
     // Bracket expressions
     if (ch === '[') {
-      const token = this.readBracketExpression();
-      this.pos += 1; // @todo
-      return token;
+      return this.readBracketExpression();
     }
     // Standard tokens
-    this.pos++;
-    return Tokens.types[ch] || Tokens.charLiteral(ch);
+    const token = tokens[ch] || tokens.charLiteral(ch);
+    token.pos = this.pos;
+    this.pushDescription(ch, token.id);
+    this.pos += 1;
+    return token;
   }
 
-  // Transfer the operator to the RPN stack if it is at the top
+  // Transfer the stacked operator to the RPN queue if it is at the top
   transferOperator(ch) {
     const operator = last(this.operators);
     if (operator && operator.label === ch) {
@@ -94,16 +99,20 @@ class Parser {
   // Add an implicit concat when necessary
   concat() {
     this.transferOperator('~');
-    this.operators.push(Tokens.concat);
+    this.operators.push(tokens.concat);
   }
 
-  // Generate a stack of tokens in reverse polish notation
+  // Generate a queue of tokens in reverse polish notation (RPN)
   // using a simplified shunting-yard algorithm
   generateRPN() {
     while (this.remaining()) {
       const token = this.readToken();
       switch (token.type) {
-        case 'charclass':
+        case 'charLiteral':
+        case 'escapedChar':
+        case 'charClass':
+        case 'bracketClass':
+        case 'wildcard':
           if (this.prevToken.concatAfter) this.concat();
           this.rpn.push(token);
           break;
@@ -117,12 +126,17 @@ class Parser {
           break;
         case 'parenOpen':
           if (this.prevToken.concatAfter) this.concat();
+          token.begin = this.pos - 1;
           this.operators.push(token);
           break;
         case 'parenClose':
           this.transferOperator('~');
           this.transferOperator('|');
-          this.operators.pop();
+          const begin = this.operators.pop().begin;
+          const end = this.pos - 1;
+          const info = { begin, end };
+          this.describe(begin, info);
+          this.describe(end, info);
           break;
         default:
           break;
@@ -133,23 +147,20 @@ class Parser {
     this.transferOperator('|');
   }
 
-  // Log the stack of tokens
-  logRPN() {
-    logHeading('RPN');
+  // Log the token queue
+  logTokens() {
+    logHeading('Tokens');
     this.rpn.forEach((token) => {
-      console.log(`  ${token.label} : ${token.name}`);
+      const info = token.id === token.label ? token.type : token.id;
+      console.log(`  ${token.label} : ${info}`);
     });
   }
 
   //----------------------------------------------------------------------------
   // Descriptions
 
-  pushDescription(label, type, config = {}) {
-    this.descriptions.push({
-      label,
-      ...Descriptions[type],
-      ...config,
-    });
+  pushDescription(label, id, config = {}) {
+    this.descriptions.push({ label, id, ...config });
   }
 
   describe(pos, info) {
@@ -157,17 +168,24 @@ class Parser {
     for (const key in info) description[key] = info[key];
   }
 
+  logDescriptions() {
+    logHeading('Descriptions');
+    this.descriptions.forEach((description) => {
+      console.log(`  ${JSON.stringify(description)}`);
+    });
+  }
+
   //----------------------------------------------------------------------------
   // Bracket expressions
 
-  eatToken(type) {
-    this.pushDescription(this.ch(), type);
+  eatToken(id) {
+    this.pushDescription(this.ch(), id);
     this.pos++;
   }
 
-  tryEatToken(label, type) {
-    if (this.ch() === label) {
-      this.pushDescription(label, type);
+  tryEatToken(id) {
+    if (this.ch() === id) {
+      this.pushDescription(id, id);
       this.pos++;
       return true;
     }
@@ -176,15 +194,15 @@ class Parser {
 
   readBracketChar(matches) {
     this.pushDescription(this.ch(), 'bracketChar');
-    this.pos++;
     matches.add(this.ch());
+    this.pos++;
   }
 
   tryReadBracketChar(label, matches) {
     if (this.ch() === label) {
       this.pushDescription(label, 'bracketChar');
-      this.pos++;
       matches.add(label);
+      this.pos++;
       return true;
     }
     return false;
@@ -220,26 +238,26 @@ class Parser {
 
     while (this.remaining()) {
       if (this.ch() === ']') {
-        this.endBracketExpression({ begin, negate, matches });
-        return;
+        const end = this.pos;
+        const list = [...matches];
+        const info = { begin, end, negate, list };
+        this.eatToken(']');
+        this.describe(begin, info);
+        this.describe(end, info);
+        const label = this.input.slice(begin, end + 1);
+        return tokens.bracketClass(label, matches);
       }
       this.tryReadBracketRange(matches) || this.readBracketChar(matches);
     }
-    this.raise('Bracket expression not closed.');
-  }
-
-  endBracketExpression({ begin, negate, matches }) {
-    const end = this.pos;
-    const list = [...matches];
-    const info = { begin, end, negate, list };
-    this.eatToken(']');
-    this.describe(begin, info);
-    this.describe(end, info);
+    // this.raise('Bracket expression not closed.'); @todo
   }
 }
+
+//------------------------------------------------------------------------------
 
 export { Parser };
 
 // const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-// parser.generateRPN();
-// parser.log();
+const parser = new Parser('a(bc)d');
+parser.generateRPN();
+parser.log();

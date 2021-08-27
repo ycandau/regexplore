@@ -6,7 +6,11 @@ const WORDS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
 const SPACES = ' \\f\\n\\r\\t\\v';
 
 //------------------------------------------------------------------------------
-// Create matching functions from a string
+// Create matching functions from a label or string
+
+const match = (label) => (ch) => ch === label;
+
+const matchInSet = (set) => (ch) => set.has(ch);
 
 const matchIn = (str) => {
   const set = new Set(str.split(''));
@@ -20,54 +24,65 @@ const matchNotIn = (str) => {
 
 //------------------------------------------------------------------------------
 // Create token types
+//   - label: the label from the input string
+//   - id:    used to retrieve the token, same as label for static tokens
+//   - type:  used for common actions
 
-const charClass = (label, name, match) => ({
+const concatAfter = true; // add implicit concatenation after
+
+const matcher = (label, id, type, match) => ({
   label,
-  name,
-  type: 'charclass',
+  id,
+  type,
   match,
-  concatAfter: true,
+  concatAfter,
 });
 
-const charLiteral = (label) => charClass(label, 'char', (ch) => label === ch);
+const charClass = (label, match) => matcher(label, label, 'charClass', match);
 
-const escapedLiteral = (label) =>
-  charClass(label, 'escaped', (ch) => label[1] === ch);
-
-const operator = (label, name, type, config) => ({
+const operator = (label, type, config) => ({
   label,
-  name,
+  id: label,
   type,
   ...config,
 });
 
-const concat = operator('~', 'concat');
-
 //------------------------------------------------------------------------------
 // Token type object
 
-const types = {
-  '.': charClass('.', 'wildcard', () => true),
-  '\\d': charClass('\\d', 'digits', matchIn(DIGITS)),
-  '\\D': charClass('\\D', 'non-digits', matchNotIn(DIGITS)),
-  '\\w': charClass('\\w', 'alphanumeric', matchIn(DIGITS + WORDS)),
-  '\\W': charClass('\\W', 'non-alphanumeric', matchNotIn(DIGITS + WORDS)),
-  '\\s': charClass('\\s', 'whitespace', matchIn(SPACES)),
-  '\\S': charClass('\\S', 'non-whitespace', matchNotIn(SPACES)),
+const tokens = {
+  // Static matcher tokens
+  '.': matcher('.', '.', 'wildcard', () => true),
 
-  '|': operator('|', 'alternate', 'alternate'),
-  '?': operator('?', 'repeat01', 'repeat', { concatAfter: true }),
-  '*': operator('*', 'repeat0N', 'repeat', { concatAfter: true }),
-  '+': operator('+', 'repeat1N', 'repeat', { concatAfter: true }),
+  '\\d': charClass('\\d', matchIn(DIGITS)),
+  '\\D': charClass('\\D', matchNotIn(DIGITS)),
+  '\\w': charClass('\\w', matchIn(DIGITS + WORDS)),
+  '\\W': charClass('\\W', matchNotIn(DIGITS + WORDS)),
+  '\\s': charClass('\\s', matchIn(SPACES)),
+  '\\S': charClass('\\S', matchNotIn(SPACES)),
 
-  '(': operator('(', 'parenOpen', 'parenOpen'),
-  ')': operator(')', 'parenClose', 'parenClose', { concatAfter: true }),
-  '[': operator('[', 'bracketOpen', 'bracketOpen'),
-  ']': operator(']', 'bracketClose', 'bracketClose', { concatAfter: true }),
+  // Static operator tokens
+  '|': operator('|', 'alternate'),
+  '?': operator('?', 'repeat', { concatAfter }),
+  '*': operator('*', 'repeat', { concatAfter }),
+  '+': operator('+', 'repeat', { concatAfter }),
+  '(': operator('(', 'parenOpen'),
+  ')': operator(')', 'parenClose', { concatAfter }),
+
+  // Implicit concatenation token
+  concat: operator('~', 'concat'),
+
+  // Dynamic tokens (labels depend on source)
+  charLiteral: (label) =>
+    matcher(label, 'charLiteral', 'charLiteral', match(label)),
+
+  escapedChar: (label) =>
+    matcher(label, 'escapedChar', 'escapedChar', match(label[1])),
+
+  bracketClass: (label, matches) =>
+    matcher(label, 'bracketClass', 'bracketClass', matchInSet(matches)),
 };
 
 //------------------------------------------------------------------------------
 
-const Tokens = { types, charLiteral, escapedLiteral, concat };
-
-export default Tokens;
+export default tokens;

@@ -1,7 +1,10 @@
 const Descriptions = {
   charLiteral: {
-    label: null,
     name: 'Character literal',
+    description: 'Match exactly that character',
+  },
+  escapedChar: {
+    name: 'Escaped character',
     description: 'Match exactly that character',
   },
   '.': {
@@ -91,5 +94,7 @@ const Descriptions = {
     warning: 'Has to be the firstState character in the expression',
   },
 };
+
+//------------------------------------------------------------------------------
 
 export default Descriptions;
