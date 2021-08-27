@@ -2,7 +2,8 @@ import { useState } from 'react';
 
 import './App.css';
 
-import { Parser } from '../re/re';
+import Parser from '../re/re';
+import descriptions from '../re/re_descriptions';
 
 import ReSearchExpression from './ReSearchExpression';
 import Display from './Display';
@@ -10,31 +11,34 @@ import Display from './Display';
 //------------------------------------------------------------------------------
 
 const App = () => {
-  const [fragment, setFragment] = useState({});
+  const [hoverIndex, setHoverIndex] = useState(null);
   // const reString = 'a(b|c)+ef*g';
   const reString = '[^]a-e246-]';
 
   const parser = new Parser(reString);
-  parser.readBracketExpression();
-  // console.log(parser, parser.parsed);
+  parser.generateRPN();
 
-  const onHover = (src) => {
-    setFragment(() => src);
+  const hoverId =
+    hoverIndex !== null ? parser.descriptions[hoverIndex].id : 'empty';
+  const info = { ...parser.descriptions[hoverIndex], ...descriptions[hoverId] };
+
+  const onHover = (index) => {
+    setHoverIndex(() => index);
   };
 
   const onHoverOff = (src) => {
-    setFragment(() => 'Empty');
+    setHoverIndex(() => null);
   };
 
   return (
     <>
       <ReSearchExpression
-        reString={reString}
-        i={fragment.index}
+        descriptions={parser.descriptions}
+        hoverIndex={hoverIndex}
         onHover={onHover}
         onHoverOff={onHoverOff}
       />
-      <Display info={fragment} />
+      <Display info={info} />
     </>
   );
 };

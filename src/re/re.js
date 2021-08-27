@@ -228,26 +228,26 @@ class Parser {
 
   readBracketExpression() {
     const begin = this.pos;
-    const matches = new Set();
+    const matchSet = new Set();
 
     this.eatToken('[');
     const negate = this.tryEatToken('^');
 
-    this.tryReadBracketChar(']', matches) ||
-      this.tryReadBracketChar('-', matches);
+    this.tryReadBracketChar(']', matchSet) ||
+      this.tryReadBracketChar('-', matchSet);
 
     while (this.remaining()) {
       if (this.ch() === ']') {
         const end = this.pos;
-        const list = [...matches];
-        const info = { begin, end, negate, list };
+        const matches = [...matchSet].join('');
+        const info = { begin, end, negate, matches };
         this.eatToken(']');
         this.describe(begin, info);
         this.describe(end, info);
         const label = this.input.slice(begin, end + 1);
-        return tokens.bracketClass(label, matches);
+        return tokens.bracketClass(label, matchSet);
       }
-      this.tryReadBracketRange(matches) || this.readBracketChar(matches);
+      this.tryReadBracketRange(matchSet) || this.readBracketChar(matchSet);
     }
     // this.raise('Bracket expression not closed.'); @todo
   }
@@ -255,9 +255,9 @@ class Parser {
 
 //------------------------------------------------------------------------------
 
-export { Parser };
+export default Parser;
 
 // const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-const parser = new Parser('a(bc)d');
-parser.generateRPN();
-parser.log();
+// const parser = new Parser('a(bc)d');
+// parser.generateRPN();
+// parser.log();

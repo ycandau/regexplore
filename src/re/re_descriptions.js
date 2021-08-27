@@ -93,6 +93,9 @@ const Descriptions = {
     description: 'Negate a bracket expression to match characters not in it',
     warning: 'Has to be the firstState character in the expression',
   },
+  empty: {
+    name: 'Not hovering over anything',
+  },
 };
 
 //------------------------------------------------------------------------------

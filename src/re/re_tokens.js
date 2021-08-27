@@ -26,7 +26,7 @@ const matchNotIn = (str) => {
 // Create token types
 //   - label: the label from the input string
 //   - id:    used to retrieve the token, same as label for static tokens
-//   - type:  used for common actions
+//   - type:  used to determine parsing actions and colouring
 
 const concatAfter = true; // add implicit concatenation after
 
