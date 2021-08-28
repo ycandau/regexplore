@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 import { getFirstState, getTerminalStates } from './re_helpers.js';
-import State from './re_state.js';
+import State from './re_states.js';
 
 //------------------------------------------------------------------------------
 
@@ -23,40 +23,41 @@ class Fragment {
   connectTo(next) {
     this.terminalStates.forEach((state) => state.connectTo(next));
   }
-
-  concat(frag2) {
-    this.connectTo(frag2);
-    return new Fragment(this, [frag2]);
-  }
-
-  alternate(frag2) {
-    const fork = new State('fork', '|');
-    fork.connectTo(this);
-    fork.connectTo(frag2);
-    return new Fragment(fork, [this, frag2]);
-  }
-
-  repeat01() {
-    const fork = new State('fork', '?');
-    fork.connectTo(this);
-    return new Fragment(fork, [this, fork]);
-  }
-
-  repeat0N() {
-    const fork = new State('fork', '*');
-    fork.connectTo(this);
-    this.connectTo(fork);
-    return new Fragment(fork, [fork]);
-  }
-
-  repeat1N() {
-    const fork = new State('fork', '+');
-    fork.connectTo(this);
-    this.connectTo(fork);
-    return new Fragment(this, [fork]);
-  }
 }
+
+const concat = (frag1, frag2) => {
+  frag1.connectTo(frag2);
+  return new Fragment(frag1, [frag2]);
+};
+
+const alternate = (frag1, frag2) => {
+  const fork = new State('fork', '|');
+  fork.connectTo(frag1);
+  fork.connectTo(frag2);
+  return new Fragment(fork, [frag1, frag2]);
+};
+
+const repeat01 = (frag) => {
+  const fork = new State('fork', '?');
+  fork.connectTo(frag);
+  return new Fragment(fork, [frag, fork]);
+};
+
+const repeat0N = (frag) => {
+  const fork = new State('fork', '*');
+  fork.connectTo(frag);
+  frag.connectTo(fork);
+  return new Fragment(fork, [fork]);
+};
+
+const repeat1N = (frag) => {
+  const fork = new State('fork', '+');
+  fork.connectTo(frag);
+  frag.connectTo(fork);
+  return new Fragment(frag, [fork]);
+};
 
 //------------------------------------------------------------------------------
 
 export default Fragment;
+export { concat, alternate, repeat01, repeat0N, repeat1N };
