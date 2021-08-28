@@ -5,8 +5,10 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import InputBase from '@material-ui/core/InputBase';
 import SearchIcon from '@material-ui/icons/Search';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import { Button } from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Brightness7 from '@material-ui/icons/Brightness7';
+import Brightness4 from '@material-ui/icons/Brightness4';
+import Avatar from '@material-ui/core/Avatar';
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -14,6 +16,12 @@ const useStyles = makeStyles((theme) => ({
   },
   menuButton: {
     marginRight: theme.spacing(2),
+  },
+  avatar: {
+    width: theme.spacing(4),
+    height: theme.spacing(4),
+    color: theme.palette.secondary.contrastText,
+    backgroundColor: theme.palette.secondary.dark,
   },
   title: {
     display: 'none',
@@ -72,7 +80,15 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function PrimarySearchAppBar() {
+export default function PrimarySearchAppBar({
+  light,
+  toggleTheme,
+  isLoggedIn,
+  userInitial,
+  isExploring,
+  toggleExplore,
+  onSearchInput,
+}) {
   const classes = useStyles();
 
   return (
@@ -82,6 +98,7 @@ export default function PrimarySearchAppBar() {
           <Typography className={classes.title} variant="h6" noWrap>
             RegExpLore
           </Typography>
+          <div className={classes.grow} />
           <div className={classes.search}>
             <div className={classes.searchIcon}>
               <SearchIcon />
@@ -93,14 +110,22 @@ export default function PrimarySearchAppBar() {
                 input: classes.inputInput,
               }}
               inputProps={{ 'aria-label': 'search' }}
+              onChange={onSearchInput}
             />
           </div>
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <Button>Explore</Button>
-            <Button>Log Out</Button>
-            <IconButton edge="end" color="inherit">
-              <AccountCircle />
+            <Button onClick={toggleExplore}>
+              {isExploring ? 'Home' : 'Explore'}
+            </Button>
+            <Button>{isLoggedIn ? 'Log Out' : 'Log In'}</Button>
+            {isLoggedIn && (
+              <IconButton>
+                <Avatar className={classes.avatar}>{userInitial}</Avatar>
+              </IconButton>
+            )}
+            <IconButton onClick={toggleTheme} edge="end">
+              {light ? <Brightness4 /> : <Brightness7 />}
             </IconButton>
           </div>
         </Toolbar>
