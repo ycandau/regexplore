@@ -20,10 +20,10 @@ class State {
 
   connectTo(next) {
     this.nextStates.push(getFirstState(next));
+    return next;
   }
 
   log() {
-    // const toStr = (state) => `[${state.type}: ${state.label}]`;
     const toStr = (state) => `[${state.label}]`;
     const nextStates = this.nextStates.map(toStr).join(', ');
     console.log(`  ${toStr(this)} => ${nextStates}`);
