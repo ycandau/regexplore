@@ -5,7 +5,7 @@
 import { last, logHeading } from './re_helpers.js';
 import tokens from './re_tokens.js';
 import State from './re_states.js';
-import Fragment from './re_fragments.js';
+// import Fragment from './re_fragments.js';
 
 //------------------------------------------------------------------------------
 
@@ -279,7 +279,7 @@ class Parser {
 export default Parser;
 
 // const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-const parser = new Parser('a|b');
-parser.generateRPN();
-parser.compileGraph();
-parser.log();
+// const parser = new Parser('a|b');
+// parser.generateRPN();
+// parser.compileGraph();
+// parser.log();
