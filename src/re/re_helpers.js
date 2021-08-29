@@ -17,10 +17,22 @@ const logHeading = (str, ...rest) =>
  * @returns A string.
  */
 const toString = (obj) => {
-  const entries = Object.entries(obj).map(([key, value]) => `${key}: ${value}`);
+  const entries = Object.entries(obj)
+    .filter(([key, value]) => key !== 'label')
+    .map(([key, value]) => `${key}: ${value}`);
   const length = entries.reduce((count, { length }) => count + length, 0);
   const separator = length <= 60 ? ', ' : '\n    ';
   return `{ ${entries.join(separator)} }`;
+};
+
+const inspect = (obj) => {
+  const entries = Object.entries(obj)
+    .filter(([key, value]) => key !== 'label' && key !== 'type')
+    .map(([key, value]) => `${key}: ${value}`);
+  const length = entries.reduce((count, { length }) => count + length, 0);
+  const separator = length <= 60 ? ', ' : '\n    ';
+  const str = `  ${obj.label} : ${obj.type} { ${entries.join(separator)} }`;
+  console.log(str);
 };
 
 /**
@@ -42,4 +54,4 @@ const getTerminalStates = (graph) =>
 
 //------------------------------------------------------------------------------
 
-export { logHeading, toString, getFirstState, getTerminalStates };
+export { logHeading, toString, getFirstState, getTerminalStates, inspect };

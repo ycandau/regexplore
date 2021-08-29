@@ -20,7 +20,7 @@ const App = () => {
   parser.generateRPN();
 
   const hoverId =
-    hoverIndex !== null ? parser.descriptions[hoverIndex].id : 'empty';
+    hoverIndex !== null ? parser.descriptions[hoverIndex].type : 'empty';
   const info = { ...parser.descriptions[hoverIndex], ...descriptions[hoverId] };
 
   const onHover = (index) => {

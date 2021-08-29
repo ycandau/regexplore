@@ -2,9 +2,14 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import { logHeading, toString } from './re_helpers.js';
+import { logHeading, toString, inspect } from './re_helpers.js';
 
-import { getToken, getConcat, getBracketClass } from './re_tokens.js';
+import {
+  getToken,
+  getConcat,
+  getBracketClass,
+  concatAfter,
+} from './re_tokens.js';
 
 import State from './re_states.js';
 import { createWarning } from './re_static_info.js';
@@ -64,7 +69,7 @@ class Parser {
     this.logStr();
     this.logTokens();
     this.logDescriptions();
-    this.logGraph();
+    // this.logGraph();
     this.logWarnings();
   }
 
@@ -79,7 +84,7 @@ class Parser {
     }
 
     const token = getToken(this.slice(2), this.pos);
-    this.pushDescription(token.label, token.id);
+    this.pushDescription(token.label, token.type);
     this.pos += token.label.length;
     return token;
   }
@@ -90,31 +95,16 @@ class Parser {
   }
 
   // Transfer the stacked operator to the RPN queue if it is at the top
-  transferConcat() {
-    if (this.lastOperatorIs('~')) {
+  transferOperator(ch) {
+    if (this.lastOperatorIs(ch)) {
       const operator = this.operators.pop();
-      this.rpn.push(operator);
-    }
-  }
-
-  transferAlternation() {
-    const positions = [];
-    while (this.lastOperatorIs('|')) {
-      const op = this.operators.pop();
-      positions.push(op.pos);
-    }
-    if (positions.length) {
-      const operator = getToken('|');
-      operator.positions = positions;
-      operator.arity = positions.length + 1;
-      operator.label = `|${operator.arity}`;
       this.rpn.push(operator);
     }
   }
 
   // Add an implicit concat when necessary
   concat() {
-    this.transferConcat();
+    this.transferOperator('~');
     this.operators.push(getConcat());
   }
 
@@ -128,25 +118,28 @@ class Parser {
         case 'escapedChar':
         case 'charClass':
         case 'bracketClass':
-        case 'wildcard':
-          if (this.prevToken.concatAfter) this.concat();
+        case '.':
+          if (concatAfter(this.prevToken)) this.concat();
           this.rpn.push(token);
           break;
-        case 'alternate':
-          this.transferConcat();
+        case '|':
+          this.transferOperator('~');
+          this.transferOperator('|');
           this.operators.push(token);
           break;
-        case 'repeat':
+        case '?':
+        case '*':
+        case '+':
           this.rpn.push(token);
           break;
-        case 'parenOpen':
-          if (this.prevToken.concatAfter) this.concat();
+        case '(':
+          if (concatAfter(this.prevToken)) this.concat();
           token.begin = this.pos - 1;
           this.operators.push(token);
           break;
-        case 'parenClose':
-          this.transferConcat();
-          this.transferAlternation();
+        case ')':
+          this.transferOperator('~');
+          this.transferOperator('|');
           const begin = this.operators.pop().begin;
           const end = this.pos - 1;
           const info = { begin, end };
@@ -158,24 +151,21 @@ class Parser {
       }
       this.prevToken = token;
     }
-    this.transferConcat();
-    this.transferAlternation();
+    this.transferOperator('~');
+    this.transferOperator('|');
   }
 
   // Log the token queue
   logTokens() {
     logHeading('Tokens');
-    this.rpn.forEach((token) => {
-      const info = token.id === token.label ? token.type : token.id;
-      console.log(`  ${token.label} : ${info}`);
-    });
+    this.rpn.forEach(inspect);
   }
 
   //----------------------------------------------------------------------------
   // Descriptions
 
-  pushDescription(label, id, config = {}) {
-    this.descriptions.push({ label, id, ...config });
+  pushDescription(label, type, config = {}) {
+    this.descriptions.push({ label, type, ...config });
   }
 
   describe(pos, info) {
@@ -185,22 +175,20 @@ class Parser {
 
   logDescriptions() {
     logHeading('Descriptions');
-    this.descriptions.forEach((description) => {
-      console.log(`  ${description.label}: ${toString(description)}`);
-    });
+    this.descriptions.forEach(inspect);
   }
 
   //----------------------------------------------------------------------------
   // Bracket expressions
 
-  eatToken(id) {
-    this.pushDescription(this.ch(), id);
+  eatToken(type) {
+    this.pushDescription(this.ch(), type);
     this.pos++;
   }
 
-  tryEatToken(id) {
-    if (this.ch() === id) {
-      this.pushDescription(id, id);
+  tryEatToken(type) {
+    if (this.ch() === type) {
+      this.pushDescription(type, type);
       this.pos++;
       return true;
     }
@@ -243,24 +231,24 @@ class Parser {
 
   readBracketExpression() {
     const begin = this.pos;
-    const matchSet = new Set();
+    const set = new Set();
 
     this.eatToken('[');
     const negate = this.tryEatToken('^');
 
     // Special characters are treated as literals at the beginning
-    this.tryReadBracketChar(']', matchSet) ||
-      this.tryReadBracketChar('-', matchSet);
+    this.tryReadBracketChar(']', set) || this.tryReadBracketChar('-', set);
 
     // Try char range, otherwise read char literal
     while (this.remaining() && this.ch() !== ']') {
-      this.tryReadBracketRange(matchSet) || this.readBracketChar(matchSet);
+      this.tryReadBracketRange(set) || this.readBracketChar(set);
     }
 
     // Finalize
     const end = this.pos;
-    const matches = [...matchSet].join('');
-    const info = { begin, end, negate, matches };
+    const range = [begin, end];
+    const matches = [...set].join('');
+    const info = { range, negate, matches };
     this.describe(begin, info);
 
     // Edge case: missing closing bracket
@@ -273,7 +261,7 @@ class Parser {
     }
 
     const label = this.input.slice(begin, end + 1);
-    return getBracketClass(label, matchSet);
+    return getBracketClass(label, info);
   }
 
   //----------------------------------------------------------------------------
@@ -299,8 +287,11 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-const parser = new Parser('(a|b|c|d)');
+// parser.compileGraph();
+
+const parser = new Parser('a|b*|[c]');
 parser.generateRPN();
-parser.compileGraph();
 parser.log();
+
+// const token = parser.rpn[0];
+// console.log(toString(token));

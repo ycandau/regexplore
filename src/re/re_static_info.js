@@ -7,6 +7,9 @@ const descriptions = {
     name: 'Escaped character',
     description: 'Match exactly that character',
   },
+  charClass: {
+    searchByLabel: true,
+  },
   '.': {
     name: 'Wildcard character',
     description: 'Match any character',
@@ -112,7 +115,7 @@ const warnings = {
   },
 };
 
-const createWarning = (id, config) => ({ ...config, ...warnings[id] });
+const createWarning = (type, config) => ({ ...config, ...warnings[type] });
 
 //------------------------------------------------------------------------------
 
