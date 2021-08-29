@@ -11,6 +11,11 @@ export default {
   args: {
     string: 'This is a demo string',
     numRows: 5,
+    widthRems: 20,
+    highlights: [
+      { ind: [2, 4], token: 'match' },
+      { ind: [6, 7], token: 'cursor' },
+    ],
   },
   decorators: [
     (Story) => (
@@ -26,7 +31,13 @@ export default {
 const Template = (args) => {
   const [str, setStr] = useState(args.string);
   return (
-    <TestStrField string={str} setString={setStr} numRows={args.numRows} />
+    <TestStrField
+      string={str}
+      setString={setStr}
+      numRows={args.numRows}
+      widthRems={args.widthRems}
+      highlights={args.highlights}
+    />
   );
 };
 
