@@ -1,4 +1,4 @@
-const Descriptions = {
+const descriptions = {
   charLiteral: {
     name: 'Character literal',
     description: 'Match exactly that character',
@@ -102,4 +102,18 @@ const Descriptions = {
 
 //------------------------------------------------------------------------------
 
-export default Descriptions;
+const warnings = {
+  '!]': {
+    message: 'An open bracket has not been closed.',
+    workaround:
+      'The parser is adding an implicit closing bracket to correct the regex.',
+    fix: (str) => str + ']',
+    precedence: 1,
+  },
+};
+
+const createWarning = (id, config) => ({ ...config, ...warnings[id] });
+
+//------------------------------------------------------------------------------
+
+export { createWarning };

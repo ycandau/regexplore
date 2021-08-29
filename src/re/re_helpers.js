@@ -35,6 +35,19 @@ const getFirstState = (graph) => (graph.firstState ? graph.firstState : graph);
 const getTerminalStates = (graph) =>
   graph.terminalStates ? graph.terminalStates : graph;
 
+/**
+ * Generate a string from a flat object.
+ *
+ * @param {*} obj A flat object.
+ * @returns A string.
+ */
+const toString = (obj) => {
+  const entries = Object.entries(obj).map(([key, value]) => `${key}: ${value}`);
+  const length = entries.reduce((count, { length }) => count + length, 0);
+  const separator = length <= 60 ? ', ' : '\n    ';
+  return `{ ${entries.join(separator)} }`;
+};
+
 //------------------------------------------------------------------------------
 
-export { last, logHeading, getFirstState, getTerminalStates };
+export { last, logHeading, getFirstState, getTerminalStates, toString };
