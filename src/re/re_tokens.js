@@ -37,7 +37,7 @@ const matchNotIn = (str) => {
 
 const compileMatcher = (fragments, token) => {
   const state = new State(token.label, 'matcher', { match: token.match });
-  const fragment = new Fragment(state);
+  const fragment = new Fragment(state, [state]);
   fragments.push(fragment);
 };
 
@@ -80,7 +80,6 @@ const operator = (label, type, compile, config) => ({
 });
 
 //------------------------------------------------------------------------------
-// Token type object
 
 const tokens = {
   // Static matcher tokens
@@ -100,21 +99,36 @@ const tokens = {
   '+': operator('+', 'repeat', unary(repeat1N), { concatAfter }),
   '(': operator('(', 'parenOpen', null),
   ')': operator(')', 'parenClose', null, { concatAfter }),
-
-  // Implicit concatenation token
-  concat: operator('~', 'concat', binary(concat)),
-
-  // Dynamic tokens (labels depend on source)
-  charLiteral: (label) =>
-    matcher(label, 'charLiteral', 'charLiteral', match(label)),
-
-  escapedChar: (label) =>
-    matcher(label, 'escapedChar', 'escapedChar', match(label[1])),
-
-  bracketClass: (label, matches) =>
-    matcher(label, 'bracketClass', 'bracketClass', matchInSet(matches)),
 };
 
 //------------------------------------------------------------------------------
 
-export default tokens;
+const getToken = (label, pos = null) => {
+  const ch = label[0];
+  if (ch in tokens) {
+    return { ...tokens[ch], pos };
+  }
+
+  if (label in tokens) {
+    return { ...tokens[label], pos };
+  }
+
+  if (label[0] === '\\') {
+    const token = matcher(label, 'escapedChar', 'escapedChar', match(label[1]));
+    token.pos = pos;
+    return token;
+  }
+
+  const token = matcher(ch, 'charLiteral', 'charLiteral', match(ch));
+  token.pos = pos;
+  return token;
+};
+
+const getConcat = () => operator('~', 'concat', binary(concat));
+
+const getBracketClass = (label, matches) =>
+  matcher(label, 'bracketClass', 'bracketClass', matchInSet(matches));
+
+//------------------------------------------------------------------------------
+
+export { getToken, getConcat, getBracketClass };

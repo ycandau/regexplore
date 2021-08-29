@@ -15,9 +15,7 @@ import State from './re_states.js';
 class Fragment {
   constructor(first, terminals) {
     this.firstState = getFirstState(first);
-    this.terminalStates = terminals
-      ? terminals.map(getTerminalStates).flat()
-      : [first];
+    this.terminalStates = terminals.map(getTerminalStates).flat();
   }
 
   connectTo(next) {

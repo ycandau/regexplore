@@ -2,8 +2,10 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import { last, logHeading, toString } from './re_helpers.js';
-import tokens from './re_tokens.js';
+import { logHeading, toString } from './re_helpers.js';
+
+import { getToken, getConcat, getBracketClass } from './re_tokens.js';
+
 import State from './re_states.js';
 import { createWarning } from './re_static_info.js';
 // import Fragment from './re_fragments.js';
@@ -64,11 +66,6 @@ class Parser {
     this.logDescriptions();
     this.logGraph();
     this.logWarnings();
-
-    // console.log(`Fragments [${this.fragments.length}]: ${this.fragments}`);
-    // console.log(`Operators [${this.operators.length}]: ${this.operators}`);
-    // console.log('Graph');
-    // this.firstState.logAll();
   }
 
   //----------------------------------------------------------------------------
@@ -76,41 +73,49 @@ class Parser {
 
   // Read the next token and advance the position in the input string
   readToken() {
-    const ch = this.ch();
-    // Escaped characters
-    if (ch === '\\') {
-      const label = this.slice(2);
-      const token = tokens[label] || tokens.escapedChar(label);
-      token.pos = this.pos;
-      this.pushDescription(label, token.id);
-      this.pos += 2;
-      return token;
-    }
     // Bracket expressions
-    if (ch === '[') {
+    if (this.ch() === '[') {
       return this.readBracketExpression();
     }
-    // Standard tokens
-    const token = tokens[ch] || tokens.charLiteral(ch);
-    token.pos = this.pos;
-    this.pushDescription(ch, token.id);
-    this.pos += 1;
+
+    const token = getToken(this.slice(2), this.pos);
+    this.pushDescription(token.label, token.id);
+    this.pos += token.label.length;
     return token;
   }
 
+  lastOperatorIs(label) {
+    const operator = this.operators[this.operators.length - 1];
+    return operator !== undefined && operator.label === label;
+  }
+
   // Transfer the stacked operator to the RPN queue if it is at the top
-  transferOperator(ch) {
-    const operator = last(this.operators);
-    if (operator && operator.label === ch) {
-      this.operators.pop();
+  transferConcat() {
+    if (this.lastOperatorIs('~')) {
+      const operator = this.operators.pop();
+      this.rpn.push(operator);
+    }
+  }
+
+  transferAlternation() {
+    const positions = [];
+    while (this.lastOperatorIs('|')) {
+      const op = this.operators.pop();
+      positions.push(op.pos);
+    }
+    if (positions.length) {
+      const operator = getToken('|');
+      operator.positions = positions;
+      operator.arity = positions.length + 1;
+      operator.label = `|${operator.arity}`;
       this.rpn.push(operator);
     }
   }
 
   // Add an implicit concat when necessary
   concat() {
-    this.transferOperator('~');
-    this.operators.push(tokens.concat);
+    this.transferConcat();
+    this.operators.push(getConcat());
   }
 
   // Generate a queue of tokens in reverse polish notation (RPN)
@@ -128,8 +133,7 @@ class Parser {
           this.rpn.push(token);
           break;
         case 'alternate':
-          this.transferOperator('~');
-          this.transferOperator('|');
+          this.transferConcat();
           this.operators.push(token);
           break;
         case 'repeat':
@@ -141,8 +145,8 @@ class Parser {
           this.operators.push(token);
           break;
         case 'parenClose':
-          this.transferOperator('~');
-          this.transferOperator('|');
+          this.transferConcat();
+          this.transferAlternation();
           const begin = this.operators.pop().begin;
           const end = this.pos - 1;
           const info = { begin, end };
@@ -154,8 +158,8 @@ class Parser {
       }
       this.prevToken = token;
     }
-    this.transferOperator('~');
-    this.transferOperator('|');
+    this.transferConcat();
+    this.transferAlternation();
   }
 
   // Log the token queue
@@ -244,7 +248,7 @@ class Parser {
     this.eatToken('[');
     const negate = this.tryEatToken('^');
 
-    // Special characters treated as literals at the beginning
+    // Special characters are treated as literals at the beginning
     this.tryReadBracketChar(']', matchSet) ||
       this.tryReadBracketChar('-', matchSet);
 
@@ -269,7 +273,7 @@ class Parser {
     }
 
     const label = this.input.slice(begin, end + 1);
-    return tokens.bracketClass(label, matchSet);
+    return getBracketClass(label, matchSet);
   }
 
   //----------------------------------------------------------------------------
@@ -296,7 +300,7 @@ class Parser {
 export default Parser;
 
 // const parser = new Parser('a.\\d\\.(b?c|d*)e|f');
-const parser = new Parser('a|b[c-f');
+const parser = new Parser('(a|b|c|d)');
 parser.generateRPN();
 parser.compileGraph();
 parser.log();

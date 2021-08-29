@@ -116,4 +116,4 @@ const createWarning = (id, config) => ({ ...config, ...warnings[id] });
 
 //------------------------------------------------------------------------------
 
-export { createWarning };
+export { descriptions, createWarning };
