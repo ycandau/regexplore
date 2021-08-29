@@ -7,6 +7,7 @@ import descriptions from '../re/re_descriptions';
 
 import ReSearchExpression from './ReSearchExpression';
 import Display from './Display';
+import Editor from './Editor';
 
 //------------------------------------------------------------------------------
 
@@ -39,6 +40,8 @@ const App = () => {
         onHoverOff={onHoverOff}
       />
       <Display info={info} />
+      <hr />
+      <Editor test={'test'} />
     </>
   );
 };
