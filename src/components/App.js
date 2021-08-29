@@ -2,8 +2,8 @@ import { useState } from 'react';
 
 import './App.css';
 
-import Parser from '../re/re';
-import descriptions from '../re/re_descriptions';
+import Parser from '../re/re_parser';
+import { descriptions } from '../re/re_static_info';
 
 import ReSearchExpression from './ReSearchExpression';
 import Display from './Display';
