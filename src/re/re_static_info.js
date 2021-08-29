@@ -107,6 +107,7 @@ const descriptions = {
 
 const warnings = {
   '!]': {
+    type: '!]',
     message: 'An open bracket has not been closed.',
     workaround:
       'The parser is adding an implicit closing bracket to correct the regex.',
@@ -115,8 +116,8 @@ const warnings = {
   },
 };
 
-const createWarning = (type, config) => ({ ...config, ...warnings[type] });
+const logWarning = (type, config) => ({ ...config, ...warnings[type] });
 
 //------------------------------------------------------------------------------
 
-export { descriptions, createWarning };
+export { descriptions, logWarning };

@@ -50,6 +50,23 @@ const runBracketClass = (input, matches) => {
   });
 };
 
+const runEdgeCase = (input, rpn, type, pos, fixed) => {
+  it(`runs the input /${input}/ and raises a warning`, () => {
+    const parser = new Parser(input);
+    parser.generateRPN();
+
+    expect(rpnStr(parser)).toBe(rpn);
+    expect(descriptionsStr(parser)).toBe(input);
+    expect(parser.operators.length).toBe(0);
+    expect(parser.warnings.length).toBe(1);
+
+    const warning = parser.warnings[0];
+    expect(warning.type).toBe(type);
+    expect(warning.pos).toBe(pos);
+    expect(parser.fix()).toBe(fixed);
+  });
+};
+
 //------------------------------------------------------------------------------
 
 describe('RE parser', () => {
@@ -74,6 +91,11 @@ describe('RE parser', () => {
   runParser('ab*|c*d|e*|f', 'ab*~c*d~|e*|f|', token(2, 2, '*', '*'));
   runParser('ab+|c+d|e+|f', 'ab+~c+d~|e+|f|', token(2, 2, '+', '+'));
 
+  runParser('(a)', 'a(', token(0, 1, '(', '('));
+  runParser('(a|b)|(c|d)', 'ab|(cd|(|', token(6, 7, '(', '('));
+  runParser('(ab)*', 'ab~(*', token(0, 3, '(', '('));
+  runParser('a(b(c|d))', 'abcd|(~(~', token(3, 5, '(', '('));
+
   runBracketClass('[abc]', 'abc');
   runBracketClass('[a-d]', 'abcd');
 
@@ -84,4 +106,8 @@ describe('RE parser', () => {
   runBracketClass('[^]abc]', ']abc');
   runBracketClass('[^-abc]', '-abc');
   runBracketClass('[^abc-]', 'abc-');
+
+  runEdgeCase('ab[cd', 'ab~[cd~', '!]', 2, 'ab[cd]');
 });
+
+//------------------------------------------------------------------------------

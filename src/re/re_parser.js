@@ -12,7 +12,7 @@ import {
 } from './re_tokens.js';
 
 import State from './re_states.js';
-import { createWarning } from './re_static_info.js';
+import { logWarning } from './re_static_info.js';
 // import Fragment from './re_fragments.js';
 
 //------------------------------------------------------------------------------
@@ -134,17 +134,24 @@ class Parser {
           break;
         case '(':
           if (concatAfter(this.prevToken)) this.concat();
-          token.begin = this.pos - 1;
+          token.range = [token.pos];
           this.operators.push(token);
           break;
         case ')':
           this.transferOperator('~');
           this.transferOperator('|');
-          const begin = this.operators.pop().begin;
-          const end = this.pos - 1;
-          const info = { begin, end };
-          this.describe(begin, info);
-          this.describe(end, info);
+
+          if (this.lastOperatorIs('(')) {
+            const open = this.operators.pop();
+            const begin = open.pos;
+            const end = token.pos;
+            const range = [begin, end];
+            open.range = range;
+
+            this.rpn.push(open);
+            this.describe(begin, { range });
+            this.describe(end, { range });
+          }
           break;
         default:
           break;
@@ -256,7 +263,7 @@ class Parser {
       this.eatToken(']');
       this.describe(end, info);
     } else {
-      const warning = createWarning('!]', { pos: begin });
+      const warning = logWarning('!]', { pos: begin });
       this.warnings.push(warning);
     }
 
@@ -281,6 +288,16 @@ class Parser {
     logHeading('Graph');
     this.firstState.logAll();
   }
+
+  //----------------------------------------------------------------------------
+  // Apply fixes
+
+  fix() {
+    const warnings = [...this.warnings];
+    return warnings
+      .sort((w1, w2) => w1.precedence - w2.precedence)
+      .reduce((str, warning) => warning.fix(str), this.input);
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -289,9 +306,9 @@ export default Parser;
 
 // parser.compileGraph();
 
-const parser = new Parser('a|b*|[c]');
-parser.generateRPN();
-parser.log();
+// const parser = new Parser('(a)');
+// parser.generateRPN();
+// parser.log();
 
 // const token = parser.rpn[0];
 // console.log(toString(token));
