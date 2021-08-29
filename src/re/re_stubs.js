@@ -1,0 +1,109 @@
+//------------------------------------------------------------------------------
+// Description
+
+// This is an object with information on one specific token from the regex
+// search string. The information is displayed in response to an onHover event
+// and maybe also based on the cursor position in the string.
+
+// The objects will have different properties depending on the type of token.
+
+const description1 = {
+  pos: 3, // position in the regex string
+  label: '*', // copied from the regex string
+  name: '0 to any quantifier',
+  description: 'Match the preceding item 0 or more times.',
+  note: 'Quantifiers have the highest operator precedence', // optional, only for some tokens
+};
+
+const description2 = {
+  range: [5, 10],
+  label: '(',
+  name: 'Left parenthesis',
+  description:
+    'Open a parentheses pair to manage precedence and set a capture group.',
+};
+
+const description3 = {
+  pos: 12,
+  label: '^',
+  name: 'Negation operator',
+  description:
+    'Negate a bracket expression to match characters that are not in it',
+  warning:
+    'It has to be the first character in the expression and will otherwise be interpreted as a regular character.',
+};
+
+//------------------------------------------------------------------------------
+// Warnings and errors
+
+// This an array which is empty if there are no warnings or errors.
+
+const warnings = [
+  {
+    pos: 3,
+    message: 'An open parenthesis has not been closed.',
+    fix: 'The parser is adding a closing parenthesis to correct the regex.',
+  },
+  {
+    pos: 5,
+    message: 'An open bracket has not been closed.',
+    fix: 'The parser is adding a closing bracket to correct the regex.',
+  },
+  {
+    pos: 7,
+    excerpt: '(*',
+    message: 'A quantifier operates on an empty string.',
+    fix: 'The parser is ignoring the quantifier.',
+  },
+  {
+    pos: 10,
+    excerpt: '(|',
+    message: 'An alternation operates on an empty string.',
+    fix: 'This is normally done with a 0 or 1 quantifier.',
+  },
+  {
+    pos: 12,
+    excerpt: '+*',
+    message: 'Multiple quantifiers in succession.',
+    fix: "The parser is simplifying '+*' to '*'.",
+  },
+];
+
+//------------------------------------------------------------------------------
+// Logs
+
+// An array with a summary log of the step by step execution of the regex.
+
+// Render to something such as:
+// [0]: 'm' => 2 active states
+// [1]: 'i' => 2 active states
+// [2]: 'n' => 1 active state
+// [3]: 'm' => 0 active states
+// Match fails
+
+const logs = [
+  {
+    pos: 0, // position in the test string
+    char: 'm', // character in the test string
+    count: 2, // number of active states in the NFA
+  },
+  {
+    pos: 1,
+    char: 'i',
+    count: 2,
+  },
+  {
+    pos: 2,
+    char: 'n',
+    count: 1,
+  },
+  {
+    pos: 3,
+    char: 't',
+    count: 0,
+  },
+];
+
+//------------------------------------------------------------------------------
+
+export { description1, description2, description3, warnings, logs };

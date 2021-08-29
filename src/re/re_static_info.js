@@ -54,11 +54,13 @@ const descriptions = {
   },
   '(': {
     name: 'Left parenthesis',
-    description: 'Open parentheses for priority and to set a capture group',
+    description:
+      'Open a parentheses pair to manage precedence and set a capture group',
   },
   ')': {
     name: 'Right parenthesis',
-    description: 'Close parentheses for priority and to set a capture group',
+    description:
+      'Close a parentheses pair to manage precedence and set a capture group',
   },
   '[': {
     name: 'Left bracket',
@@ -91,7 +93,7 @@ const descriptions = {
   '^': {
     name: 'Negation operator',
     description: 'Negate a bracket expression to match characters not in it',
-    warning: 'Has to be the firstState character in the expression',
+    warning: 'Has to be positioned as the first character in the expression',
   },
   empty: {
     name: 'Not hovering over anything',
