@@ -3,12 +3,16 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles((theme) => ({
   container: {
     display: 'grid',
-    width: '20rem',
     gridGap: theme.spacing(2),
   },
 }));
 
-export default function GridWrapper({ children }) {
+export default function GridWrapper({ width, children }) {
   const classes = useStyles();
-  return <div className={classes.container}>{children}</div>;
+  const rem = width || 20;
+  return (
+    <div className={classes.container} style={{ width: rem + 'rem' }}>
+      {children}
+    </div>
+  );
 }
