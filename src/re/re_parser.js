@@ -89,14 +89,14 @@ class Parser {
     return token;
   }
 
-  lastOperatorIs(label) {
+  topOperatorIs(label) {
     const operator = this.operators[this.operators.length - 1];
     return operator !== undefined && operator.label === label;
   }
 
   // Transfer the stacked operator to the RPN queue if it is at the top
   transferOperator(ch) {
-    if (this.lastOperatorIs(ch)) {
+    if (this.topOperatorIs(ch)) {
       const operator = this.operators.pop();
       this.rpn.push(operator);
     }
@@ -141,7 +141,7 @@ class Parser {
           this.transferOperator('~');
           this.transferOperator('|');
 
-          if (this.lastOperatorIs('(')) {
+          if (this.topOperatorIs('(')) {
             const open = this.operators.pop();
             const begin = open.pos;
             const end = token.pos;
@@ -158,8 +158,24 @@ class Parser {
       }
       this.prevToken = token;
     }
-    this.transferOperator('~');
-    this.transferOperator('|');
+    do {
+      this.transferOperator('~');
+      this.transferOperator('|');
+
+      // Edge case: missing closing parenthesis
+      if (this.topOperatorIs('(')) {
+        const open = this.operators.pop();
+        const begin = open.pos;
+        const end = this.input.length - 1;
+        const range = [begin, end];
+        open.range = range;
+
+        this.rpn.push(open);
+        this.describe(begin, { range });
+        const warning = logWarning('!)', { pos: begin });
+        this.warnings.push(warning);
+      }
+    } while (this.operators.length > 0);
   }
 
   // Log the token queue

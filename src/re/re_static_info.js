@@ -114,6 +114,14 @@ const warnings = {
     fix: (str) => str + ']',
     precedence: 1,
   },
+  '!)': {
+    type: '!)',
+    message: 'An open parenthesis has not been closed.',
+    workaround:
+      'The parser is adding an implicit closing parenthesis to correct the regex.',
+    fix: (str) => str + ')',
+    precedence: 2,
+  },
 };
 
 const logWarning = (type, config) => ({ ...config, ...warnings[type] });

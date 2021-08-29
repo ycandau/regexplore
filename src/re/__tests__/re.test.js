@@ -50,7 +50,7 @@ const runBracketClass = (input, matches) => {
   });
 };
 
-const runEdgeCase = (input, rpn, type, pos, fixed) => {
+const runEdgeCase = (input, rpn, fixed, types, positions) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
     const parser = new Parser(input);
     parser.generateRPN();
@@ -58,12 +58,13 @@ const runEdgeCase = (input, rpn, type, pos, fixed) => {
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
     expect(parser.operators.length).toBe(0);
-    expect(parser.warnings.length).toBe(1);
-
-    const warning = parser.warnings[0];
-    expect(warning.type).toBe(type);
-    expect(warning.pos).toBe(pos);
+    expect(parser.warnings.length).toBe(types.length);
     expect(parser.fix()).toBe(fixed);
+
+    parser.warnings.forEach((warning, index) => {
+      expect(warning.type).toBe(types[index]);
+      expect(warning.pos).toBe(positions[index]);
+    });
   });
 };
 
@@ -107,7 +108,9 @@ describe('RE parser', () => {
   runBracketClass('[^-abc]', '-abc');
   runBracketClass('[^abc-]', 'abc-');
 
-  runEdgeCase('ab[cd', 'ab~[cd~', '!]', 2, 'ab[cd]');
+  runEdgeCase('ab[cd', 'ab~[cd~', 'ab[cd]', ['!]'], [2]);
+  runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', ['!)'], [2]);
+  runEdgeCase('a(b[c', 'ab[c~(~', 'a(b[c])', ['!]', '!)'], [3, 1]);
 });
 
 //------------------------------------------------------------------------------
