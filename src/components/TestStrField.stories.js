@@ -13,8 +13,8 @@ export default {
     numRows: 5,
     widthRems: 20,
     highlights: [
-      { ind: [2, 4], token: 'match' },
-      { ind: [6, 7], token: 'cursor' },
+      { startInd: 2, endInd: 4, token: 'match' },
+      { startInd: 6, endInd: 7, token: 'cursor' },
     ],
   },
   decorators: [

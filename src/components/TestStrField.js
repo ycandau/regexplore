@@ -1,5 +1,5 @@
 import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
+import { alpha, makeStyles } from '@material-ui/core/styles';
 import { Paper, Typography } from '@material-ui/core';
 
 export default function TestStrField({
@@ -9,6 +9,7 @@ export default function TestStrField({
   setString,
   highlights,
 }) {
+  // ghost input magic happens here
   const useStyles = makeStyles((theme) => ({
     textBox: {
       '& [class*="MuiInputBase-root"]': {
@@ -28,14 +29,41 @@ export default function TestStrField({
       lineHeight: 'unset',
       letterSpacing: 'unset',
     },
+    match: {
+      backgroundColor: alpha(theme.palette.success.main, 0.5),
+    },
+    cursor: {
+      backgroundColor: alpha(theme.palette.info.main, 0.5),
+    },
   }));
   const handleChange = (e) => setString(e.target.value);
   const classes = useStyles();
 
+  /**
+   * experimental highlighting module, potentially reusable
+   */
+  // go over the array of highlights with the string as a starting value
+  const highlightedStr = highlights.reduce(
+    (a, { startInd, endInd, token }) =>
+      a.map((c, i) => {
+        let clName;
+        // if the character matches the highlight..
+        if (i >= startInd && i < endInd) clName = token;
+        return (
+          // ..wrap it in a span with the appropriate class name
+          <span key={i} className={classes[clName]}>
+            {c}
+          </span>
+        );
+      }),
+    // take the string as a starting value, split for processing
+    string.split('')
+  );
+
   return (
-    <>
+    <div>
       <Paper className={classes.pap}>
-        <Typography className={classes.ghostText}>{string}</Typography>
+        <Typography className={classes.ghostText}>{highlightedStr}</Typography>
       </Paper>
       <TextField
         classes={{
@@ -51,14 +79,6 @@ export default function TestStrField({
         minRows={numRows}
         spellCheck="false"
       />
-    </>
+    </div>
   );
 }
-/* 
-args: {
-  ...highlights: [
-      { ind: [2, 4], token: 'match' },
-      { ind: [6, 7], token: 'cursor' },
-    ],
-  }
- */
