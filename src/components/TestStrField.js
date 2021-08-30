@@ -15,19 +15,23 @@ export default function TestStrField({
       '& [class*="MuiInputBase-root"]': {
         color: 'transparent',
         'caret-color': '#666',
+        letterSpacing: 'normal',
+        liteHeight: 'normal',
       },
     },
     pap: {
       position: 'absolute',
       width: widthRems * 0.925 + 'rem',
-      height: numRows * 1.19 + 'rem',
+      minHeight: numRows * 1.19 + 'rem',
       padding: theme.spacing(4),
+      paddingTop: theme.spacing(4.3),
+      paddingLeft: theme.spacing(3.7),
       marginLeft: theme.spacing(-2),
       marginTop: theme.spacing(-2),
     },
     ghostText: {
-      lineHeight: 'unset',
-      letterSpacing: 'unset',
+      lineHeight: 'normal',
+      letterSpacing: 'normal',
     },
     match: {
       backgroundColor: alpha(theme.palette.success.main, 0.5),
