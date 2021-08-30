@@ -123,7 +123,7 @@ const logs = [
   - error: red
  */
 
-const highlightsBase = [
+const hlBase = [
   {
     label: 'a',
     colorType: 'value',
@@ -341,4 +341,14 @@ const hlHoverOperator = [
 
 //------------------------------------------------------------------------------
 
-export { description1, description2, description3, warnings, logs };
+export {
+  description1,
+  description2,
+  description3,
+  warnings,
+  logs,
+  hlBase,
+  hlHoverValue,
+  hlHoverParen,
+  hlHoverOperator,
+};
