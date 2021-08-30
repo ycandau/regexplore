@@ -13,10 +13,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function WarningBox({ warnings, onClick }) {
+export default function WarningBox({ warnings, onHover }) {
   const classes = useStyles();
   const warnList = warnings.map(({ pos, excerpt, message, fix }) => (
-    <ListItem key={pos} button onClick={() => onClick(pos)}>
+    <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
       <ListItemText
         primary={message}
         secondary={

@@ -12,7 +12,7 @@ export default {
     warnings,
   },
   argTypes: {
-    onClick: { action: 'Click!' },
+    onHover: { action: 'Mouse hover' },
   },
   decorators: [
     (Story) => (
