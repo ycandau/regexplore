@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     display: 'none',
-    [theme.breakpoints.up('sm')]: {
+    [theme.breakpoints.up('md')]: {
       display: 'block',
     },
   },
@@ -67,16 +67,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   sectionDesktop: {
-    display: 'none',
-    [theme.breakpoints.up('md')]: {
-      display: 'flex',
-    },
-  },
-  sectionMobile: {
     display: 'flex',
-    [theme.breakpoints.up('md')]: {
-      display: 'none',
-    },
   },
 }));
 
