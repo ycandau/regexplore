@@ -6,7 +6,7 @@ import InfoBox from './InfoBox';
 import { description1, description2, description3 } from '../re/re_stubs';
 
 export default {
-  title: 'App/Grid/Infobox',
+  title: 'App/Infobox',
   component: InfoBox,
   args: {
     description1,

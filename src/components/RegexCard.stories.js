@@ -5,7 +5,7 @@ import GridWrapper from './GridWrapper';
 import RegexCard from './RegexCard';
 
 export default {
-  title: 'App/Grid/Regex Card',
+  title: 'App/Regex Card',
   component: RegexCard,
   args: {
     title: 'A Saved Regex',

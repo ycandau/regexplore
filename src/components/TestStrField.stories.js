@@ -6,7 +6,7 @@ import TestStrField from './TestStrField';
 import { useState } from 'react';
 
 export default {
-  title: 'App/Grid/TestStringField',
+  title: 'App/TestStringField',
   component: TestStrField,
   args: {
     string: 'This is a demo string',
