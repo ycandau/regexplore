@@ -111,7 +111,7 @@ const warnings = {
     message: 'An open bracket has not been closed.',
     workaround:
       'The parser is adding an implicit closing bracket to correct the regex.',
-    fix: (str) => str + ']',
+    fix: (str, pos) => str.slice() + ']',
     precedence: 1,
   },
   '!)': {
@@ -119,7 +119,15 @@ const warnings = {
     message: 'An open parenthesis has not been closed.',
     workaround:
       'The parser is adding an implicit closing parenthesis to correct the regex.',
-    fix: (str) => str + ')',
+    fix: (str, pos) => str.slice() + ')',
+    precedence: 2,
+  },
+  '!(': {
+    type: '!(',
+    message: 'A closing parenthesis has no matching opening.',
+    workaround:
+      'The parser is skipping the closing parenthesis to correct the regex.',
+    fix: (str, pos) => str.slice(0, pos) + str.slice(pos + 1),
     precedence: 2,
   },
 };

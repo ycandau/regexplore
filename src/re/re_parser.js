@@ -111,6 +111,7 @@ class Parser {
   // Generate a queue of tokens in reverse polish notation (RPN)
   // using a simplified shunting-yard algorithm
   generateRPN() {
+    let openParenCount = 0;
     while (this.remaining()) {
       const token = this.readToken();
       switch (token.type) {
@@ -136,12 +137,13 @@ class Parser {
           if (concatAfter(this.prevToken)) this.concat();
           token.range = [token.pos];
           this.operators.push(token);
+          openParenCount++;
           break;
         case ')':
-          this.transferOperator('~');
-          this.transferOperator('|');
+          if (openParenCount) {
+            this.transferOperator('~');
+            this.transferOperator('|');
 
-          if (this.topOperatorIs('(')) {
             const open = this.operators.pop();
             const begin = open.pos;
             const end = token.pos;
@@ -151,13 +153,21 @@ class Parser {
             this.rpn.push(open);
             this.describe(begin, { range });
             this.describe(end, { range });
+            openParenCount--;
+          } else {
+            // Edge case: missing opening parenthesis
+            this.describe(token.pos, { warning: '!(' });
+            const warning = logWarning('!(', { pos: token.pos });
+            this.warnings.push(warning);
           }
+
           break;
         default:
           break;
       }
       this.prevToken = token;
     }
+
     do {
       this.transferOperator('~');
       this.transferOperator('|');
@@ -312,7 +322,7 @@ class Parser {
     const warnings = [...this.warnings];
     return warnings
       .sort((w1, w2) => w1.precedence - w2.precedence)
-      .reduce((str, warning) => warning.fix(str), this.input);
+      .reduce((str, warning) => warning.fix(str, warning.pos), this.input);
   }
 }
 

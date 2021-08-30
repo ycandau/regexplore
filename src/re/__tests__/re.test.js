@@ -110,7 +110,9 @@ describe('RE parser', () => {
 
   runEdgeCase('ab[cd', 'ab~[cd~', 'ab[cd]', ['!]'], [2]);
   runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', ['!)'], [2]);
+  runEdgeCase('a(b(c', 'abc(~(~', 'a(b(c))', ['!)', '!)'], [3, 1]);
   runEdgeCase('a(b[c', 'ab[c~(~', 'a(b[c])', ['!]', '!)'], [3, 1]);
+  runEdgeCase('ab)cd', 'ab~c~d~', 'abcd', ['!('], [2]);
 });
 
 //------------------------------------------------------------------------------
