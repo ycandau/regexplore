@@ -1,7 +1,13 @@
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
-import { List, ListItem, ListItemText, makeStyles } from '@material-ui/core';
+import {
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  makeStyles,
+} from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   warnList: {
@@ -12,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function WarningBox({ warnings, onHover }) {
+export default function WarningBox({ warnings, onHover, onFix }) {
   const classes = useStyles();
   const warnList = warnings.map(({ pos, excerpt, message, fix }) => (
     <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
@@ -31,7 +37,20 @@ export default function WarningBox({ warnings, onHover }) {
     <div>
       <Card className={classes.warnList}>
         <CardContent>
-          <CardHeader title="⚠️ Warnings" />
+          <CardHeader
+            title="Warnings"
+            action={
+              <Button
+                size="large"
+                variant="outlined"
+                disabled={!warnings.length}
+                className={classes.warnList}
+                onClick={onFix}
+              >
+                Fix
+              </Button>
+            }
+          />
           <List dense disablePadding>
             {warnList}
           </List>

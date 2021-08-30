@@ -13,6 +13,7 @@ export default {
   },
   argTypes: {
     onHover: { action: 'Mouse hover' },
+    onFix: { action: 'Fix Button Clicked' },
   },
   decorators: [
     (Story) => (
