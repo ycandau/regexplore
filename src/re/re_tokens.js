@@ -20,8 +20,6 @@ const SPACES = ' \\f\\n\\r\\t\\v';
 
 const match = (label) => (ch) => ch === label;
 
-const matchInSet = (set) => (ch) => set.has(ch);
-
 const matchIn = (str) => {
   const set = new Set(str.split(''));
   return (ch) => set.has(ch);
@@ -36,7 +34,7 @@ const matchNotIn = (str) => {
 // Compilation functions
 
 const compileMatcher = (fragments, token) => {
-  const state = new State(token.label, 'matcher', { match: token.match });
+  const state = new State(token.label, 'value', { match: token.match });
   const fragment = new Fragment(state, [state]);
   fragments.push(fragment);
 };
@@ -54,36 +52,28 @@ const binary = (operation) => (fragments) => {
 
 //------------------------------------------------------------------------------
 // Create token types
-//   - label: the label from the input string
-//   - id:    used to retrieve the token, same as label for static tokens
-//   - type:  used to determine parsing actions and colouring
 
-const concatAfter = true; // add implicit concatenation after
-
-const matcher = (label, id, type, match) => ({
+const value = (label, type, match) => ({
   label,
-  id,
   type,
   match,
-  compile: compileMatcher,
-  concatAfter,
+  // compile: compileMatcher,
 });
 
-const charClass = (label, match) => matcher(label, label, 'charClass', match);
+const charClass = (label, match) => value(label, 'charClass', match);
 
-const operator = (label, type, compile, config) => ({
+const operator = (label, config) => ({
   label,
-  id: label,
-  type,
-  compile,
+  type: label,
+  // compile,
   ...config,
 });
 
 //------------------------------------------------------------------------------
 
 const tokens = {
-  // Static matcher tokens
-  '.': matcher('.', '.', 'wildcard', () => true),
+  // Static value tokens
+  '.': value('.', '.', () => true),
 
   '\\d': charClass('\\d', matchIn(DIGITS)),
   '\\D': charClass('\\D', matchNotIn(DIGITS)),
@@ -93,12 +83,19 @@ const tokens = {
   '\\S': charClass('\\S', matchNotIn(SPACES)),
 
   // Static operator tokens
-  '|': operator('|', 'alternate', binary(alternate)),
-  '?': operator('?', 'repeat', unary(repeat01), { concatAfter }),
-  '*': operator('*', 'repeat', unary(repeat0N), { concatAfter }),
-  '+': operator('+', 'repeat', unary(repeat1N), { concatAfter }),
-  '(': operator('(', 'parenOpen', null),
-  ')': operator(')', 'parenClose', null, { concatAfter }),
+  '|': operator('|'),
+  '?': operator('?'),
+  '*': operator('*'),
+  '+': operator('+'),
+  '(': operator('('),
+  ')': operator(')'),
+
+  // '|': operator('|', binary(alternate)),
+  // '?': operator('?', unary(repeat01), { concatAfter }),
+  // '*': operator('*', unary(repeat0N), { concatAfter }),
+  // '+': operator('+', unary(repeat1N), { concatAfter }),
+  // '(': operator('(', null),
+  // ')': operator(')', null, { concatAfter }),
 };
 
 //------------------------------------------------------------------------------
@@ -114,21 +111,28 @@ const getToken = (label, pos = null) => {
   }
 
   if (label[0] === '\\') {
-    const token = matcher(label, 'escapedChar', 'escapedChar', match(label[1]));
+    const token = value(label, 'escapedChar', match(label[1]));
     token.pos = pos;
     return token;
   }
 
-  const token = matcher(ch, 'charLiteral', 'charLiteral', match(ch));
+  const token = value(ch, 'charLiteral', match(ch));
   token.pos = pos;
   return token;
 };
 
+const getEmpty = () => value('0', 'empty', null);
+
 const getConcat = () => operator('~', 'concat', binary(concat));
 
-const getBracketClass = (label, matches) =>
-  matcher(label, 'bracketClass', 'bracketClass', matchInSet(matches));
+const getBracketClass = (label, info) => {
+  const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);
+  return {
+    ...value(label, 'bracketClass', match),
+    ...info,
+  };
+};
 
 //------------------------------------------------------------------------------
 
-export { getToken, getConcat, getBracketClass };
+export { getToken, getConcat, getBracketClass, getEmpty };

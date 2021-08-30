@@ -7,6 +7,9 @@ const descriptions = {
     name: 'Escaped character',
     description: 'Match exactly that character',
   },
+  charClass: {
+    searchByLabel: true,
+  },
   '.': {
     name: 'Wildcard character',
     description: 'Match any character',
@@ -104,16 +107,32 @@ const descriptions = {
 
 const warnings = {
   '!]': {
-    message: 'An open bracket has not been closed.',
-    workaround:
-      'The parser is adding an implicit closing bracket to correct the regex.',
-    fix: (str) => str + ']',
-    precedence: 1,
+    type: '!]',
+    issue: 'An open bracket has not been closed.',
+    msg: 'Parser adding an implicit closing bracket to correct the regex.',
+  },
+  '!)': {
+    type: '!)',
+    issue: 'An open parenthesis has not been closed.',
+    msg: 'Parser adding an implicit closing parenthesis to correct the regex.',
+  },
+  '!(': {
+    type: '!(',
+    issue: 'A closing parenthesis has no matching opening.',
+    msg: 'Parser skipping the closing parenthesis to correct the regex.',
+  },
+  '!E': {
+    type: '!E',
+    issue: 'A quantifier follows an empty value.',
+    msg: 'Parser skipping the quantifier as it is of no use.',
+  },
+  '!**': {
+    type: '!**',
+    issue: 'Redundant quantifiers.',
+    msg: '!**', // provided by parser
   },
 };
 
-const createWarning = (id, config) => ({ ...config, ...warnings[id] });
-
 //------------------------------------------------------------------------------
 
-export { descriptions, createWarning };
+export { descriptions, warnings };
