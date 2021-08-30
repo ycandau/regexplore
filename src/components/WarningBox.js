@@ -9,7 +9,6 @@ const useStyles = makeStyles((theme) => ({
       theme.palette.type === 'dark'
         ? theme.palette.warning.main
         : theme.palette.error.dark,
-    listStyleType: '⚠',
   },
 }));
 
