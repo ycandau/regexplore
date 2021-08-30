@@ -106,4 +106,239 @@ const logs = [
 
 //------------------------------------------------------------------------------
 
+// Example string with all cases:
+// 'ab|c?.\\w\\.[^de0-9]?(+fg)
+
+/*
+  String displayed with no hover.
+  The display probably only includes a color per type.
+
+  Potential color types:
+
+  - value: green
+  - value-special: blue
+  - operator: yellow
+  - quantifier: orange
+  - delimeter: purple
+  - error: red
+ */
+
+const highlightsBase = [
+  {
+    label: 'a',
+    colorType: 'value',
+  },
+  {
+    label: 'b',
+    colorType: 'value',
+  },
+  {
+    label: '|',
+    type: 'operator',
+  },
+  {
+    label: 'c',
+    colorType: 'value',
+  },
+  {
+    label: '?',
+    colorType: 'quantifier',
+  },
+  {
+    label: '.',
+    colorType: 'value-special',
+  },
+  {
+    label: '\\w',
+    colorType: 'value-special',
+  },
+  {
+    label: '\\.',
+    colorType: 'value-special',
+  },
+  {
+    label: '[',
+    colorType: 'delimeter',
+  },
+  {
+    label: '^',
+    type: 'operator',
+  },
+  {
+    label: 'd',
+    colorType: 'value',
+  },
+  {
+    label: 'e',
+    colorType: 'value',
+  },
+  {
+    label: '0',
+    colorType: 'value-special',
+  },
+  {
+    label: '-',
+    colorType: 'value-special',
+  },
+  {
+    label: '9',
+    colorType: 'value-special',
+  },
+  {
+    label: ']',
+    colorType: 'delimeter',
+  },
+  {
+    label: '?',
+    colorType: 'quantifier',
+  },
+  {
+    label: '(',
+    colorType: 'delimeter',
+  },
+  {
+    label: '+',
+    colorType: 'error',
+  },
+  {
+    label: 'f',
+    colorType: 'value',
+  },
+  {
+    label: 'g',
+    colorType: 'value',
+  },
+  {
+    label: ')',
+    colorType: 'delimeter',
+  },
+];
+
+/*
+  String displayed with hover.
+  The display probably only includes a color per type.
+
+  Potential hover decorations:
+
+  More than we need maybe, but better to have all the information in case
+  we want to change the styles (for instance underline to boxes).
+
+  - hl-value: background higlight
+  - hl-operator: background higlight
+
+  - hl-delimeter-begin: background + bottom border
+  - hl-delimeter-inside: bottom border
+  - hl-delimeter-end: background + bottom border
+
+  - hl-left-operand-single: bottom border
+  - hl-left-operand-begin: bottom border
+  - hl-left-operand-inside: bottom border
+  - hl-left-operand-end: bottom border
+
+  - hl-right-operand-single: bottom border
+  - hl-right-operand-begin: bottom border
+  - hl-right-operand-inside: bottom border
+  - hl-right-operand-end: bottom border
+*/
+
+const hlHoverValue = [
+  {
+    label: 'a',
+    colorType: 'value',
+  },
+  {
+    label: 'b',
+    colorType: 'value',
+    hoverType: 'hl-value',
+  },
+  {
+    label: 'c',
+    colorType: 'value',
+  },
+];
+
+// Regex: a(bc)d
+// Hover over one of the parentheses
+
+const hlHoverParen = [
+  {
+    label: 'a',
+    colorType: 'value',
+  },
+  {
+    label: '(',
+    colorType: 'delimeter',
+    hoverType: 'hl-delimeter-begin',
+  },
+
+  {
+    label: 'b',
+    colorType: 'value',
+    hoverType: 'hl-delimeter-inside',
+  },
+  {
+    label: 'c',
+    colorType: 'value',
+    hoverType: 'hl-delimeter-inside',
+  },
+  {
+    label: ')',
+    colorType: 'delimeter',
+    hoverType: 'hl-delimeter-end',
+  },
+  {
+    label: 'd',
+    colorType: 'value',
+  },
+];
+
+// Regex: ab(c|def)
+// Hover over alternation
+
+const hlHoverOperator = [
+  {
+    label: 'a',
+    colorType: 'value',
+  },
+  {
+    label: 'b',
+    colorType: 'value',
+  },
+  {
+    label: '(',
+    colorType: 'delimeter',
+  },
+  {
+    label: 'c',
+    colorType: 'value',
+    hoverType: 'hl-left-operand-single',
+  },
+  {
+    label: '|',
+    colorType: 'operator',
+    hoverType: 'hl-operator',
+  },
+  {
+    label: 'd',
+    colorType: 'value',
+    hoverType: 'hl-right-operand-begin',
+  },
+  {
+    label: 'e',
+    colorType: 'value',
+    hoverType: 'hl-right-operand-inside',
+  },
+  {
+    label: 'f',
+    colorType: 'value',
+    hoverType: 'hl-right-operand-end',
+  },
+  {
+    label: ')',
+    colorType: 'delimeter',
+  },
+];
+
+//------------------------------------------------------------------------------
+
 export { description1, description2, description3, warnings, logs };
