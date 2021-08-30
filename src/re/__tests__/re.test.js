@@ -116,15 +116,20 @@ describe('RE parser: Bracket expressions', () => {
 //------------------------------------------------------------------------------
 
 describe('RE parser: Edge cases', () => {
-  runEdgeCase('ab[cd', 'ab~[cd~', 'ab[cd]', ['!]'], [2]);
+  runEdgeCase('ab[cd', 'ab~[cd]~', 'ab[cd]', ['!]'], [2]);
   runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', ['!)'], [2]);
   runEdgeCase('a(b(c', 'abc(~(~', 'a(b(c))', ['!)', '!)'], [3, 1]);
-  runEdgeCase('a(b[c', 'ab[c~(~', 'a(b[c])', ['!]', '!)'], [3, 1]);
+  runEdgeCase('a(b[c', 'ab[c]~(~', 'a(b[c])', ['!]', '!)'], [3, 1]);
   runEdgeCase('ab)cd', 'ab~c~d~', 'abcd', ['!('], [2]);
   runEdgeCase('a)b)c)d', 'ab~c~d~', 'abcd', ['!(', '!(', '!('], [1, 3, 5]);
   runEdgeCase('*ab', 'ab~', 'ab', ['!E'], [0]);
   runEdgeCase('a|+b', 'ab|', 'a|b', ['!E'], [2]);
   runEdgeCase('a(?b)', 'ab(~', 'a(b)', ['!E'], [2]);
+  runEdgeCase('ab??', 'ab?~', 'ab?', ['!**'], [3]);
+  runEdgeCase('ab**', 'ab*~', 'ab*', ['!**'], [3]);
+  runEdgeCase('ab++', 'ab+~', 'ab+', ['!**'], [3]);
+  runEdgeCase('ab??+', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
+  runEdgeCase('ab++?', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
 });
 
 //------------------------------------------------------------------------------
