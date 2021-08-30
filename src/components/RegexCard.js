@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
   },
   bagOfChips: {
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     flexWrap: 'wrap',
     listStyle: 'none',
     padding: theme.spacing(0.5),
