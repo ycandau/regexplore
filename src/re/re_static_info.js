@@ -108,34 +108,28 @@ const descriptions = {
 const warnings = {
   '!]': {
     type: '!]',
-    message: 'An open bracket has not been closed.',
-    workaround:
-      'The parser is adding an implicit closing bracket to correct the regex.',
-    fix: (str, pos) => str.slice() + ']',
-    precedence: 2,
+    issue: 'An open bracket has not been closed.',
+    msg: 'Parser adding an implicit closing bracket to correct the regex.',
   },
   '!)': {
     type: '!)',
-    message: 'An open parenthesis has not been closed.',
-    workaround:
-      'The parser is adding an implicit closing parenthesis to correct the regex.',
-    fix: (str, pos) => str.slice() + ')',
-    precedence: 3,
+    issue: 'An open parenthesis has not been closed.',
+    msg: 'Parser adding an implicit closing parenthesis to correct the regex.',
   },
   '!(': {
     type: '!(',
-    message: 'A closing parenthesis has no matching opening.',
-    workaround:
-      'The parser is skipping the closing parenthesis to correct the regex.',
-    fix: (str, pos) => str.slice(0, pos) + str.slice(pos + 1),
-    precedence: 1,
+    issue: 'A closing parenthesis has no matching opening.',
+    msg: 'Parser skipping the closing parenthesis to correct the regex.',
   },
   '!E': {
     type: '!E',
-    message: 'A quantifier follows an empty value.',
-    workaround: 'The parser is skipping the quantifier as it is of no use.',
-    fix: (str, pos) => str.slice(0, pos) + str.slice(pos + 1),
-    precedence: 1,
+    issue: 'A quantifier follows an empty value.',
+    msg: 'Parser skipping the quantifier as it is of no use.',
+  },
+  '!**': {
+    type: '!**',
+    issue: 'Redundant quantifiers.',
+    msg: '!**', // provided by parser
   },
 };
 
