@@ -54,4 +54,4 @@ const getTerminalStates = (graph) =>
 
 //------------------------------------------------------------------------------
 
-export { logHeading, toString, getFirstState, getTerminalStates, inspect };
+export { logHeading, toString, inspect, getFirstState, getTerminalStates };

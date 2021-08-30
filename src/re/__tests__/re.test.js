@@ -70,7 +70,7 @@ const runEdgeCase = (input, rpn, fixed, types, positions) => {
 
 //------------------------------------------------------------------------------
 
-describe('RE parser', () => {
+describe('RE parser: General tests', () => {
   runParser('abcd', 'ab~c~d~', token(0, 0, 'a', 'charLiteral'));
   runParser('.a..b.', '.a~.~.~b~.~', token(0, 0, '.', '.'));
   runParser('\\da\\d\\d', '\\da~\\d~\\d~', token(0, 0, '\\d', 'charClass'));
@@ -96,7 +96,11 @@ describe('RE parser', () => {
   runParser('(a|b)|(c|d)', 'ab|(cd|(|', token(6, 7, '(', '('));
   runParser('(ab)*', 'ab~(*', token(0, 3, '(', '('));
   runParser('a(b(c|d))', 'abcd|(~(~', token(3, 5, '(', '('));
+});
 
+//------------------------------------------------------------------------------
+
+describe('RE parser: Bracket expressions', () => {
   runBracketClass('[abc]', 'abc');
   runBracketClass('[a-d]', 'abcd');
 
@@ -107,12 +111,20 @@ describe('RE parser', () => {
   runBracketClass('[^]abc]', ']abc');
   runBracketClass('[^-abc]', '-abc');
   runBracketClass('[^abc-]', 'abc-');
+});
 
+//------------------------------------------------------------------------------
+
+describe('RE parser: Edge cases', () => {
   runEdgeCase('ab[cd', 'ab~[cd~', 'ab[cd]', ['!]'], [2]);
   runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', ['!)'], [2]);
   runEdgeCase('a(b(c', 'abc(~(~', 'a(b(c))', ['!)', '!)'], [3, 1]);
   runEdgeCase('a(b[c', 'ab[c~(~', 'a(b[c])', ['!]', '!)'], [3, 1]);
   runEdgeCase('ab)cd', 'ab~c~d~', 'abcd', ['!('], [2]);
+  runEdgeCase('a)b)c)d', 'ab~c~d~', 'abcd', ['!(', '!(', '!('], [1, 3, 5]);
+  runEdgeCase('*ab', 'ab~', 'ab', ['!E'], [0]);
+  runEdgeCase('a|+b', 'ab|', 'a|b', ['!E'], [2]);
+  runEdgeCase('a(?b)', 'ab(~', 'a(b)', ['!E'], [2]);
 });
 
 //------------------------------------------------------------------------------

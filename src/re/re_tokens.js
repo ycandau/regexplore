@@ -131,9 +131,6 @@ const getBracketClass = (label, info) => {
   };
 };
 
-const concatAfter = (token) =>
-  token.type && token.type !== '|' && token.type !== '(';
-
 //------------------------------------------------------------------------------
 
-export { getToken, getConcat, getBracketClass, concatAfter };
+export { getToken, getConcat, getBracketClass };

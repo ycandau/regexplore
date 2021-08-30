@@ -112,7 +112,7 @@ const warnings = {
     workaround:
       'The parser is adding an implicit closing bracket to correct the regex.',
     fix: (str, pos) => str.slice() + ']',
-    precedence: 1,
+    precedence: 2,
   },
   '!)': {
     type: '!)',
@@ -120,7 +120,7 @@ const warnings = {
     workaround:
       'The parser is adding an implicit closing parenthesis to correct the regex.',
     fix: (str, pos) => str.slice() + ')',
-    precedence: 2,
+    precedence: 3,
   },
   '!(': {
     type: '!(',
@@ -128,12 +128,17 @@ const warnings = {
     workaround:
       'The parser is skipping the closing parenthesis to correct the regex.',
     fix: (str, pos) => str.slice(0, pos) + str.slice(pos + 1),
-    precedence: 2,
+    precedence: 1,
+  },
+  '!E': {
+    type: '!E',
+    message: 'A quantifier follows an empty value.',
+    workaround: 'The parser is skipping the quantifier as it is of no use.',
+    fix: (str, pos) => str.slice(0, pos) + str.slice(pos + 1),
+    precedence: 1,
   },
 };
 
-const logWarning = (type, config) => ({ ...config, ...warnings[type] });
-
 //------------------------------------------------------------------------------
 
-export { descriptions, logWarning };
+export { descriptions, warnings };
