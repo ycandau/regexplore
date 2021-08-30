@@ -34,7 +34,7 @@ const matchNotIn = (str) => {
 // Compilation functions
 
 const compileMatcher = (fragments, token) => {
-  const state = new State(token.label, 'matcher', { match: token.match });
+  const state = new State(token.label, 'value', { match: token.match });
   const fragment = new Fragment(state, [state]);
   fragments.push(fragment);
 };
@@ -53,14 +53,14 @@ const binary = (operation) => (fragments) => {
 //------------------------------------------------------------------------------
 // Create token types
 
-const matcher = (label, type, match) => ({
+const value = (label, type, match) => ({
   label,
   type,
   match,
   // compile: compileMatcher,
 });
 
-const charClass = (label, match) => matcher(label, 'charClass', match);
+const charClass = (label, match) => value(label, 'charClass', match);
 
 const operator = (label, config) => ({
   label,
@@ -72,8 +72,8 @@ const operator = (label, config) => ({
 //------------------------------------------------------------------------------
 
 const tokens = {
-  // Static matcher tokens
-  '.': matcher('.', '.', () => true),
+  // Static value tokens
+  '.': value('.', '.', () => true),
 
   '\\d': charClass('\\d', matchIn(DIGITS)),
   '\\D': charClass('\\D', matchNotIn(DIGITS)),
@@ -111,26 +111,28 @@ const getToken = (label, pos = null) => {
   }
 
   if (label[0] === '\\') {
-    const token = matcher(label, 'escapedChar', match(label[1]));
+    const token = value(label, 'escapedChar', match(label[1]));
     token.pos = pos;
     return token;
   }
 
-  const token = matcher(ch, 'charLiteral', match(ch));
+  const token = value(ch, 'charLiteral', match(ch));
   token.pos = pos;
   return token;
 };
+
+const getEmpty = () => value('0', 'empty', null);
 
 const getConcat = () => operator('~', 'concat', binary(concat));
 
 const getBracketClass = (label, info) => {
   const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);
   return {
-    ...matcher(label, 'bracketClass', match),
+    ...value(label, 'bracketClass', match),
     ...info,
   };
 };
 
 //------------------------------------------------------------------------------
 
-export { getToken, getConcat, getBracketClass };
+export { getToken, getConcat, getBracketClass, getEmpty };

@@ -4,7 +4,7 @@
 
 import { logHeading, toString, inspect } from './re_helpers.js';
 
-import { getToken, getConcat, getBracketClass } from './re_tokens.js';
+import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
 import State from './re_states.js';
 import { warnings } from './re_static_info.js';
@@ -117,6 +117,7 @@ class Parser {
     while (this.remaining()) {
       let skipped = false;
       const token = this.readToken();
+
       switch (token.type) {
         case 'charLiteral':
         case 'escapedChar':
@@ -128,6 +129,9 @@ class Parser {
           break;
 
         case '|':
+          // Edge case: empty token before parenthesis
+          if (!isValue(prevToken)) this.rpn.push(getEmpty());
+
           this.transferOperator('~');
           this.transferOperator('|');
           this.operators.push(token);
@@ -136,7 +140,7 @@ class Parser {
         case '?':
         case '*':
         case '+':
-          // Edge case: Redundant quantifiers
+          // Edge case: redundant quantifiers
           if (isQuantifier(prevToken)) {
             const pair = `${prevToken.type}${token.type}`;
             const sub = pair === '??' ? '?' : pair === '++' ? '+' : '*';
@@ -149,7 +153,7 @@ class Parser {
             break;
           }
 
-          // Edge case: No value before quantifier
+          // Edge case: no value before quantifier
           if (!isValue(prevToken)) {
             this.addWarning('!E', token.pos);
             this.describe(token.pos, { warning: '!E' });
@@ -176,6 +180,9 @@ class Parser {
             break;
           }
 
+          // Edge case: empty token before parenthesis
+          if (!isValue(prevToken)) this.rpn.push(getEmpty());
+
           this.transferOperator('~');
           this.transferOperator('|');
 
@@ -195,6 +202,18 @@ class Parser {
           break;
       }
       if (!skipped) prevToken = token;
+    }
+
+    // Edge cases: terminal character is '|'
+    const top = this.operators[this.operators.length - 1];
+    if (top && top.type === '|' && top.pos === this.input.length - 1) {
+      this.operators.pop();
+    }
+
+    // Edge cases: terminal character is '('
+    if (top && top.type === '(' && top.pos === this.input.length - 1) {
+      this.operators.pop();
+      this.operators.pop();
     }
 
     do {
@@ -365,6 +384,9 @@ class Parser {
         case '.':
           stack.push(token.label);
           break;
+        case 'empty':
+          stack.push('');
+          break;
         case '?':
         case '*':
         case '+':
@@ -399,7 +421,7 @@ export default Parser;
 
 // parser.compileGraph();
 
-// const parser = new Parser('ab?+**');
+// const parser = new Parser('a(|b)');
 // parser.generateRPN();
 // parser.log();
-// console.log();
+// console.log(parser.operators);

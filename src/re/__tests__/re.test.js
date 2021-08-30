@@ -130,6 +130,20 @@ describe('RE parser: Edge cases', () => {
   runEdgeCase('ab++', 'ab+~', 'ab+', ['!**'], [3]);
   runEdgeCase('ab??+', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
   runEdgeCase('ab++?', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
+
+  runParser('a(|b)', 'a0b|(~');
+  runParser('a(b|)', 'ab0|(~');
+  runParser('|a', '0a|');
+
+  runParser('a()b', 'a0(~b~');
+  runParser(')ab', 'ab~');
+  runParser('*ab', 'ab~');
+  runParser('*)ab', 'ab~');
+
+  runParser('ab((', 'ab~');
+  runParser('ab|', 'ab~');
+  // runParser('ab(*', 'ab~');
+  // runParser('ab|*', 'ab~');
 });
 
 //------------------------------------------------------------------------------
