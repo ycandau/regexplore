@@ -16,9 +16,11 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
     textBox: {
       '& [class*="MuiInputBase-root"]': {
         color: 'transparent',
-        'caret-color': '#666',
+        'caret-color': '#888',
         letterSpacing: 'normal',
         liteHeight: 'normal',
+        fontFamily: 'Fira Code',
+        fontWeight: 'bold',
       },
     },
     pap: {
@@ -26,14 +28,16 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
       width: widthRems * 0.925 + 'rem',
       minHeight: 1.19 + 'rem',
       padding: theme.spacing(4),
-      paddingTop: theme.spacing(4.3),
-      paddingLeft: theme.spacing(3.7),
+      paddingTop: theme.spacing(4.1),
+      paddingLeft: theme.spacing(3.75),
       marginLeft: theme.spacing(-2),
       marginTop: theme.spacing(-2),
     },
     ghostText: {
       lineHeight: 'normal',
       letterSpacing: 'normal',
+      fontFamily: 'Fira Code',
+      fontWeight: 'bold',
     },
     match: {
       backgroundColor: alpha(theme.palette.success.main, 0.5),
