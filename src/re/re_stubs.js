@@ -134,7 +134,7 @@ const hlBase = [
   },
   {
     label: '|',
-    type: 'operator',
+    colorType: 'operator',
   },
   {
     label: 'c',
@@ -162,7 +162,7 @@ const hlBase = [
   },
   {
     label: '^',
-    type: 'operator',
+    colorType: 'operator',
   },
   {
     label: 'd',

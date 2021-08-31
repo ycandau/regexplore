@@ -2,18 +2,23 @@ import { ThemeProvider } from '@material-ui/core';
 import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
-import WarningBox from './WarningBox';
-import { warnings } from '../re/re_stubs';
+import RegexEditor from './RegexEditorBox';
+import {
+  hlBase,
+  hlHoverValue,
+  hlHoverParen,
+  hlHoverOperator,
+} from '../re/re_stubs';
 
 export default {
-  title: 'App/Warning Box',
-  component: WarningBox,
+  title: 'App/Regex Editor',
+  component: RegexEditor,
   args: {
-    warnings,
+    tokens: hlBase,
+    widthRems: 20,
   },
   argTypes: {
-    onHover: { action: 'Mouse hover' },
-    onFix: { action: 'Fix Button Clicked' },
+    setTokens: { action: 'Tokens updated' },
   },
   decorators: [
     (Story) => (
@@ -26,9 +31,24 @@ export default {
   ],
 };
 
-const Template = (args) => <WarningBox {...args} />;
+const Template = (args) => <RegexEditor {...args} />;
 
 export const DarkTheme = Template.bind({});
+
+export const HoverValue = Template.bind({});
+HoverValue.args = {
+  tokens: hlHoverValue,
+};
+
+export const HoverParen = Template.bind({});
+HoverParen.args = {
+  tokens: hlHoverParen,
+};
+
+export const HoverOperator = Template.bind({});
+HoverOperator.args = {
+  tokens: hlHoverOperator,
+};
 
 export const LightTheme = Template.bind({});
 LightTheme.decorators = [
