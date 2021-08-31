@@ -9,8 +9,12 @@ import {
   purple,
   red,
 } from '@material-ui/core/colors';
+import { useState } from 'react';
 
 export default function RegexEditor({ widthRems, tokens, setTokens }) {
+  const [x, setX] = useState(null);
+  const [y, setY] = useState(null);
+
   // ghost input magic happens here
   const useStyles = makeStyles((theme) => ({
     textBox: {
@@ -48,6 +52,10 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
     value: {
       color: green[theme.palette.type === 'dark' ? 'A200' : '700'],
     },
+    // this is bad, really-really bad
+    'hl-value': {
+      backgroundColor: x > 24 && x <= 36 && y > 16 && y <= 46 && green[700],
+    },
     'value-special': {
       color: blue[theme.palette.type === 'dark' ? 'A200' : '800'],
     },
@@ -68,8 +76,11 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
   const classes = useStyles();
 
   // another experimental highlighting module
-  const highlightedStr = tokens.map(({ label, colorType }, i) => (
-    <span key={i} className={classes[colorType]}>
+  const highlightedStr = tokens.map(({ label, colorType, hoverType }, i) => (
+    <span
+      key={i}
+      className={[classes[colorType], classes[hoverType]].join(' ')}
+    >
       {label}
     </span>
   ));
@@ -113,6 +124,11 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
         fullWidth
         value={string}
         spellCheck="false"
+        onMouseMove={({ nativeEvent }) => {
+          const { offsetX, offsetY } = nativeEvent;
+          setX(offsetX);
+          setY(offsetY);
+        }}
       />
     </div>
   );

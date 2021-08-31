@@ -3,7 +3,12 @@ import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
 import RegexEditor from './RegexEditorBox';
-import { hlBase } from '../re/re_stubs';
+import {
+  hlBase,
+  hlHoverValue,
+  hlHoverParen,
+  hlHoverOperator,
+} from '../re/re_stubs';
 
 export default {
   title: 'App/Regex Editor',
@@ -29,6 +34,21 @@ export default {
 const Template = (args) => <RegexEditor {...args} />;
 
 export const DarkTheme = Template.bind({});
+
+export const HoverValue = Template.bind({});
+HoverValue.args = {
+  tokens: hlHoverValue,
+};
+
+export const HoverParen = Template.bind({});
+HoverParen.args = {
+  tokens: hlHoverParen,
+};
+
+export const HoverOperator = Template.bind({});
+HoverOperator.args = {
+  tokens: hlHoverOperator,
+};
 
 export const LightTheme = Template.bind({});
 LightTheme.decorators = [
