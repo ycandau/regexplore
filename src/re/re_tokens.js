@@ -1,11 +1,11 @@
-import State from './re_states.js';
+// import State from './re_states.js';
 
-import Fragment, {
-  concat,
-  alternate,
-  repeat01,
-  repeat0N,
-  repeat1N,
+import {
+  /* Fragment, */ concat,
+  // alternate,
+  // repeat01,
+  // repeat0N,
+  // repeat1N,
 } from './re_fragments.js';
 
 //------------------------------------------------------------------------------
@@ -33,16 +33,16 @@ const matchNotIn = (str) => {
 //------------------------------------------------------------------------------
 // Compilation functions
 
-const compileMatcher = (fragments, token) => {
-  const state = new State(token.label, 'value', { match: token.match });
-  const fragment = new Fragment(state, [state]);
-  fragments.push(fragment);
-};
+// const compileMatcher = (fragments, token) => {
+//   const state = new State(token.label, 'value', { match: token.match });
+//   const fragment = new Fragment(state, [state]);
+//   fragments.push(fragment);
+// };
 
-const unary = (operation) => (fragments) => {
-  const frag = fragments.pop();
-  fragments.push(operation(frag));
-};
+// const unary = (operation) => (fragments) => {
+//   const frag = fragments.pop();
+//   fragments.push(operation(frag));
+// };
 
 const binary = (operation) => (fragments) => {
   const frag2 = fragments.pop();

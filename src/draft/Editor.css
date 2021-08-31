@@ -1,0 +1,68 @@
+#editor {
+  width: 560px;
+  height: 100px;
+  position: relative;
+  font-size: 24px;
+}
+
+.edit,
+.display {
+  background-color: black;
+  width: 100%;
+  height: 45%;
+  margin: 0em;
+  padding: 0.3em 0.5em 0 0.5em;
+  border: 1px solid black;
+  font-family: monospace;
+  font-size: inherit;
+  outline: none;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.edit {
+  color: transparent;
+  background: transparent;
+  pointer-events: none;
+  caret-color: red;
+  resize: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.display {
+  /* pointer-events: none; */
+  z-index: 0;
+}
+
+.display span {
+  pointer-events: all;
+}
+
+.display .value {
+  color: rgb(74, 209, 74);
+}
+
+.display .operator {
+  color: yellow;
+}
+
+.display .delimiter {
+  color: rgb(216, 111, 216);
+}
+
+.display .hl-value,
+.display .hl-operator,
+.display .hl-delimiter {
+  background-color: rgba(255, 255, 0, 0.3);
+}
+
+.display .hl-delimiter,
+.display .hl-delimiter-inside,
+.display .hl-operator,
+.display .hl-left-operand-inside,
+.display .hl-right-operand-inside {
+  border-bottom: 1px solid yellow;
+}

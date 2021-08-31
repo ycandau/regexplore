@@ -119,7 +119,7 @@ const logs = [
   - value-special: blue
   - operator: yellow
   - quantifier: orange
-  - delimeter: purple
+  - delimiter: purple
   - error: red
  */
 
@@ -158,7 +158,7 @@ const hlBase = [
   },
   {
     label: '[',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
   {
     label: '^',
@@ -186,7 +186,7 @@ const hlBase = [
   },
   {
     label: ']',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
   {
     label: '?',
@@ -194,7 +194,7 @@ const hlBase = [
   },
   {
     label: '(',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
   {
     label: '+',
@@ -210,7 +210,7 @@ const hlBase = [
   },
   {
     label: ')',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
 ];
 
@@ -225,10 +225,11 @@ const hlBase = [
 
   - hl-value: background higlight
   - hl-operator: background higlight
+  - hl-delimiter: background higlight
 
-  - hl-delimeter-begin: background + bottom border
-  - hl-delimeter-inside: bottom border
-  - hl-delimeter-end: background + bottom border
+  - hl-delimiter-begin: background + bottom border
+  - hl-delimiter-inside: bottom border
+  - hl-delimiter-end: background + bottom border
 
   - hl-left-operand-single: bottom border
   - hl-left-operand-begin: bottom border
@@ -267,24 +268,24 @@ const hlHoverParen = [
   },
   {
     label: '(',
-    colorType: 'delimeter',
-    hoverType: 'hl-delimeter-begin',
+    colorType: 'delimiter',
+    hoverType: 'hl-delimiter-begin',
   },
 
   {
     label: 'b',
     colorType: 'value',
-    hoverType: 'hl-delimeter-inside',
+    hoverType: 'hl-delimiter-inside',
   },
   {
     label: 'c',
     colorType: 'value',
-    hoverType: 'hl-delimeter-inside',
+    hoverType: 'hl-delimiter-inside',
   },
   {
     label: ')',
-    colorType: 'delimeter',
-    hoverType: 'hl-delimeter-end',
+    colorType: 'delimiter',
+    hoverType: 'hl-delimiter-end',
   },
   {
     label: 'd',
@@ -306,7 +307,7 @@ const hlHoverOperator = [
   },
   {
     label: '(',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
   {
     label: 'c',
@@ -335,7 +336,7 @@ const hlHoverOperator = [
   },
   {
     label: ')',
-    colorType: 'delimeter',
+    colorType: 'delimiter',
   },
 ];
 
