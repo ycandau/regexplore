@@ -16,20 +16,17 @@ const Container = () => {
   const parser = new Parser(regex);
   parser.generateRPN();
 
-  const onChange = (str) => {
-    setRegex(() => setRegex(str));
+  const onRegexChange = (event) => {
+    if (event.nativeEvent.inputType === 'insertLineBreak') return;
+    setRegex(() => setRegex(event.target.value));
   };
 
-  const interpretations = parserOutput;
+  const editorInfo = parserOutput;
 
   return (
     <>
       <h2>Container</h2>
-      <Editor
-        value={regex}
-        interpretations={interpretations}
-        onChange={onChange}
-      />
+      <Editor editorInfo={editorInfo} onRegexChange={onRegexChange} />
       <Info info={'some information'} />
     </>
   );
@@ -42,12 +39,12 @@ export default Container;
 const parserOutput = [
   {
     label: 'a',
-    type: 'value',
+    displayType: 'value',
     pos: 0,
   },
   {
     label: '(',
-    type: 'delimiter',
+    displayType: 'delimiter',
     pos: 1,
     begin: 1,
     end: 5,
@@ -55,12 +52,12 @@ const parserOutput = [
 
   {
     label: 'b',
-    type: 'value',
+    displayType: 'value',
     pos: 2,
   },
   {
     label: '|',
-    type: 'operator',
+    displayType: 'operator',
     pos: 3,
     beginL: 2,
     endL: 2,
@@ -69,19 +66,19 @@ const parserOutput = [
   },
   {
     label: 'c',
-    type: 'value',
+    displayType: 'value',
     pos: 4,
   },
   {
     label: ')',
-    type: 'delimiter',
+    displayType: 'delimiter',
     pos: 5,
     begin: 1,
     end: 5,
   },
   {
     label: 'd',
-    type: 'value',
+    displayType: 'value',
     pos: 6,
   },
 ];

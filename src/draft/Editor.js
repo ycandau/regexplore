@@ -4,17 +4,18 @@ import { useState, useRef } from 'react';
 
 //------------------------------------------------------------------------------
 
-const Editor = ({ value, interpretations }) => {
-  const [str, setStr] = useState(value);
-  const [index, setIndex] = useState(-1);
+const Editor = ({ editorInfo, onRegexChange }) => {
+  console.log('Render: Editor');
+
+  const [index, setIndex] = useState(null);
   const edit = useRef(null);
 
-  // console.log('Render: Editor', index);
+  const str = editorInfo.reduce((str, { label }) => str + label, '');
 
-  const onChange = (event) => {
-    if (event.nativeEvent.inputType === 'insertLineBreak') return;
-    setStr(() => event.target.value);
-  };
+  // const onChange = (event) => {
+  //   if (event.nativeEvent.inputType === 'insertLineBreak') return;
+  //   // setStr(() => event.target.value);
+  // };
 
   const onClick = (index) => (event) => {
     const ind = index === null ? str.length : index;
@@ -23,7 +24,7 @@ const Editor = ({ value, interpretations }) => {
     edit.current.setSelectionRange(ind, ind);
   };
 
-  const interp = getInterpretations(interpretations, index);
+  const labelsAndClasses = getLabelsAndClasses(editorInfo, index);
 
   return (
     <div id="editor">
@@ -32,11 +33,11 @@ const Editor = ({ value, interpretations }) => {
         className="edit"
         spellCheck="false"
         maxLength="40"
-        onChange={onChange}
+        onChange={onRegexChange}
         value={str}
       />
       <div className="display" onClick={onClick(null)}>
-        {interp.map((token, index) => {
+        {labelsAndClasses.map((token, index) => {
           return (
             <span
               key={index}
@@ -58,25 +59,25 @@ export default Editor;
 
 //------------------------------------------------------------------------------
 
-const addClassTo = (interpretations) => (cls, ...indexes) => {
+const addClassTo = (displayInfo) => (cls, ...indexes) => {
   const begin = indexes[0];
   const end = indexes[1] || indexes[0];
   for (let i = begin; i <= end; i++) {
-    const interpretation = interpretations[i] || {};
-    interpretation.classes += ` ${cls}`;
+    const token = displayInfo[i] || {};
+    token.classes += ` ${cls}`;
   }
 };
 
-const getInterpretations = (pOutput, index) => {
-  const interpretations = pOutput.map(({ label, type }) => ({
+const getLabelsAndClasses = (editorInfo, index) => {
+  const displayInfo = editorInfo.map(({ label, displayType }) => ({
     label,
-    classes: type,
+    classes: displayType,
   }));
 
-  const token = pOutput[index] || {};
-  const add = addClassTo(interpretations);
+  const token = editorInfo[index] || {};
+  const add = addClassTo(displayInfo);
 
-  switch (token.type) {
+  switch (token.displayType) {
     case 'value':
       add('hl-value', token.pos);
       break;
@@ -93,5 +94,5 @@ const getInterpretations = (pOutput, index) => {
     default:
       break;
   }
-  return interpretations;
+  return displayInfo;
 };
