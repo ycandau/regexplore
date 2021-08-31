@@ -56,6 +56,10 @@ class Parser {
     return this.input.length - this.pos;
   }
 
+  currentIndex() {
+    return this.descriptions.length - 1;
+  }
+
   logStr() {
     logHeading('Input');
     console.log(`  ${this.input}`);
@@ -84,8 +88,8 @@ class Parser {
       return this.readBracketExpression();
     }
 
-    const token = getToken(this.slice(2), this.pos);
-    this.pushDescription(token.label, token.type);
+    const token = getToken(this.slice(2), this.pos, this.currentIndex() + 1);
+    this.addDescription(token.label, token.type);
     this.pos += token.label.length;
     return token;
   }
@@ -148,7 +152,7 @@ class Parser {
             prevToken.type = sub;
             const msg = `Parser substituting '${pair}' with '${sub}'`;
             this.addWarning('!**', token.pos, { msg });
-            this.describe(token.pos, { warning: '!**' });
+            this.describe({ warning: '!**' });
             skipped = true;
             break;
           }
@@ -156,7 +160,7 @@ class Parser {
           // Edge case: no value before quantifier
           if (!isValue(prevToken)) {
             this.addWarning('!E', token.pos);
-            this.describe(token.pos, { warning: '!E' });
+            this.describe({ warning: '!E' });
             skipped = true;
             break;
           }
@@ -166,7 +170,7 @@ class Parser {
 
         case '(':
           if (isValue(prevToken)) this.concat();
-          token.range = [token.pos];
+          token.begin = this.currentIndex();
           this.operators.push(token);
           openParenCount++;
           break;
@@ -175,7 +179,7 @@ class Parser {
           // Edge case: missing opening parenthesis
           if (openParenCount === 0) {
             this.addWarning('!(', token.pos);
-            this.describe(token.pos, { warning: '!(' });
+            this.describe({ warning: '!(' });
             skipped = true;
             break;
           }
@@ -187,14 +191,12 @@ class Parser {
           this.transferOperator('|');
 
           const open = this.operators.pop();
-          const begin = open.pos;
-          const end = token.pos;
-          const range = [begin, end];
-          open.range = range;
+          const begin = open.begin;
+          const end = this.currentIndex();
 
           this.rpn.push(open);
-          this.describe(begin, { range });
-          this.describe(end, { range });
+          this.describe({ begin, end }, begin);
+          this.describe({ begin, end }, end);
           openParenCount--;
           break;
 
@@ -223,14 +225,12 @@ class Parser {
       // Edge case: missing closing parenthesis
       if (this.topOperatorIs('(')) {
         const open = this.operators.pop();
-        const begin = open.pos;
-        const end = this.input.length - 1;
-        const range = [begin, end];
-        open.range = range;
+        const begin = open.begin;
+        const end = begin;
 
         this.rpn.push(open);
         this.addWarning('!)', begin);
-        this.describe(begin, { range });
+        this.describe({ begin, end }, begin);
       }
     } while (this.operators.length > 0);
   }
@@ -244,12 +244,15 @@ class Parser {
   //----------------------------------------------------------------------------
   // Descriptions
 
-  pushDescription(label, type, config = {}) {
-    this.descriptions.push({ label, type, ...config });
+  addDescription(label, type) {
+    const index = this.currentIndex() + 1;
+    const pos = this.pos;
+    this.descriptions.push({ index, pos, label, type });
   }
 
-  describe(pos, info) {
-    const description = this.descriptions[pos];
+  describe(info, index) {
+    const ind = index !== undefined ? index : this.currentIndex();
+    const description = this.descriptions[ind];
     for (const key in info) description[key] = info[key];
   }
 
@@ -262,13 +265,13 @@ class Parser {
   // Bracket expressions
 
   eatToken(type) {
-    this.pushDescription(this.ch(), type);
+    this.addDescription(this.ch(), type);
     this.pos++;
   }
 
   tryEatToken(type) {
     if (this.ch() === type) {
-      this.pushDescription(type, type);
+      this.addDescription(type, type);
       this.pos++;
       return true;
     }
@@ -276,14 +279,14 @@ class Parser {
   }
 
   readBracketChar(matches) {
-    this.pushDescription(this.ch(), 'bracketChar');
+    this.addDescription(this.ch(), 'bracketChar');
     matches.add(this.ch());
     this.pos++;
   }
 
   tryReadBracketChar(label, matches) {
     if (this.ch() === label) {
-      this.pushDescription(label, 'bracketChar');
+      this.addDescription(label, 'bracketChar');
       matches.add(label);
       this.pos++;
       return true;
@@ -310,10 +313,11 @@ class Parser {
   }
 
   readBracketExpression() {
-    const begin = this.pos;
-    const set = new Set();
+    const pos = this.pos;
 
     this.eatToken('[');
+    const set = new Set();
+    const begin = this.currentIndex();
     const negate = this.tryEatToken('^');
 
     // Special characters are treated as literals at the beginning
@@ -325,24 +329,23 @@ class Parser {
     }
 
     // Finalize
-    const end = this.pos;
-    const range = [begin, end];
+    const end = this.currentIndex() + 1;
     const matches = [...set].join('');
-    const info = { range, negate, matches };
-    this.describe(begin, info);
+    const info = { begin, end, negate, matches };
+    this.describe(info, begin);
 
     // Edge case: missing closing bracket
     const hasClosingBracket = this.ch() === ']';
     if (hasClosingBracket) {
       this.eatToken(']');
-      this.describe(end, info);
+      this.describe(info, end);
     } else {
       this.addWarning('!]', begin);
     }
 
     const closingBracket = hasClosingBracket ? '' : ']';
-    const label = this.input.slice(begin, end + 1) + closingBracket;
-    return getBracketClass(label, info);
+    const label = this.input.slice(pos, this.pos) + closingBracket;
+    return getBracketClass(label, { ...info, pos, index: begin });
   }
 
   //----------------------------------------------------------------------------
@@ -420,8 +423,8 @@ class Parser {
 export default Parser;
 
 // parser.compileGraph();
-
-// const parser = new Parser('a(|b)');
-// parser.generateRPN();
-// parser.log();
 // console.log(parser.operators);
+
+const parser = new Parser('\\a(b|c)d');
+parser.generateRPN();
+parser.log();

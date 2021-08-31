@@ -44,11 +44,11 @@ const matchNotIn = (str) => {
 //   fragments.push(operation(frag));
 // };
 
-const binary = (operation) => (fragments) => {
-  const frag2 = fragments.pop();
-  const frag1 = fragments.pop();
-  fragments.push(operation(frag1, frag2));
-};
+// const binary = (operation) => (fragments) => {
+//   const frag2 = fragments.pop();
+//   const frag1 = fragments.pop();
+//   fragments.push(operation(frag1, frag2));
+// };
 
 //------------------------------------------------------------------------------
 // Create token types
@@ -100,30 +100,32 @@ const tokens = {
 
 //------------------------------------------------------------------------------
 
-const getToken = (label, pos = null) => {
+const getToken = (label, pos, index) => {
   const ch = label[0];
   if (ch in tokens) {
-    return { ...tokens[ch], pos };
+    return { ...tokens[ch], pos, index };
   }
 
   if (label in tokens) {
-    return { ...tokens[label], pos };
+    return { ...tokens[label], pos, index };
   }
 
   if (label[0] === '\\') {
     const token = value(label, 'escapedChar', match(label[1]));
     token.pos = pos;
+    token.index = index;
     return token;
   }
 
   const token = value(ch, 'charLiteral', match(ch));
   token.pos = pos;
+  token.index = index;
   return token;
 };
 
-const getEmpty = () => value('0', 'empty', null);
+const getEmpty = () => value('0', 'empty');
 
-const getConcat = () => operator('~', 'concat', binary(concat));
+const getConcat = () => operator('~', 'concat');
 
 const getBracketClass = (label, info) => {
   const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);

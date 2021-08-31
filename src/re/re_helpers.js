@@ -11,7 +11,7 @@ const logHeading = (str, ...rest) =>
   console.log(`----------------\n${str}:`, ...rest);
 
 /**
- * Generate a string from a flat object.
+ * Generate a string from a flat object which includes a label and type.
  *
  * @param {*} obj A flat object.
  * @returns A string.
@@ -25,6 +25,12 @@ const toString = (obj) => {
   return `{ ${entries.join(separator)} }`;
 };
 
+/**
+ * Log a flat object which includes a label and type.
+ *
+ * @param {*} obj A flat object.
+ * @returns A string.
+ */
 const inspect = (obj) => {
   const entries = Object.entries(obj)
     .filter(([key, value]) => key !== 'label' && key !== 'type')
