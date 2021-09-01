@@ -79,7 +79,7 @@ const getLabelsAndClasses = (editorInfo, index) => {
 
   switch (token.displayType) {
     case 'value':
-      add('hl-value', token.pos);
+      add('hl-value', token.index);
       break;
     case 'delimiter':
       add('hl-delimiter', token.begin);
@@ -87,7 +87,7 @@ const getLabelsAndClasses = (editorInfo, index) => {
       add('hl-delimiter-inside', token.begin + 1, token.end - 1);
       break;
     case 'operator':
-      add('hl-operator', token.pos);
+      add('hl-operator', token.index);
       add('hl-left-operand-inside', token.beginL, token.endL);
       add('hl-right-operand-inside', token.beginR, token.endR);
       break;

@@ -34,7 +34,6 @@ const connectFragment = (frag, node) => {
 };
 
 const setRange = (token, frag1, frag2) => {
-  // const descrip =
   token.beginL = frag1.begin;
   token.endL = frag1.end;
   if (frag2 !== undefined) {

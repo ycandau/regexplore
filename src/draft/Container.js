@@ -14,14 +14,14 @@ const Container = () => {
   const [regex, setRegex] = useState('a(b|c)d');
 
   const parser = new Parser(regex);
-  parser.generateRPN();
 
   const onRegexChange = (event) => {
     if (event.nativeEvent.inputType === 'insertLineBreak') return;
     setRegex(() => setRegex(event.target.value));
   };
 
-  const editorInfo = parserOutput;
+  // const editorInfo = parserOutput;
+  const editorInfo = parser.editorInfo;
 
   return (
     <>
@@ -40,12 +40,12 @@ const parserOutput = [
   {
     label: 'a',
     displayType: 'value',
-    pos: 0,
+    index: 0,
   },
   {
     label: '(',
     displayType: 'delimiter',
-    pos: 1,
+    index: 1,
     begin: 1,
     end: 5,
   },
@@ -53,12 +53,12 @@ const parserOutput = [
   {
     label: 'b',
     displayType: 'value',
-    pos: 2,
+    index: 2,
   },
   {
     label: '|',
     displayType: 'operator',
-    pos: 3,
+    index: 3,
     beginL: 2,
     endL: 2,
     beginR: 4,
@@ -67,18 +67,18 @@ const parserOutput = [
   {
     label: 'c',
     displayType: 'value',
-    pos: 4,
+    index: 4,
   },
   {
     label: ')',
     displayType: 'delimiter',
-    pos: 5,
+    index: 5,
     begin: 1,
     end: 5,
   },
   {
     label: 'd',
     displayType: 'value',
-    pos: 6,
+    index: 6,
   },
 ];
