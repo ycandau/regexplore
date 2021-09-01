@@ -33,7 +33,7 @@ const exploreSelectedTags = ['selected', 'tags'];
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: '45rem 1fr',
+    gridTemplateColumns: '8fr 3fr',
     gap: theme.spacing(2),
     padding: theme.spacing(2),
   },

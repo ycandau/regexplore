@@ -53,7 +53,7 @@ export default function LogBox({
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeght }}>
       <CardHeader
-        title="Graph Log"
+        title="Log"
         action={
           <>
             <IconButton onClick={onToBeginnig}>
