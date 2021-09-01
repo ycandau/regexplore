@@ -8,6 +8,7 @@
 // The objects will have different properties depending on the type of token.
 
 const description1 = {
+  index: 3,
   pos: 3, // position in the regex string
   label: '*', // copied from the regex string
   name: '0 to any quantifier',
@@ -16,6 +17,8 @@ const description1 = {
 };
 
 const description2 = {
+  index: 3,
+  pos: 3,
   range: [5, 10],
   label: '(',
   name: 'Left parenthesis',
@@ -24,6 +27,7 @@ const description2 = {
 };
 
 const description3 = {
+  index: 12,
   pos: 12,
   label: '^',
   name: 'Negation operator',
@@ -40,28 +44,33 @@ const description3 = {
 
 const warnings = [
   {
+    index: 3,
     pos: 3,
     message: 'An open parenthesis has not been closed.',
     fix: 'The parser is adding a closing parenthesis to correct the regex.',
   },
   {
+    index: 5,
     pos: 5,
     message: 'An open bracket has not been closed.',
     fix: 'The parser is adding a closing bracket to correct the regex.',
   },
   {
+    index: 7,
     pos: 7,
     excerpt: '(*',
     message: 'A quantifier operates on an empty string.',
     fix: 'The parser is ignoring the quantifier.',
   },
   {
+    index: 10,
     pos: 10,
     excerpt: '(|',
     message: 'An alternation operates on an empty string.',
     fix: 'This is normally done with a 0 or 1 quantifier.',
   },
   {
+    index: 12,
     pos: 12,
     excerpt: '+*',
     message: 'Multiple quantifiers in succession.',

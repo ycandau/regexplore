@@ -12,7 +12,6 @@
   height: 45%;
   margin: 0em;
   padding: 0.3em 0.5em 0 0.5em;
-  border: 1px solid black;
   font-family: monospace;
   font-size: inherit;
   outline: none;
@@ -25,24 +24,27 @@
 .edit {
   color: transparent;
   background: transparent;
-  pointer-events: none;
   caret-color: red;
   resize: none;
-  z-index: 1;
+  pointer-events: none;
+  z-index: 2;
   overflow: hidden;
 }
 
 .display {
-  /* pointer-events: none; */
-  z-index: 0;
-}
-
-.display span {
-  pointer-events: all;
+  z-index: 1;
 }
 
 .display .value {
   color: rgb(74, 209, 74);
+}
+
+.display .value-special {
+  color: rgb(71, 180, 231);
+}
+
+.display .quantifier {
+  color: rgb(255, 196, 0);
 }
 
 .display .operator {
@@ -54,15 +56,24 @@
 }
 
 .display .hl-value,
+.display .hl-value-special,
 .display .hl-operator,
+.display .hl-quantifier,
 .display .hl-delimiter {
   background-color: rgba(255, 255, 0, 0.3);
+  border-bottom: 1px solid yellow;
 }
 
-.display .hl-delimiter,
-.display .hl-delimiter-inside,
-.display .hl-operator,
-.display .hl-left-operand-inside,
-.display .hl-right-operand-inside {
+.display .hl-oper-left-single,
+.display .hl-oper-left-begin,
+.display .hl-oper-left-inside,
+.display .hl-oper-left-end,
+.display .hl-oper-right-single,
+.display .hl-oper-right-begin,
+.display .hl-oper-right-inside,
+.display .hl-oper-right-end,
+.display .hl-delim-begin,
+.display .hl-delim-inside,
+.display .hl-delim-end {
   border-bottom: 1px solid yellow;
 }
