@@ -38,7 +38,7 @@ const isValue = (token) =>
 
 const isQuantifier = (token) => ['?', '*', '+'].includes(token.type);
 
-const isNot = (str) => (s) => s !== str;
+// const isNot = (str) => (s) => s !== str;
 const isNotIn = (...args) => (s) => !args.includes(s);
 
 const merge = (obj1, obj2, filter = () => true) => {
@@ -465,5 +465,5 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('\\w\\a[01a-d](345|78+)*23');
-// parser.log();
+const parser = new Parser('[abc]+');
+parser.log();

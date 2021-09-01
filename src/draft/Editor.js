@@ -5,25 +5,24 @@ import { useState, useRef } from 'react';
 //------------------------------------------------------------------------------
 
 const Editor = ({ editorInfo, onRegexChange }) => {
-  console.log('Render: Editor');
-
   const [index, setIndex] = useState(null);
   const edit = useRef(null);
 
-  const str = editorInfo.reduce((str, { label }) => str + label, '');
+  // Concatenate the regex from the editor info object
+  const regex = editorInfo.reduce((str, { label }) => str + label, '');
 
-  // const onChange = (event) => {
-  //   if (event.nativeEvent.inputType === 'insertLineBreak') return;
-  //   // setStr(() => event.target.value);
-  // };
-
+  // Catch the click events from the display <div> and <span>
+  // Then trigger focus and cursor position in the <textarea>
   const onClick = (index) => (event) => {
-    const ind = index === null ? str.length : index;
-    event.stopPropagation();
+    const pos = index === null ? regex.length : getPosition(editorInfo, index);
+
+    event.stopPropagation(); // avoid duplicates from <div> and <span>
     edit.current.focus();
-    edit.current.setSelectionRange(ind, ind);
+    edit.current.setSelectionRange(pos, pos);
   };
 
+  // Generate an array of objects:
+  // [ { label: 'a', classes: '...' }, ... ]
   const labelsAndClasses = getLabelsAndClasses(editorInfo, index);
 
   return (
@@ -34,7 +33,7 @@ const Editor = ({ editorInfo, onRegexChange }) => {
         spellCheck="false"
         maxLength="40"
         onChange={onRegexChange}
-        value={str}
+        value={regex}
       />
       <div className="display" onClick={onClick(null)}>
         {labelsAndClasses.map((token, index) => {
@@ -55,9 +54,19 @@ const Editor = ({ editorInfo, onRegexChange }) => {
   );
 };
 
+//------------------------------------------------------------------------------
+
 export default Editor;
 
 //------------------------------------------------------------------------------
+
+const getPosition = (editorInfo, index) => {
+  let pos = 0;
+  for (let i = 0; i <= index; i++) {
+    pos += editorInfo[i].label.length;
+  }
+  return pos;
+};
 
 const addClassTo = (displayInfo) => (cls, ...indexes) => {
   const begin = indexes[0];
@@ -81,15 +90,23 @@ const getLabelsAndClasses = (editorInfo, index) => {
     case 'value':
       add('hl-value', token.index);
       break;
-    case 'delimiter':
-      add('hl-delimiter', token.begin);
-      add('hl-delimiter', token.end);
-      add('hl-delimiter-inside', token.begin + 1, token.end - 1);
+    case 'value-special':
+      add('hl-value-special', token.index);
       break;
     case 'operator':
       add('hl-operator', token.index);
-      add('hl-left-operand-inside', token.beginL, token.endL);
-      add('hl-right-operand-inside', token.beginR, token.endR);
+      add('hl-oper-left-inside', token.beginL, token.endL);
+      add('hl-oper-right-inside', token.beginR, token.endR);
+      break;
+    case 'quantifier':
+      // console.log(token);
+      add('hl-quantifier', token.index);
+      add('hl-oper-left-inside', token.beginL, token.endL);
+      break;
+    case 'delimiter':
+      add('hl-delimiter', token.begin);
+      add('hl-delimiter', token.end);
+      add('hl-delim-inside', token.begin + 1, token.end - 1);
       break;
     default:
       break;

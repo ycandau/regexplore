@@ -2,10 +2,10 @@
 // Compile the NFA
 //------------------------------------------------------------------------------
 
-import { inspect } from './re_helpers.js';
+// import { inspect } from './re_helpers.js';
 
-const REG_HEIGHT = 1;
-const REPEAT_HEIGHT = 0.5;
+// const REG_HEIGHT = 1;
+// const REPEAT_HEIGHT = 0.5;
 
 //------------------------------------------------------------------------------
 
@@ -95,7 +95,8 @@ const parentheses = (frag, token) => {
 
 const pushValue = (fragments, token) => {
   const node = newNode(token);
-  const fragment = newFragment(node, [node], token.index, token.index);
+  const end = token.end || token.index;
+  const fragment = newFragment(node, [node], token.index, end);
   fragments.push(fragment);
 };
 
