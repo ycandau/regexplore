@@ -11,7 +11,7 @@ const logHeading = (str, ...rest) =>
   console.log(`----------------\n${str}:`, ...rest);
 
 /**
- * Generate a string from a flat object.
+ * Generate a string from a flat object which includes a label and type.
  *
  * @param {*} obj A flat object.
  * @returns A string.
@@ -21,13 +21,20 @@ const toString = (obj) => {
     .filter(([key, value]) => key !== 'label')
     .map(([key, value]) => `${key}: ${value}`);
   const length = entries.reduce((count, { length }) => count + length, 0);
-  const separator = length <= 60 ? ', ' : '\n    ';
+  const separator = length <= 80 ? ', ' : '\n    ';
   return `{ ${entries.join(separator)} }`;
 };
 
-const inspect = (obj) => {
+/**
+ * Log a flat object which includes a label and type.
+ *
+ * @param {*} obj A flat object.
+ * @returns A string.
+ */
+const inspect = (...keys) => (obj) => {
   const entries = Object.entries(obj)
-    .filter(([key, value]) => key !== 'label' && key !== 'type')
+    .filter(([key]) => key !== 'label' && key !== 'type')
+    .filter(([key]) => keys.length === 0 || keys.includes(key))
     .map(([key, value]) => `${key}: ${value}`);
   const length = entries.reduce((count, { length }) => count + length, 0);
   const separator = length <= 60 ? ', ' : '\n    ';
@@ -35,23 +42,6 @@ const inspect = (obj) => {
   console.log(str);
 };
 
-/**
- * To connect to a Fragment or State independently of the class.
- *
- * @param {*} graph Can be a State or a Fragment.
- * @returns The first state of a Fragment, or the State itself.
- */
-const getFirstState = (graph) => (graph.firstState ? graph.firstState : graph);
-
-/**
- * To connect from a Fragment or State independently of the class.
- *
- * @param {*} graph Can be a State or a Fragment.
- * @returns The terminal states of a Fragment, or the State itself.
- */
-const getTerminalStates = (graph) =>
-  graph.terminalStates ? graph.terminalStates : graph;
-
 //------------------------------------------------------------------------------
 
-export { logHeading, toString, inspect, getFirstState, getTerminalStates };
+export { logHeading, toString, inspect };
