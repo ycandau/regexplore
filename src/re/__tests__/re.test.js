@@ -18,11 +18,12 @@ const token = (rpnIndex, pos, index, label, type) => ({
 const runParser = (input, rpn, ...tokens) => {
   it(`runs the input /${input}/`, () => {
     const parser = new Parser(input);
-    parser.generateRPN();
+    parser.parse();
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
     expect(parser.operators.length).toBe(0);
+    expect(parser.fix()).toBe(input);
 
     tokens.forEach(({ rpnIndex, pos, index, label, type }) => {
       const token = parser.rpn[rpnIndex];
@@ -37,7 +38,7 @@ const runParser = (input, rpn, ...tokens) => {
 const runBracketClass = (input, matches) => {
   it(`runs the bracket class /${input}/`, () => {
     const parser = new Parser(input);
-    parser.generateRPN();
+    parser.parse();
     const token = parser.rpn[0];
 
     expect(token.label).toBe(input);
@@ -60,7 +61,7 @@ const runBracketClass = (input, matches) => {
 const runEdgeCase = (input, rpn, fixed, types, positions) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
     const parser = new Parser(input);
-    parser.generateRPN();
+    parser.parse();
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
@@ -138,20 +139,21 @@ describe('RE parser: Edge cases', () => {
   runEdgeCase('ab??+', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
   runEdgeCase('ab++?', 'ab*~', 'ab*', ['!**', '!**'], [3, 4]);
 
-  runParser('a(|b)', 'a0b|(~');
-  runParser('a(b|)', 'ab0|(~');
-  runParser('|a', '0a|');
+  runEdgeCase('a(|b)', 'a0b|(~', 'a(|b)', [], []);
+  runEdgeCase('a(b|)', 'ab0|(~', 'a(b|)', [], []);
+  runEdgeCase('|a', '0a|', '|a', [], []);
 
-  runParser('a()b', 'a0(~b~');
-  runParser(')ab', 'ab~');
-  runParser('*ab', 'ab~');
-  runParser('*)ab', 'ab~');
+  runEdgeCase('a()b', 'a0(~b~', 'a()b', [], []);
+  runEdgeCase(')ab', 'ab~', 'ab', ['!('], [0]);
+  runEdgeCase('*ab', 'ab~', 'ab', ['!E'], [0]);
+  runEdgeCase('*)ab', 'ab~', 'ab', ['!E', '!('], [0, 1]);
 
-  runParser('ab|', 'ab~');
-  runParser('ab(', 'ab~');
-  // runParser('ab((', 'ab~');
-  // runParser('ab(*', 'ab~');
-  // runParser('ab|*', 'ab~');
+  runEdgeCase('ab|', 'ab~', 'ab', [], []);
+  runEdgeCase('ab(', 'ab~', 'ab', [], []);
+
+  // runEdgeCase('ab((', 'ab~', 'ab', [], []);
+  // runEdgeCase('ab(*', 'ab~', 'ab', [], []);
+  // runEdgeCase('ab|*', 'ab~', 'ab', [], []);
 });
 
 //------------------------------------------------------------------------------

@@ -1,12 +1,6 @@
-// import State from './re_states.js';
-
-import {
-  /* Fragment, */ concat,
-  // alternate,
-  // repeat01,
-  // repeat0N,
-  // repeat1N,
-} from './re_fragments.js';
+//------------------------------------------------------------------------------
+// Tokens
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // Constants
@@ -31,33 +25,12 @@ const matchNotIn = (str) => {
 };
 
 //------------------------------------------------------------------------------
-// Compilation functions
-
-// const compileMatcher = (fragments, token) => {
-//   const state = new State(token.label, 'value', { match: token.match });
-//   const fragment = new Fragment(state, [state]);
-//   fragments.push(fragment);
-// };
-
-// const unary = (operation) => (fragments) => {
-//   const frag = fragments.pop();
-//   fragments.push(operation(frag));
-// };
-
-// const binary = (operation) => (fragments) => {
-//   const frag2 = fragments.pop();
-//   const frag1 = fragments.pop();
-//   fragments.push(operation(frag1, frag2));
-// };
-
-//------------------------------------------------------------------------------
 // Create token types
 
 const value = (label, type, match) => ({
   label,
   type,
   match,
-  // compile: compileMatcher,
 });
 
 const charClass = (label, match) => value(label, 'charClass', match);
@@ -65,14 +38,14 @@ const charClass = (label, match) => value(label, 'charClass', match);
 const operator = (label, config) => ({
   label,
   type: label,
-  // compile,
   ...config,
 });
 
 //------------------------------------------------------------------------------
+// Satic tokens
 
 const tokens = {
-  // Static value tokens
+  // Values
   '.': value('.', '.', () => true),
 
   '\\d': charClass('\\d', matchIn(DIGITS)),
@@ -82,23 +55,17 @@ const tokens = {
   '\\s': charClass('\\s', matchIn(SPACES)),
   '\\S': charClass('\\S', matchNotIn(SPACES)),
 
-  // Static operator tokens
+  // Operators
   '|': operator('|'),
   '?': operator('?'),
   '*': operator('*'),
   '+': operator('+'),
   '(': operator('('),
   ')': operator(')'),
-
-  // '|': operator('|', binary(alternate)),
-  // '?': operator('?', unary(repeat01), { concatAfter }),
-  // '*': operator('*', unary(repeat0N), { concatAfter }),
-  // '+': operator('+', unary(repeat1N), { concatAfter }),
-  // '(': operator('(', null),
-  // ')': operator(')', null, { concatAfter }),
 };
 
 //------------------------------------------------------------------------------
+// Get tokens
 
 const getToken = (label, pos, index) => {
   const ch = label[0];
