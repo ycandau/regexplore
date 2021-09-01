@@ -465,5 +465,5 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('\\w\\a[01a-d](345|78+)*23');
-// parser.log();
+const parser = new Parser('[abc]+');
+parser.log();
