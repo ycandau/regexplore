@@ -1,7 +1,6 @@
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import Typography from '@material-ui/core/Typography';
 import SearchIcon from '@material-ui/icons/Search';
 import InputBase from '@material-ui/core/InputBase';
 import Chip from '@material-ui/core/Chip';
@@ -70,6 +69,9 @@ const useStyles = makeStyles((theme) => ({
     transition: theme.transitions.create('width'),
     width: '100%',
   },
+  cardHeight: {
+    height: '100%',
+  },
 }));
 
 export default function SaveBox({
@@ -90,8 +92,11 @@ export default function SaveBox({
   };
 
   return (
-    <Card>
-      <CardContent className={classes.root}>
+    <Card classes={{ root: classes.cardHeight }}>
+      <CardContent
+        className={classes.root}
+        classes={{ root: classes.cardHeight }}
+      >
         <div className={classes.detailsLeft}>
           <TextField
             autoFocus
@@ -141,7 +146,9 @@ export default function SaveBox({
                 <Chip
                   label={tag}
                   className={classes.chip}
-                  onDelete={() => setTags(tags.filter((t) => tag !== t))}
+                  onDelete={() =>
+                    setTags((tags) => tags.filter((t) => tag !== t))
+                  }
                 />
               </li>
             ))}

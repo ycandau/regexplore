@@ -22,6 +22,9 @@ const useStyles = makeStyles((theme) => ({
         ? theme.palette.info.light
         : theme.palette.info.dark,
   },
+  cardHeght: {
+    height: '100%',
+  },
 }));
 
 export default function LogBox({ logs, onHover }) {
@@ -34,15 +37,13 @@ export default function LogBox({ logs, onHover }) {
   ));
 
   return (
-    <div>
-      <Card className={classes.logList}>
-        <CardContent>
-          <CardHeader title="Execution Log" />
-          <List dense disablePadding>
-            {logList}
-          </List>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className={classes.logList} classes={{ root: classes.cardHeght }}>
+      <CardContent>
+        <CardHeader title="Execution Log" />
+        <List dense disablePadding>
+          {logList}
+        </List>
+      </CardContent>
+    </Card>
   );
 }

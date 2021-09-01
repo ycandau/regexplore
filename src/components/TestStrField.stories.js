@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider, CssBaseline } from '@material-ui/core';
 import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
@@ -20,6 +20,7 @@ export default {
   decorators: [
     (Story) => (
       <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
         <GridWrapper>
           <Story />
         </GridWrapper>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import Editor from './Editor';
-import Info from './Info';
 import Parser from '../re/re_parser';
 
 //------------------------------------------------------------------------------
@@ -18,13 +17,8 @@ const Container = () => {
     setRegex(() => event.target.value);
   };
 
-  return (
-    <>
-      <h2>Container</h2>
-      <Editor editorInfo={parser.editorInfo} onRegexChange={onRegexChange} />
-      <Info info={'some information'} />
-    </>
-  );
+  return <Editor editorInfo={parser.editorInfo} onRegexChange={onRegexChange} />;
+
 };
 
 //------------------------------------------------------------------------------

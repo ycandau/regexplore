@@ -78,6 +78,7 @@ export default function PrimarySearchAppBar({
   userInitial,
   isExploring,
   toggleExplore,
+  search,
   onSearchInput,
 }) {
   const classes = useStyles();
@@ -102,6 +103,7 @@ export default function PrimarySearchAppBar({
               }}
               inputProps={{ 'aria-label': 'search' }}
               onChange={onSearchInput}
+              value={search}
             />
           </div>
           <div className={classes.grow} />
