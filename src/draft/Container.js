@@ -9,76 +9,24 @@ import Parser from '../re/re_parser';
 // A higher level component where the parser state is kept
 
 const Container = () => {
-  console.log('Render: Container');
-
   const [regex, setRegex] = useState('a(b|c)d');
 
   const parser = new Parser(regex);
 
   const onRegexChange = (event) => {
     if (event.nativeEvent.inputType === 'insertLineBreak') return;
-    setRegex(() => setRegex(event.target.value));
+    setRegex(() => event.target.value);
   };
-
-  // const editorInfo = parserOutput;
-  const editorInfo = parser.editorInfo;
 
   return (
     <>
       <h2>Container</h2>
-      <Editor editorInfo={editorInfo} onRegexChange={onRegexChange} />
+      <Editor editorInfo={parser.editorInfo} onRegexChange={onRegexChange} />
       <Info info={'some information'} />
     </>
   );
 };
 
-export default Container;
-
 //------------------------------------------------------------------------------
 
-const parserOutput = [
-  {
-    label: 'a',
-    displayType: 'value',
-    index: 0,
-  },
-  {
-    label: '(',
-    displayType: 'delimiter',
-    index: 1,
-    begin: 1,
-    end: 5,
-  },
-
-  {
-    label: 'b',
-    displayType: 'value',
-    index: 2,
-  },
-  {
-    label: '|',
-    displayType: 'operator',
-    index: 3,
-    beginL: 2,
-    endL: 2,
-    beginR: 4,
-    endR: 4,
-  },
-  {
-    label: 'c',
-    displayType: 'value',
-    index: 4,
-  },
-  {
-    label: ')',
-    displayType: 'delimiter',
-    index: 5,
-    begin: 1,
-    end: 5,
-  },
-  {
-    label: 'd',
-    displayType: 'value',
-    index: 6,
-  },
-];
+export default Container;

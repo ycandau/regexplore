@@ -38,7 +38,7 @@ const isValue = (token) =>
 
 const isQuantifier = (token) => ['?', '*', '+'].includes(token.type);
 
-const isNot = (str) => (s) => s !== str;
+// const isNot = (str) => (s) => s !== str;
 const isNotIn = (...args) => (s) => !args.includes(s);
 
 const merge = (obj1, obj2, filter = () => true) => {
