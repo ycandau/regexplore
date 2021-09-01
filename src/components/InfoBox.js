@@ -13,16 +13,19 @@ const useStyles = makeStyles((theme) => ({
   iconBox: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingTop: theme.spacing(1),
   },
   warningIcon: {
     color: theme.palette.warning.main,
-    paddingRight: theme.spacing(1),
+    paddingRight: theme.spacing(2),
   },
   infoIcon: {
     color: theme.palette.info.main,
-    paddingRight: theme.spacing(1),
+    paddingRight: theme.spacing(2),
+  },
+  cardHeght: {
+    height: '100%',
   },
 }));
 
@@ -30,32 +33,34 @@ export default function InfoBox({ desc }) {
   const { label, name, description, note, warning } = desc;
   const classes = useStyles();
   return (
-    <div>
-      <Card>
-        <CardHeader
-          avatar={<Avatar className={classes.avatar}>{label}</Avatar>}
-          title={name}
-        />
-        <CardContent>
-          <Typography>{description}</Typography>
-          {note && (
-            <div className={classes.iconBox}>
-              <InfoRounded className={classes.infoIcon} />
-              <Typography color="textSecondary" variant="body2">
-                {note}
-              </Typography>
-            </div>
-          )}
-          {warning && (
-            <div className={classes.iconBox}>
-              <WarningRounded className={classes.warningIcon} />
-              <Typography color="textSecondary" variant="body2">
-                {warning}
-              </Typography>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <Card
+      classes={{
+        root: classes.cardHeght,
+      }}
+    >
+      <CardHeader
+        avatar={<Avatar className={classes.avatar}>{label}</Avatar>}
+        title={name}
+      />
+      <CardContent>
+        <Typography>{description}</Typography>
+        {note && (
+          <div className={classes.iconBox}>
+            <InfoRounded className={classes.infoIcon} fontSize="large" />
+            <Typography color="textSecondary" variant="body2">
+              {note}
+            </Typography>
+          </div>
+        )}
+        {warning && (
+          <div className={classes.iconBox}>
+            <WarningRounded className={classes.warningIcon} fontSize="large" />
+            <Typography color="textSecondary" variant="body2">
+              {warning}
+            </Typography>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

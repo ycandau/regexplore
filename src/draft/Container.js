@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import Editor from './Editor';
-import Info from './Info';
 import Parser from '../re/re_parser';
 
 //------------------------------------------------------------------------------
@@ -23,13 +22,7 @@ const Container = () => {
 
   const editorInfo = parserOutput;
 
-  return (
-    <>
-      <h2>Container</h2>
-      <Editor editorInfo={editorInfo} onRegexChange={onRegexChange} />
-      <Info info={'some information'} />
-    </>
-  );
+  return <Editor editorInfo={editorInfo} onRegexChange={onRegexChange} />;
 };
 
 export default Container;
