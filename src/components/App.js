@@ -33,7 +33,7 @@ const exploreSelectedTags = ['selected', 'tags'];
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: '45rem 1fr',
+    gridTemplateColumns: '8fr 3fr',
     gap: theme.spacing(2),
     padding: theme.spacing(2),
   },
@@ -120,6 +120,10 @@ const App = () => {
         <LogBox
           logs={logs}
           onHover={(pos) => console.log('hovered over', pos)}
+          onToBeginnig={() => console.log('Jump to the beginning')}
+          onStepBack={() => console.log('Step Back')}
+          onStepForward={() => console.log('Step Forward')}
+          onToEnd={() => console.log('Jump to the end')}
         />
       </div>
       <div className={classes.saveBox}>

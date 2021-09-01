@@ -2,44 +2,46 @@ import TextField from '@material-ui/core/TextField';
 import { alpha, makeStyles } from '@material-ui/core/styles';
 import { Paper, Typography } from '@material-ui/core';
 
+// ghost input magic happens here
+const useStyles = makeStyles((theme) => ({
+  contextWrapper: {
+    display: 'block',
+    position: 'relative',
+  },
+  textBox: {
+    '& [class*="MuiInputBase-root"]': {
+      color: 'transparent',
+      'caret-color': '#666',
+      letterSpacing: 'normal',
+      lineHeight: 'normal',
+    },
+  },
+  pap: {
+    position: 'absolute',
+    width: `calc(100% + ${theme.spacing(4)}px)`,
+    minHeight: `calc(100% + ${theme.spacing(4)}px)`,
+    margin: theme.spacing(-2),
+    paddingTop: theme.spacing(4.3),
+    paddingInline: theme.spacing(3.7),
+  },
+  ghostText: {
+    lineHeight: 'normal',
+    letterSpacing: 'normal',
+  },
+  match: {
+    backgroundColor: alpha(theme.palette.success.main, 0.5),
+  },
+  cursor: {
+    backgroundColor: alpha(theme.palette.info.main, 0.5),
+  },
+}));
+
 export default function TestStrField({
   numRows,
-  widthRems,
   string,
   setString,
   highlights,
 }) {
-  // ghost input magic happens here
-  const useStyles = makeStyles((theme) => ({
-    textBox: {
-      '& [class*="MuiInputBase-root"]': {
-        color: 'transparent',
-        'caret-color': '#666',
-        letterSpacing: 'normal',
-        lineHeight: 'normal',
-      },
-    },
-    pap: {
-      position: 'absolute',
-      width: widthRems + 'rem',
-      minHeight: numRows * 1.85 + 'rem',
-      padding: theme.spacing(4),
-      paddingTop: theme.spacing(4.3),
-      paddingLeft: theme.spacing(3.7),
-      marginLeft: theme.spacing(-2),
-      marginTop: theme.spacing(-2),
-    },
-    ghostText: {
-      lineHeight: 'normal',
-      letterSpacing: 'normal',
-    },
-    match: {
-      backgroundColor: alpha(theme.palette.success.main, 0.5),
-    },
-    cursor: {
-      backgroundColor: alpha(theme.palette.info.main, 0.5),
-    },
-  }));
   const handleChange = (e) => setString(e.target.value);
   const classes = useStyles();
 
@@ -65,7 +67,7 @@ export default function TestStrField({
   );
 
   return (
-    <div>
+    <div className={classes.contextWrapper}>
       <Paper className={classes.pap}>
         <Typography className={classes.ghostText}>{highlightedStr}</Typography>
       </Paper>
