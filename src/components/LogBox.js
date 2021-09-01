@@ -2,12 +2,19 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import {
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   makeStyles,
 } from '@material-ui/core';
+import {
+  FastForwardRounded,
+  FastRewindRounded,
+  SkipNextRounded,
+  SkipPreviousRounded,
+} from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   logList: {
@@ -27,7 +34,14 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function LogBox({ logs, onHover }) {
+export default function LogBox({
+  logs,
+  onHover,
+  onToBeginnig,
+  onStepBack,
+  onStepForward,
+  onToEnd,
+}) {
   const classes = useStyles();
   const logList = logs.map(({ pos, char, count }) => (
     <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
@@ -38,8 +52,26 @@ export default function LogBox({ logs, onHover }) {
 
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeght }}>
+      <CardHeader
+        title="Graph Log"
+        action={
+          <>
+            <IconButton onClick={onToBeginnig}>
+              <FastRewindRounded />
+            </IconButton>
+            <IconButton onClick={onStepBack}>
+              <SkipPreviousRounded />
+            </IconButton>
+            <IconButton onClick={onStepForward}>
+              <SkipNextRounded />
+            </IconButton>
+            <IconButton onClick={onToEnd}>
+              <FastForwardRounded />
+            </IconButton>
+          </>
+        }
+      />
       <CardContent>
-        <CardHeader title="Execution Log" />
         <List dense disablePadding>
           {logList}
         </List>
