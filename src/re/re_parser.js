@@ -7,7 +7,7 @@ import { logHeading, toString, inspect } from './re_helpers.js';
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
 import { compile, logGraph } from './re_nfa.js';
-import { warnings } from './re_static_info.js';
+import { descriptions, warnings } from './re_static_info.js';
 
 //------------------------------------------------------------------------------
 
@@ -45,6 +45,14 @@ const merge = (obj1, obj2, filter = () => true) => {
   Object.keys(obj2)
     .filter(filter)
     .forEach((key) => (obj1[key] = obj2[key]));
+};
+
+const concatLabels = (descriptions, begin, end) => {
+  let str = '';
+  for (let index = begin; index <= end; index++) {
+    str += descriptions[index].label;
+  }
+  return str;
 };
 
 //------------------------------------------------------------------------------
@@ -178,12 +186,12 @@ class Parser {
         case '+':
           // Edge case: redundant quantifiers
           if (isQuantifier(prevToken)) {
-            const pair = `${prevToken.type}${token.type}`;
-            const sub = pair === '??' ? '?' : pair === '++' ? '+' : '*';
+            const label = `${prevToken.type}${token.type}`;
+            const sub = label === '??' ? '?' : label === '++' ? '+' : '*';
             prevToken.label = sub;
             prevToken.type = sub;
-            const msg = `Parser substituting '${pair}' with '${sub}'`;
-            this.addWarning('!**', token.pos, { msg });
+            const msg = `The parser is substituting '${label}' with '${sub}'`;
+            this.addWarning('!**', token.pos, token.index, { label, msg });
             this.describe({ warning: '!**' });
             skipped = true;
             break;
@@ -191,7 +199,8 @@ class Parser {
 
           // Edge case: no value before quantifier
           if (!isValue(prevToken)) {
-            this.addWarning('!E', token.pos);
+            const label = token.type;
+            this.addWarning('!E', token.pos, token.index, { label });
             this.describe({ warning: '!E' });
             skipped = true;
             break;
@@ -210,8 +219,8 @@ class Parser {
         case ')':
           // Edge case: missing opening parenthesis
           if (openParenCount === 0) {
-            this.addWarning('!(', token.pos);
-            this.describe({ warning: '!(' });
+            this.addWarning('!)', token.pos, token.index);
+            this.describe({ warning: '!)' });
             skipped = true;
             break;
           }
@@ -262,7 +271,7 @@ class Parser {
         const end = begin;
 
         this.rpn.push(open);
-        this.addWarning('!)', begin);
+        this.addWarning('!(', open.pos, open.index);
         this.describe({ begin, end }, begin);
       }
     } while (this.operators.length > 0);
@@ -367,13 +376,13 @@ class Parser {
     const info = { begin, end, negate, matches };
     this.describe(info, begin);
 
-    // Edge case: missing closing bracket
+    // Edge case: open bracket with no closing
     const hasClosingBracket = this.ch() === ']';
     if (hasClosingBracket) {
       this.eatToken(']');
       this.describe(info, end);
     } else {
-      this.addWarning('!]', begin);
+      this.addWarning('![', pos, begin);
     }
 
     const closingBracket = hasClosingBracket ? '' : ']';
@@ -406,14 +415,36 @@ class Parser {
     logGraph(this.nfa);
   }
 
+  tokenInfo(index) {
+    const token = this.descriptions[index];
+    const type = token.type === 'charClass' ? token.label : token.type;
+
+    const operands = [];
+    if (token.begin !== undefined && token.end !== undefined) {
+      operands.push(
+        concatLabels(this.descriptions, token.begin + 1, token.end - 1)
+      );
+    }
+    if (token.beginL !== undefined && token.endL !== undefined) {
+      operands.push(concatLabels(this.descriptions, token.beginL, token.endL));
+    }
+    if (token.beginR !== undefined && token.endR !== undefined) {
+      operands.push(concatLabels(this.descriptions, token.beginR, token.endR));
+    }
+
+    const info = { pos: token.pos, ...descriptions[type] };
+    if (operands.length) info.operands = operands;
+    return info;
+  }
+
   //----------------------------------------------------------------------------
   // Generate editor info
 
   //----------------------------------------------------------------------------
   // Apply fixes
 
-  addWarning(type, pos, config) {
-    const warning = { pos, ...warnings[type], ...config };
+  addWarning(type, pos, index, config) {
+    const warning = { pos, index, ...warnings[type], ...config };
     this.warnings.push(warning);
   }
 
@@ -465,5 +496,6 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('[abc]+');
+const parser = new Parser('[abc]+a');
 parser.log();
+console.log(parser.tokenInfo(4));
