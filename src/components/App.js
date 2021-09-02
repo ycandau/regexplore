@@ -3,7 +3,7 @@ import RegexCard from './RegexCard';
 import SaveBox from './SaveBox';
 import InfoBox from './InfoBox';
 import LogBox from './LogBox';
-import { description1, logs } from '../re/re_stubs';
+import { logs } from '../re/re_stubs';
 import TestStrField from './TestStrField';
 import Header from './Header';
 import Editor from './Editor';
@@ -78,8 +78,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const App = () => {
-  // @ added
-  const [index, setIndex] = useState(null);
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [search, setSearch] = useState('');
@@ -88,19 +86,16 @@ const App = () => {
   const [desc, setDesc] = useState('Regex Description');
   const [tags, setTags] = useState(['Regex', 'Tags', 'Array']);
   const [selectedTags, setSelectedTags] = useState(exploreSelectedTags);
+  const [index, setIndex] = useState(null);
+  const [parser, setParser] = useState(new Parser('a(b|c)de'));
 
   //----------------------------------------------------------------------------
   // Parser for the Regex Editor
 
-  const [regex, setRegex] = useState('a(b|c)de');
-
-  const parser = new Parser(regex);
-
-  const { warnings } = parser;
-
   const onRegexChange = (event) => {
     if (event.nativeEvent.inputType === 'insertLineBreak') return;
-    setRegex(() => event.target.value);
+    const regex = event.target.value;
+    setParser(() => new Parser(regex));
   };
 
   const onHover = (index) => () => {
@@ -108,6 +103,8 @@ const App = () => {
   };
 
   const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
+
+  //----------------------------------------------------------------------------
 
   const logBox = (
     <LogBox
@@ -122,7 +119,7 @@ const App = () => {
 
   const warningBox = (
     <WarningBox
-      warnings={warnings}
+      warnings={parser.warnings}
       onHover={(pos) => console.log('Hovering over the warning at', pos)}
       onFix={() => console.log("'FIX' button clicked")}
     />
@@ -167,7 +164,7 @@ const App = () => {
         <InfoBox desc={tokenInfo} />
       </div>
       <div className={classes.logBox}>
-        {!!warnings.length ? warningBox : logBox}
+        {!!parser.warnings.length ? warningBox : logBox}
       </div>
       <div className={classes.saveBox}>
         <SaveBox
@@ -192,8 +189,8 @@ const App = () => {
         {Array(8)
           .fill()
           .map(() => sampleRegexCard)
-          .map((cardData) => (
-            <div className={classes.regexCardBox}>
+          .map((cardData, ind) => (
+            <div className={classes.regexCardBox} key={ind}>
               <RegexCard {...cardData} />
             </div>
           ))}
