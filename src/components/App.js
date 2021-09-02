@@ -3,7 +3,7 @@ import RegexCard from './RegexCard';
 import SaveBox from './SaveBox';
 import InfoBox from './InfoBox';
 import LogBox from './LogBox';
-import { description1, logs } from '../re/re_stubs';
+import { logs } from '../re/re_stubs';
 import TestStrField from './TestStrField';
 import Header from './Header';
 import Editor from './Editor';
@@ -191,10 +191,9 @@ const App = () => {
       <div className={classes.regexCards}>
         {Array(8)
           .fill()
-          .map(() => sampleRegexCard)
-          .map((cardData) => (
-            <div className={classes.regexCardBox}>
-              <RegexCard {...cardData} />
+          .map((e, i) => (
+            <div className={classes.regexCardBox} key={i}>
+              <RegexCard {...sampleRegexCard} />
             </div>
           ))}
       </div>
