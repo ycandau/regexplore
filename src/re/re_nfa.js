@@ -6,6 +6,7 @@ const HEIGHT = 1;
 const QUANT_HEIGHT = 0.5;
 
 const nodeBase = () => ({
+  previousNodes: [],
   nextNodes: [],
   nextLink: null,
   gen: 0, // used during simulation
@@ -30,6 +31,7 @@ const newFragment = (
 
 const connect = (node1, node2) => {
   node1.nextNodes.push(node2);
+  node2.previousNodes.push(node1);
 };
 
 const connectFragment = (frag, node) => {
@@ -66,16 +68,56 @@ const concat = (frag1, frag2) => {
 
 const alternate = (frag1, frag2, token) => {
   const fork = newNode(token);
-  connect(fork, frag1.firstNode);
-  connect(fork, frag2.firstNode);
+
+  // No fork merging
+  if (frag1.firstNode.type !== '|' && frag2.firstNode.type !== '|') {
+    connect(fork, frag1.firstNode);
+    connect(fork, frag2.firstNode);
+
+    fork.nextLink = frag1.firstNode;
+    frag1.lastNode.nextLink = frag2.firstNode;
+
+    fork.heights = [frag1.height, frag2.height];
+  }
+
+  // Merge left hand fork
+  else if (frag1.firstNode.type === '|') {
+    const fork1 = frag1.firstNode;
+    fork1.nextNodes.forEach((next) => connect(fork, next));
+    connect(fork, frag2.firstNode);
+    fork.nextLink = fork1.nextLink;
+    frag1.lastNode.nextLink = frag2.firstNode;
+    fork.heights = [...fork1.heights, frag2.height];
+  }
+
+  // Merge right hand fork
+  else if (frag2.firstNode.type === '|') {
+    throw new Error('NFA: Merging a right hand fork should not happen');
+    // const fork2 = frag2.firstNode;
+    // connect(fork, frag1.firstNode);
+    // fork2.nextNodes.forEach((next) => connect(fork, next));
+    // fork.nextLink = frag1.firstNode;
+    // frag1.lastNode.nextLink = fork2.nextLink;
+    // fork.heights = [frag1.height, ...fork2.heights];
+  }
+
+  // Merge two forks
+  else {
+    throw new Error('NFA: Merging two forks should not happen');
+    // const fork1 = frag1.firstNode;
+    // const fork2 = frag2.firstNode;
+    // fork1.nextNodes.forEach((next) => connect(fork, next));
+    // fork2.nextNodes.forEach((next) => connect(fork, next));
+    // fork.nextLink = fork1.nextLink;
+    // frag1.lastNode.nextLink = fork2.nextLink;
+    // fork.heights = [...fork1.heights, ...fork2.heights];
+  }
+
   setRange(token, frag1, frag2);
 
-  fork.nextLink = frag1.firstNode;
-  frag1.lastNode.nextLink = frag2.firstNode;
   const height = frag1.height + frag2.height;
-  fork.heights = [frag1.height, frag2.height];
-
   const terminals = [...frag1.terminalNodes, ...frag2.terminalNodes];
+
   return newFragment(
     fork,
     terminals,

@@ -123,19 +123,20 @@ class Parser {
   logGraph() {
     logHeading('Graph');
     this.nodes.forEach((node) => {
-      const toLabel = (n) => n.label;
-      const nextNodes = node.nextNodes.map(toLabel).join(' , ');
-      const heights = node.heights ? ` ${node.heights}` : '';
-      const str = `  ${node.label} : [ ${nextNodes} ]${heights}`;
+      const toLabel = (n) => `[${n.label}]`;
+      const next = node.nextNodes.map(toLabel).join(' ');
+      const previous = node.previousNodes.map(toLabel).join(' ');
+      const heights = node.heights ? ` - ${node.heights}` : '';
+      const str = `  ${node.label} : ${previous} - ${next}${heights}`;
       console.log(str);
     });
   }
 
   log() {
     this.logStr();
-    this.logRPN();
-    this.logDescriptions();
-    this.logWarnings();
+    // this.logRPN();
+    // this.logDescriptions();
+    // this.logWarnings();
     this.logGraph();
   }
 
@@ -502,5 +503,5 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('(a*b|c*d)|e');
+const parser = new Parser('a|b|c');
 parser.log();
