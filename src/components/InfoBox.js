@@ -39,7 +39,7 @@ export default function InfoBox({ desc }) {
       }}
     >
       <CardHeader
-        avatar={<Avatar className={classes.avatar}>{label || ' '}</Avatar>}
+        avatar={<Avatar className={classes.avatar}>{label || 'i'}</Avatar>}
         title={name}
       />
       <CardContent>

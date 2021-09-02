@@ -188,10 +188,9 @@ const App = () => {
       <div className={classes.regexCards}>
         {Array(8)
           .fill()
-          .map(() => sampleRegexCard)
-          .map((cardData, ind) => (
-            <div className={classes.regexCardBox} key={ind}>
-              <RegexCard {...cardData} />
+          .map((e, i) => (
+            <div className={classes.regexCardBox} key={i}>
+              <RegexCard {...sampleRegexCard} />
             </div>
           ))}
       </div>
