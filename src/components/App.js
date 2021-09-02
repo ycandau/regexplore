@@ -43,10 +43,7 @@ const useStyles = makeStyles((theme) => ({
   editorBox: {
     gridColumn: '1/2',
     gridRow: '1/2',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing(-5),
+    padding: theme.spacing(2),
   },
   testStrBox: {
     gridColumn: '1/2',
