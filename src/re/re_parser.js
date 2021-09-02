@@ -6,7 +6,7 @@ import { logHeading, toString, inspect } from './re_helpers.js';
 
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, logGraph } from './re_nfa.js';
+import { compile, list } from './re_nfa.js';
 import { descriptions, warnings } from './re_static_info.js';
 
 //------------------------------------------------------------------------------
@@ -105,9 +105,30 @@ class Parser {
     console.log(`  ${this.input}`);
   }
 
+  logRPN() {
+    logHeading('Tokens');
+    this.rpn.forEach(inspect());
+  }
+
+  logDescriptions() {
+    logHeading('Descriptions');
+    this.descriptions.forEach(inspect());
+  }
+
   logWarnings() {
     logHeading('Warnings');
     this.warnings.forEach((warning) => console.log(`  ${toString(warning)}`));
+  }
+
+  logGraph() {
+    logHeading('Graph');
+    this.nodes.forEach((node) => {
+      const toLabel = (n) => n.label;
+      const nextNodes = node.nextNodes.map(toLabel).join(' , ');
+      const heights = node.heights ? ` ${node.heights}` : '';
+      const str = `  ${node.label} : [ ${nextNodes} ]${heights}`;
+      console.log(str);
+    });
   }
 
   log() {
@@ -277,12 +298,6 @@ class Parser {
     } while (this.operators.length > 0);
   }
 
-  // Log the token queue
-  logRPN() {
-    logHeading('Tokens');
-    this.rpn.forEach(inspect());
-  }
-
   //----------------------------------------------------------------------------
   // Descriptions
 
@@ -296,11 +311,6 @@ class Parser {
     const ind = index !== undefined ? index : this.currentIndex();
     const description = this.descriptions[ind];
     for (const key in info) description[key] = info[key];
-  }
-
-  logDescriptions() {
-    logHeading('Descriptions');
-    this.descriptions.forEach(inspect());
   }
 
   //----------------------------------------------------------------------------
@@ -408,12 +418,11 @@ class Parser {
       ...descrip,
       displayType: typeToDisplayType[descrip.type],
     }));
+
+    this.nodes = list(this.nfa);
   }
 
-  logGraph() {
-    logHeading('NFA');
-    logGraph(this.nfa);
-  }
+  //----------------------------------------------------------------------------
 
   tokenInfo(index) {
     const token = this.descriptions[index];
@@ -436,9 +445,6 @@ class Parser {
     if (operands.length) info.operands = operands;
     return info;
   }
-
-  //----------------------------------------------------------------------------
-  // Generate editor info
 
   //----------------------------------------------------------------------------
   // Apply fixes
@@ -496,6 +502,5 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('[abc]+a');
-// parser.log();
-// console.log(parser.tokenInfo(4));
+const parser = new Parser('(a*b|c*d)|e');
+parser.log();
