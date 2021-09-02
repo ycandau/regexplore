@@ -496,6 +496,6 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('[abc]+a');
-parser.log();
-console.log(parser.tokenInfo(4));
+// const parser = new Parser('[abc]+a');
+// parser.log();
+// console.log(parser.tokenInfo(4));
