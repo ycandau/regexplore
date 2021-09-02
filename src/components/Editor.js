@@ -1,11 +1,46 @@
 import './Editor.css';
 
 import { useRef } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import TextField from '@material-ui/core/TextField';
+import { Typography } from '@material-ui/core';
 
+const useStyles = makeStyles((theme) => ({
+  contextWrapper: {
+    display: 'block',
+    position: 'relative',
+  },
+  paperPad: {
+    position: 'absolute',
+    width: `calc(100% + ${theme.spacing(4)}px)`,
+    minHeight: `calc(100% + ${theme.spacing(4)}px)`,
+    margin: theme.spacing(-2),
+    paddingTop: theme.spacing(4.1),
+    paddingInline: theme.spacing(3.75),
+  },
+  textBox: {
+    '& [class*="MuiInputBase-root"]': {
+      color: 'transparent',
+      'caret-color': theme.palette.text.primary,
+      letterSpacing: 'normal',
+      lineHeight: 'normal',
+      fontFamily: 'Fira Code',
+      fontWeight: 'bold',
+    },
+  },
+  ghostText: {
+    lineHeight: 'normal',
+    letterSpacing: 'normal',
+    fontFamily: 'Fira Code',
+    fontWeight: 'bold',
+  },
+}));
 //------------------------------------------------------------------------------
 
 const Editor = ({ index, editorInfo, onRegexChange, onHover }) => {
   const edit = useRef(null);
+  const classes = useStyles();
 
   // Concatenate the regex from the editor info object
   const regex = editorInfo.reduce((str, { label }) => str + label, '');
@@ -21,33 +56,49 @@ const Editor = ({ index, editorInfo, onRegexChange, onHover }) => {
 
   // Generate an array of objects:
   // [ { label: 'a', classes: '...' }, ... ]
-  const labelsAndClasses = getLabelsAndClasses(editorInfo, index);
+  const labelsAndClasses = getLabelsAndClasses(editorInfo, index).map(
+    (token, ind) => {
+      return (
+        <span
+          key={ind}
+          className={token.classes}
+          onMouseEnter={onHover(ind)}
+          onMouseLeave={onHover(null)}
+          onClick={onClick(ind)}
+        >
+          {token.label}
+        </span>
+      );
+    }
+  );
 
   return (
-    <div id="editor">
-      <textarea
-        ref={edit}
-        className="edit"
+    <div className={classes.contextWrapper}>
+      <Paper className={classes.paperPad}>
+        <div className={'display'} onClick={onClick(null)}>
+          <Typography className={classes.ghostText}>
+            {labelsAndClasses}
+          </Typography>
+        </div>
+      </Paper>
+      <TextField
+        label="Regex"
         spellCheck="false"
-        maxLength="40"
-        onChange={onRegexChange}
+        inputRef={edit}
+        fullWidth
+        variant="outlined"
         value={regex}
+        onChange={onRegexChange}
+        classes={{ root: classes.textBox }}
       />
-      <div className="display" onClick={onClick(null)}>
-        {labelsAndClasses.map((token, ind) => {
-          return (
-            <span
-              key={ind}
-              className={token.classes}
-              onMouseEnter={onHover(ind)}
-              onMouseLeave={onHover(null)}
-              onClick={onClick(ind)}
-            >
-              {token.label}
-            </span>
-          );
-        })}
-      </div>
+      {/* <textarea
+          // ref={edit}
+          // className="edit"
+          // spellCheck="false"
+          // maxLength="40"
+          // onChange={onRegexChange}
+          // value={regex}
+        /> */}
     </div>
   );
 };
