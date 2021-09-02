@@ -11,7 +11,7 @@ const useStyles = makeStyles((theme) => ({
   textBox: {
     '& [class*="MuiInputBase-root"]': {
       color: 'transparent',
-      'caret-color': '#666',
+      'caret-color': theme.palette.text.primary,
       letterSpacing: 'normal',
       lineHeight: 'normal',
     },
