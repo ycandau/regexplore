@@ -32,6 +32,9 @@ const useStyles = makeStyles((theme) => ({
   cardHeght: {
     height: '100%',
   },
+  headerRoot: {
+    alignItems: 'flex-start',
+  },
 }));
 
 export default function LogBox({
@@ -54,6 +57,7 @@ export default function LogBox({
     <Card className={classes.logList} classes={{ root: classes.cardHeght }}>
       <CardHeader
         title="Log"
+        classes={{ root: classes.headerRoot }}
         action={
           <>
             <IconButton onClick={onToBeginnig}>
