@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   chip: {
-    marginInline: theme.spacing(0.5),
+    margin: theme.spacing(0.5),
   },
   searchIcon: {
     padding: theme.spacing(0, 2),

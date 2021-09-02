@@ -432,7 +432,7 @@ class Parser {
       operands.push(concatLabels(this.descriptions, token.beginR, token.endR));
     }
 
-    const info = { pos: token.pos, ...descriptions[type] };
+    const info = { pos: token.pos, label: token.label, ...descriptions[type] };
     if (operands.length) info.operands = operands;
     return info;
   }

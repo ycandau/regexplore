@@ -20,13 +20,13 @@ const useStyles = makeStyles((theme) => ({
 
 export default function WarningBox({ warnings, onHover, onFix }) {
   const classes = useStyles();
-  const warnList = warnings.map(({ pos, excerpt, message, fix }) => (
+  const warnList = warnings.map(({ pos, excerpt, issue, msg }) => (
     <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
       <ListItemText
-        primary={message}
+        primary={issue}
         secondary={
           <>
-            At position {pos} {excerpt && ", '" + excerpt + "'"} - {fix}
+            At position {pos} {excerpt && ", '" + excerpt + "'"} - {msg}
           </>
         }
       />
@@ -59,3 +59,16 @@ export default function WarningBox({ warnings, onHover, onFix }) {
     </div>
   );
 }
+
+//------------------------------------------------------------------------------
+
+// const warningsExample = [
+//   {
+//     label: '(',
+//     pos: 3,
+//     index: 3,
+//     issue: 'An open parenthesis has not been closed.',
+//     msg:
+//       'The parser is adding an implicit closing parenthesis to correct the regex.',
+//   },
+// ];
