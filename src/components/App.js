@@ -105,17 +105,9 @@ const App = () => {
 
   const onHover = (index) => () => {
     setIndex(index);
-    // const tokenInfo = parser.tokenInfo(index);
   };
 
-  // const tokenInfoExample = {
-  //   label: '|',
-  //   pos: 3,
-  //   type: 'Operator',
-  //   name: 'Alternation operator',
-  //   description: 'Match either of the items preceding and following.',
-  //   operands: ['ab', 'cd'],
-  // };
+  const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
 
   const logBox = (
     <LogBox
@@ -161,7 +153,6 @@ const App = () => {
           onRegexChange={onRegexChange}
           onHover={onHover}
         />
-        ;
       </div>
       <div className={classes.testStrBox}>
         <TestStrField
@@ -173,7 +164,7 @@ const App = () => {
         />
       </div>
       <div className={classes.infoBox}>
-        <InfoBox desc={description1} />
+        <InfoBox desc={tokenInfo} />
       </div>
       <div className={classes.logBox}>
         {!!warnings.length ? warningBox : logBox}

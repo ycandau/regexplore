@@ -39,7 +39,7 @@ export default function InfoBox({ desc }) {
       }}
     >
       <CardHeader
-        avatar={<Avatar className={classes.avatar}>{label}</Avatar>}
+        avatar={<Avatar className={classes.avatar}>{label || ' '}</Avatar>}
         title={name}
       />
       <CardContent>
@@ -64,3 +64,14 @@ export default function InfoBox({ desc }) {
     </Card>
   );
 }
+
+//------------------------------------------------------------------------------
+
+// const tokenInfoExample = {
+//   label: '|',
+//   pos: 3,
+//   type: 'Operator',
+//   name: 'Alternation operator',
+//   description: 'Match either of the items preceding and following.',
+//   operands: ['ab', 'cd'],
+// };
