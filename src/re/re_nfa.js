@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
-const QUANT_HEIGHT = 1;
+const QUANT_HEIGHT = 2;
 
 const nodeBase = () => ({
   previousNodes: [],
@@ -335,25 +335,27 @@ const deltaY = (heights, index) => {
   return dy - sum / 2;
 };
 
-const layout = (nodes) => {
-  const graph = [];
+const graph = (nfaNodes) => {
+  const allNodes = [];
 
-  nodes.forEach((node) => {
+  console.log(nfaNodes);
+
+  nfaNodes.forEach((node) => {
     // First
     if (node.type === 'first') {
       const gNode = { x: 0, y: 0, label: '>' };
       node.gNode = gNode;
-      graph.push(gNode);
+      allNodes.push(gNode);
     }
 
     // Fork
-    else if (node.type === '|') {
+    else if (node.type === '|' || node.type === '+') {
       const previous = node.previousNodes[0];
       const x = previous.gNode.x;
       const y = previous.gNode.y;
-      const gNode = { x, y, label: '|' };
+      const gNode = { x, y, label: node.type };
       node.gNode = gNode;
-      graph.push(gNode);
+      allNodes.push(gNode);
 
       // Post fork
     } else if (node.forkIndex !== undefined) {
@@ -362,7 +364,7 @@ const layout = (nodes) => {
       const y = previous.gNode.y + deltaY(previous.heights, node.forkIndex);
       const gNode = { x, y, label: node.label };
       node.gNode = gNode;
-      graph.push(gNode);
+      allNodes.push(gNode);
     }
 
     // Merge
@@ -376,7 +378,7 @@ const layout = (nodes) => {
       const y = (top.gNode.y + bottom.gNode.y) / 2;
       const gNode = { x, y, label: node.label };
       node.gNode = gNode;
-      graph.push(gNode);
+      allNodes.push(gNode);
     }
 
     // Link
@@ -387,13 +389,17 @@ const layout = (nodes) => {
       const y = previous.gNode.y;
       const gNode = { x, y, label: node.label };
       node.gNode = gNode;
-      graph.push(gNode);
+      allNodes.push(gNode);
     }
   });
 
-  return graph;
+  const nodes = allNodes.filter(
+    (node) => node.label !== '|' && node.label !== '+'
+  );
+
+  return { nodes };
 };
 
 //------------------------------------------------------------------------------
 
-export { compile, list, layout };
+export { compile, list, graph };

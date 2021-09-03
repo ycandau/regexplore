@@ -1,0 +1,21 @@
+#graph-container {
+  width: 800px;
+  height: 300px;
+  color: white;
+  background-color: black;
+  position: relative;
+}
+
+#graph-container .node {
+  width: 50px;
+  height: 50px;
+  border-radius: 1em;
+  font-size: 24px;
+  font-weight: 600;
+  color: black;
+  background-color: orange;
+  padding-top: 0.4em;
+  position: absolute;
+  text-align: center;
+  vertical-align: bottom;
+}

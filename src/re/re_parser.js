@@ -6,7 +6,7 @@ import { logHeading, toString, inspect } from './re_helpers.js';
 
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, list, layout } from './re_nfa.js';
+import { compile, list, graph } from './re_nfa.js';
 import { descriptions, warnings } from './re_static_info.js';
 
 //------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ class Parser {
 
   logGraph() {
     logHeading('Graph');
-    this.layout.forEach((node) => {
+    this.graph.nodes.forEach((node) => {
       const str = `  ${node.label} : ( ${node.x} , ${node.y} )`;
       console.log(str);
     });
@@ -431,7 +431,7 @@ class Parser {
 
     this.nodes = list(this.nfa);
 
-    this.layout = layout(this.nodes);
+    this.graph = graph(this.nodes);
   }
 
   //----------------------------------------------------------------------------
@@ -514,5 +514,5 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('');
+const parser = new Parser('a|(b|(c|d))');
 parser.logAll();
