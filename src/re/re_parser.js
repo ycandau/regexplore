@@ -6,7 +6,7 @@ import { logHeading, toString, inspect } from './re_helpers.js';
 
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, list } from './re_nfa.js';
+import { compile, list, layout } from './re_nfa.js';
 import { descriptions, warnings } from './re_static_info.js';
 
 //------------------------------------------------------------------------------
@@ -120,8 +120,8 @@ class Parser {
     this.warnings.forEach((warning) => console.log(`  ${toString(warning)}`));
   }
 
-  logGraph() {
-    logHeading('Graph');
+  logNFA() {
+    logHeading('NFA');
     this.nodes.forEach((node) => {
       const toLabel = (n) => `[${n.label}]`;
       const next = node.nextNodes.map(toLabel).join(' ');
@@ -132,11 +132,20 @@ class Parser {
     });
   }
 
-  log() {
+  logGraph() {
+    logHeading('Graph');
+    this.layout.forEach((node) => {
+      const str = `  ${node.label} : ( ${node.x} , ${node.y} )`;
+      console.log(str);
+    });
+  }
+
+  logAll() {
     this.logStr();
     // this.logRPN();
     // this.logDescriptions();
     // this.logWarnings();
+    this.logNFA();
     this.logGraph();
   }
 
@@ -421,6 +430,8 @@ class Parser {
     }));
 
     this.nodes = list(this.nfa);
+
+    this.layout = layout(this.nodes);
   }
 
   //----------------------------------------------------------------------------
@@ -495,7 +506,7 @@ class Parser {
           break;
       }
     });
-    return stack[0];
+    return stack[0] || '';
   }
 }
 
@@ -503,5 +514,5 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('a|b|c');
-parser.log();
+const parser = new Parser('');
+parser.logAll();

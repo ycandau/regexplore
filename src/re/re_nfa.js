@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
-const QUANT_HEIGHT = 0.5;
+const QUANT_HEIGHT = 1;
 
 const nodeBase = () => ({
   previousNodes: [],
@@ -31,7 +31,6 @@ const newFragment = (
 
 const connect = (node1, node2) => {
   node1.nextNodes.push(node2);
-  node2.previousNodes.push(node1);
 };
 
 const connectFragment = (frag, node) => {
@@ -52,8 +51,13 @@ const setRange = (token, frag1, frag2) => {
 const concat = (frag1, frag2) => {
   connectFragment(frag1, frag2.firstNode);
 
-  frag1.lastNode.nextLink = frag2.firstNode;
+  // Previous
   const height = Math.max(frag1.height, frag2.height);
+  frag1.terminalNodes.forEach((node) => {
+    frag2.firstNode.previousNodes.push(node);
+  });
+
+  frag1.lastNode.nextLink = frag2.firstNode;
 
   const terminals = [...frag2.terminalNodes];
   return newFragment(
@@ -74,25 +78,46 @@ const alternate = (frag1, frag2, token) => {
     connect(fork, frag1.firstNode);
     connect(fork, frag2.firstNode);
 
+    // Previous
+    frag1.firstNode.previousNodes.push(fork);
+    frag1.firstNode.forkIndex = 0;
+    frag2.firstNode.previousNodes.push(fork);
+    frag2.firstNode.forkIndex = 1;
+    fork.heights = [frag1.height, frag2.height];
+
     fork.nextLink = frag1.firstNode;
     frag1.lastNode.nextLink = frag2.firstNode;
-
-    fork.heights = [frag1.height, frag2.height];
   }
 
   // Merge left hand fork
   else if (frag1.firstNode.type === '|') {
     const fork1 = frag1.firstNode;
-    fork1.nextNodes.forEach((next) => connect(fork, next));
+
+    fork1.nextNodes.forEach((next, ind) => {
+      connect(fork, next);
+
+      // Previous
+      next.previousNodes.pop();
+      if (next.previousNodes.length !== 0) {
+        throw new Error('NFA: previousNodes should be empty');
+      }
+      next.previousNodes.push(fork);
+      next.previousNodes.forkIndex = ind;
+    });
     connect(fork, frag2.firstNode);
+
+    // Previous
+    frag2.firstNode.previousNodes.push(fork);
+    frag2.firstNode.forkIndex = fork1.nextNodes.length;
+    fork.heights = [...fork1.heights, frag2.height];
+
     fork.nextLink = fork1.nextLink;
     frag1.lastNode.nextLink = frag2.firstNode;
-    fork.heights = [...fork1.heights, frag2.height];
   }
 
   // Merge right hand fork
   else if (frag2.firstNode.type === '|') {
-    throw new Error('NFA: Merging a right hand fork should not happen');
+    throw new Error('NFA: Right hand fork merge should not happen');
     // const fork2 = frag2.firstNode;
     // connect(fork, frag1.firstNode);
     // fork2.nextNodes.forEach((next) => connect(fork, next));
@@ -103,7 +128,7 @@ const alternate = (frag1, frag2, token) => {
 
   // Merge two forks
   else {
-    throw new Error('NFA: Merging two forks should not happen');
+    throw new Error('NFA: Two forks merge should not happen');
     // const fork1 = frag1.firstNode;
     // const fork2 = frag2.firstNode;
     // fork1.nextNodes.forEach((next) => connect(fork, next));
@@ -131,6 +156,10 @@ const alternate = (frag1, frag2, token) => {
 const repeat01 = (frag, token) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
+
+  // Previous
+  frag.firstNode.previousNodes.push(fork);
+
   setRange(token, frag);
 
   fork.nextLink = frag.firstNode;
@@ -151,6 +180,10 @@ const repeat0N = (frag, token) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
+
+  // Previous
+  frag.firstNode.previousNodes.push(fork);
+
   setRange(token, frag);
 
   fork.nextLink = frag.firstNode;
@@ -170,6 +203,10 @@ const repeat1N = (frag, token) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
+
+  // Previous
+  fork.previousNodes.push(frag.firstNode);
+
   setRange(token, frag);
 
   frag.lastNode.nextLink = fork;
@@ -193,7 +230,13 @@ const parentheses = (frag, token) => {
 
   open.nextLink = frag.firstNode;
   frag.lastNode.nextLink = close;
+
+  // Previous
   const height = frag.height;
+  frag.firstNode.previousNodes.push(open);
+  frag.terminalNodes.forEach((node) => {
+    close.previousNodes.push(node);
+  });
 
   return newFragment(open, [close], token.begin, token.end, close, height);
 };
@@ -259,7 +302,10 @@ const compile = (rpn) => {
     }
   });
 
-  binary(fragments, concat);
+  if (fragments.length === 2) {
+    binary(fragments, concat);
+  }
+
   pushValue(fragments, { label: '>', type: 'last' });
   binary(fragments, concat);
 
@@ -278,6 +324,76 @@ const list = (first) => {
   return array;
 };
 
+const deltaY = (heights, index) => {
+  let dy = 0;
+  let sum = 0;
+  for (let i = 0; i < heights.length; i++) {
+    dy += i < index ? heights[i] : 0;
+    sum += heights[i];
+  }
+  dy += heights[index] / 2;
+  return dy - sum / 2;
+};
+
+const layout = (nodes) => {
+  const graph = [];
+
+  nodes.forEach((node) => {
+    // First
+    if (node.type === 'first') {
+      const gNode = { x: 0, y: 0, label: '>' };
+      node.gNode = gNode;
+      graph.push(gNode);
+    }
+
+    // Fork
+    else if (node.type === '|') {
+      const previous = node.previousNodes[0];
+      const x = previous.gNode.x;
+      const y = previous.gNode.y;
+      const gNode = { x, y, label: '|' };
+      node.gNode = gNode;
+      graph.push(gNode);
+
+      // Post fork
+    } else if (node.forkIndex !== undefined) {
+      const previous = node.previousNodes[0];
+      const x = previous.gNode.x + 1;
+      const y = previous.gNode.y + deltaY(previous.heights, node.forkIndex);
+      const gNode = { x, y, label: node.label };
+      node.gNode = gNode;
+      graph.push(gNode);
+    }
+
+    // Merge
+    else if (node.previousNodes.length !== 1) {
+      const top = node.previousNodes[0];
+      const bottom = node.previousNodes[node.previousNodes.length - 1];
+      const x =
+        node.previousNodes.reduce((max, node) => {
+          return Math.max(max, node.gNode.x);
+        }, 0) + 1;
+      const y = (top.gNode.y + bottom.gNode.y) / 2;
+      const gNode = { x, y, label: node.label };
+      node.gNode = gNode;
+      graph.push(gNode);
+    }
+
+    // Link
+    else if (node.previousNodes.length === 1) {
+      const previous = node.previousNodes[0];
+      // console.log(node.label, previous.label, previous.gNode);
+      const x = previous.gNode.x + 1;
+      const y = previous.gNode.y;
+      const gNode = { x, y, label: node.label };
+      node.gNode = gNode;
+      graph.push(gNode);
+    }
+  });
+
+  return graph;
+};
+
 //------------------------------------------------------------------------------
 
-export { compile, list };
+export { compile, list, layout };
