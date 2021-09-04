@@ -176,12 +176,13 @@ const App = () => {
   const onSearchChange = (str) => console.log('Tag Search:', str);
   const onSave = () => console.log('Save Action Detected');
 
-  const onExploreRegex = ({ id, title, desc, literal }) => {
+  const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
     setParser(() => new Parser(literal));
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
+    setTags(tags);
   };
 
   const classes = useStyles();

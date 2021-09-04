@@ -60,6 +60,7 @@ export default function RegexCard({
                 title,
                 desc,
                 literal,
+                tags,
               })
             }
           >
