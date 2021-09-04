@@ -12,7 +12,7 @@ import {
   createTheme,
   makeStyles,
 } from '@material-ui/core/styles';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -23,15 +23,6 @@ import Parser from '../re/re_parser';
 import WarningBox from './WarningBox';
 
 // rendering stubs, TODO: clean up once the wiring's done
-const sampleRegexCard = {
-  title: 'A Saved Regex',
-  desc:
-    'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Reprehenderit, officia saepe molestiae cupiditate, at illum modi dolores id ipsum.',
-  literal: '/regex/i',
-  tags: ['regex', 'tags', 'poorly implemented'],
-  author: '@happyDevOps',
-};
-const exploreSelectedTags = ['selected', 'tags'];
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -77,14 +68,43 @@ const useStyles = makeStyles((theme) => ({
 const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
-  const [search, setSearch] = useState('');
+  const [tsq, setTSQ] = useState('');
   const [testString, setTestString] = useState('');
   const [title, setTitle] = useState('Regex Title');
   const [desc, setDesc] = useState('Regex Description');
-  const [tags, setTags] = useState(['Regex', 'Tags', 'Array']);
-  const [selectedTags, setSelectedTags] = useState(exploreSelectedTags);
+  const [tags, setTags] = useState([]);
+  const [regexes, setRegexes] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [index, setIndex] = useState(null);
   const [parser, setParser] = useState(new Parser('a(b|c)de'));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let res;
+        if (!tsq) {
+          res = await fetch('/regexes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        } else {
+          res = await fetch('/regexes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tsq }),
+          });
+        }
+        const { regexes } = await res.json();
+        setRegexes(regexes);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [tsq, setRegexes]);
 
   //----------------------------------------------------------------------------
   // Parser for the Regex Editor
@@ -127,7 +147,7 @@ const App = () => {
   const toggleExplore = () =>
     setScreen((screen) => (screen === 'main' ? 'explore' : 'main'));
   const onSearchInput = (e) => {
-    setSearch(e.target.value);
+    setTSQ(e.target.value);
   };
   const onSearchChange = (str) => console.log('Tag Search:', str);
   const onSave = () => console.log('Save Action Detected');
@@ -183,13 +203,19 @@ const App = () => {
   const exploreScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.regexCards}>
-        {Array(8)
-          .fill()
-          .map((e, i) => (
-            <div className={classes.regexCardBox} key={i}>
-              <RegexCard {...sampleRegexCard} />
-            </div>
-          ))}
+        {regexes.map(({ id, title, notes, regex, tags }) => (
+          <div className={classes.regexCardBox} key={id}>
+            <RegexCard
+              {...{
+                title,
+                desc: notes,
+                literal: regex,
+                tagsObj: tags,
+                author: "TODO - get author's name",
+              }}
+            />
+          </div>
+        ))}
       </div>
       <div className={classes.tagSelectBox}>
         <TagSelector
@@ -210,7 +236,7 @@ const App = () => {
           userInitial,
           isExploring,
           toggleExplore,
-          search,
+          search: tsq,
           onSearchInput,
         }}
       />
