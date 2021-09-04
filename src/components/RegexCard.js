@@ -30,7 +30,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function RegexCard({ title, desc, literal, tagsObj, author }) {
+export default function RegexCard({
+  title,
+  desc,
+  literal,
+  tagsObj,
+  user_name,
+}) {
   const classes = useStyles();
   const tags = Object.entries(tagsObj).map(([id, tag_name]) => ({
     id,
@@ -58,7 +64,7 @@ export default function RegexCard({ title, desc, literal, tagsObj, author }) {
             ))}
           </ul>
           <Typography variant="body2" color="textSecondary">
-            by {author}
+            by {user_name}
           </Typography>
         </div>
       </CardContent>

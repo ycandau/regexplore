@@ -203,7 +203,7 @@ const App = () => {
   const exploreScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.regexCards}>
-        {regexes.map(({ id, title, notes, regex, tags }) => (
+        {regexes.map(({ id, user_name, title, notes, regex, tags }) => (
           <div className={classes.regexCardBox} key={id}>
             <RegexCard
               {...{
@@ -211,7 +211,7 @@ const App = () => {
                 desc: notes,
                 literal: regex,
                 tagsObj: tags,
-                author: "TODO - get author's name",
+                user_name,
               }}
             />
           </div>
