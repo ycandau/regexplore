@@ -141,13 +141,15 @@ export default function SaveBox({
             />
           </div>
           <ul className={classes.bagOfChips}>
-            {tags.map((tag, i) => (
-              <li key={i}>
+            {tags.map(({ id, tag_name }) => (
+              <li key={id}>
                 <Chip
-                  label={tag}
+                  label={tag_name}
                   className={classes.chip}
                   onDelete={() =>
-                    setTags((tags) => tags.filter((t) => tag !== t))
+                    setTags((tags) =>
+                      tags.filter((t) => tag_name !== t.tag_name)
+                    )
                   }
                 />
               </li>
