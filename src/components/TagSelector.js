@@ -85,6 +85,7 @@ export default function TagSelector({
         let res;
         if (!tsq) {
           res = await fetch('/tags', {
+            method: 'POST',
             headers: {
               Accepts: 'application/json',
             },
@@ -119,6 +120,7 @@ export default function TagSelector({
             input: classes.inputInput,
           }}
           value={tsq}
+          spellCheck={false}
           inputProps={{ 'aria-label': 'search' }}
           onChange={handleSearch}
         />
