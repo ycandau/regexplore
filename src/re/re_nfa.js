@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
-const QUANT_HEIGHT = 2;
+const QUANT_HEIGHT = 0;
 
 const nodeBase = () => ({
   previousNodes: [],
@@ -113,29 +113,8 @@ const alternate = (frag1, frag2, token) => {
 
     fork.nextLink = fork1.nextLink;
     frag1.lastNode.nextLink = frag2.firstNode;
-  }
-
-  // Merge right hand fork
-  else if (frag2.firstNode.type === '|') {
-    throw new Error('NFA: Right hand fork merge should not happen');
-    // const fork2 = frag2.firstNode;
-    // connect(fork, frag1.firstNode);
-    // fork2.nextNodes.forEach((next) => connect(fork, next));
-    // fork.nextLink = frag1.firstNode;
-    // frag1.lastNode.nextLink = fork2.nextLink;
-    // fork.heights = [frag1.height, ...fork2.heights];
-  }
-
-  // Merge two forks
-  else {
-    throw new Error('NFA: Two forks merge should not happen');
-    // const fork1 = frag1.firstNode;
-    // const fork2 = frag2.firstNode;
-    // fork1.nextNodes.forEach((next) => connect(fork, next));
-    // fork2.nextNodes.forEach((next) => connect(fork, next));
-    // fork.nextLink = fork1.nextLink;
-    // frag1.lastNode.nextLink = fork2.nextLink;
-    // fork.heights = [...fork1.heights, ...fork2.heights];
+  } else {
+    throw new Error('NFA: Fork merge should not happen');
   }
 
   setRange(token, frag1, frag2);
@@ -324,6 +303,8 @@ const list = (first) => {
   return array;
 };
 
+//------------------------------------------------------------------------------
+
 const deltaY = (heights, index) => {
   let dy = 0;
   let sum = 0;
@@ -351,9 +332,19 @@ const link = (node1, node2) => {
   ];
 };
 
+//------------------------------------------------------------------------------
+
 const graph = (nfaNodes) => {
   const allNodes = [];
   const links = [];
+
+  const log = nfaNodes.map(({ type, label, previousNodes }) => ({
+    type,
+    label,
+    previousNodes,
+  }));
+
+  console.log(log);
 
   nfaNodes.forEach((node) => {
     // First
@@ -364,14 +355,23 @@ const graph = (nfaNodes) => {
     }
 
     // Fork
-    else if (node.type === '|' || node.type === '+') {
+    else if (node.type === '|') {
       const previous = node.previousNodes[0];
-      const gNode = nodeFromOffset(node.label, 0, 0, previous.gNode);
+      const gNode = nodeFromOffset(node.label, 1, 0, previous.gNode);
       node.gNode = gNode;
       allNodes.push(gNode);
+    }
 
-      // Post fork
-    } else if (node.forkIndex !== undefined) {
+    // Quantifiers
+    // else if (node.type === '?' || node.type === '*' || node.type === '+') {
+    //   const previous = node.previousNodes[0];
+    //   const gNode = nodeFromOffset(node.label, 0, 0, previous.gNode);
+    //   node.gNode = gNode;
+    //   allNodes.push(gNode);
+    // }
+
+    // Post fork
+    else if (node.forkIndex !== undefined) {
       const previous = node.previousNodes[0];
       const dy = deltaY(previous.heights, node.forkIndex);
       const gNode = nodeFromOffset(node.label, 1, dy, previous.gNode);
@@ -405,7 +405,7 @@ const graph = (nfaNodes) => {
   });
 
   const nodes = allNodes.filter(
-    (node) => node.label !== '|' && node.label !== '+'
+    (node) => !['?', '*', '+', '|'].includes('node.label')
   );
 
   return { nodes, links };
@@ -414,3 +414,28 @@ const graph = (nfaNodes) => {
 //------------------------------------------------------------------------------
 
 export { compile, list, graph };
+
+//------------------------------------------------------------------------------
+
+// Merge right hand fork
+// else if (frag2.firstNode.type === '|') {
+//   throw new Error('NFA: Right hand fork merge should not happen');
+// const fork2 = frag2.firstNode;
+// connect(fork, frag1.firstNode);
+// fork2.nextNodes.forEach((next) => connect(fork, next));
+// fork.nextLink = frag1.firstNode;
+// frag1.lastNode.nextLink = fork2.nextLink;
+// fork.heights = [frag1.height, ...fork2.heights];
+// }
+
+// Merge two forks
+// else {
+//   throw new Error('NFA: Two forks merge should not happen');
+// const fork1 = frag1.firstNode;
+// const fork2 = frag2.firstNode;
+// fork1.nextNodes.forEach((next) => connect(fork, next));
+// fork2.nextNodes.forEach((next) => connect(fork, next));
+// fork.nextLink = fork1.nextLink;
+// frag1.lastNode.nextLink = fork2.nextLink;
+// fork.heights = [...fork1.heights, ...fork2.heights];
+// }

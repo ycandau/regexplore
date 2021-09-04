@@ -1,5 +1,5 @@
 #graph-container {
-  width: 800px;
+  width: 1000px;
   height: 300px;
   color: white;
   background-color: black;
@@ -15,11 +15,11 @@
 
 #graph-container .node {
   border-radius: 1em;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: black;
   background-color: orange;
-  padding-top: 0.4em;
+  padding-top: 0.3em;
   position: absolute;
   text-align: center;
   vertical-align: bottom;

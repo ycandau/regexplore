@@ -15,17 +15,18 @@ const scaleNode = (xmin, height, dx, dy) => (coord) => {
 //------------------------------------------------------------------------------
 
 const Graph = () => {
-  const parser = new Parser('ab|cd|ef');
+  const parser = new Parser('a*c');
   const { graph } = parser;
 
   const canvasRef = useRef(null);
-  const scale = scaleNode(40, 300, 80, 80);
+  const scale = scaleNode(40, 300, 70, 60);
+  const diameter = 40;
 
-  console.log(graph);
+  // console.log(graph);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    canvas.width = 800;
+    canvas.width = 1000;
     canvas.height = 300;
     const ctx = canvas.getContext('2d');
 
@@ -53,7 +54,7 @@ const Graph = () => {
             key={`${index}`}
             coord={scaledCoord}
             label={label}
-            diameter={50}
+            diameter={diameter}
           />
         );
       })}
