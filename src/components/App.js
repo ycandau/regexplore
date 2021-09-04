@@ -82,12 +82,14 @@ const App = () => {
     (async () => {
       try {
         let res;
+        let baseBody = { tags: selectedTags.map(({ id }) => id) };
         if (!tsq) {
           res = await fetch('/regexes', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ ...baseBody }),
           });
         } else {
           res = await fetch('/regexes', {
@@ -95,7 +97,7 @@ const App = () => {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ tsq }),
+            body: JSON.stringify({ tsq, ...baseBody }),
           });
         }
         const { regexes } = await res.json();
@@ -104,7 +106,7 @@ const App = () => {
         console.error(e);
       }
     })();
-  }, [tsq, setRegexes]);
+  }, [tsq, selectedTags, setRegexes]);
 
   //----------------------------------------------------------------------------
   // Parser for the Regex Editor
