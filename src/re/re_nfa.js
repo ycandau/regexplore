@@ -66,6 +66,8 @@ const gconnectMerge = (frag, gnode) => {
 };
 
 const gconnectBackToFork = (gfork, gnode, forkIndex) => {
+  // console.log(gfork, gnode);
+
   gnode.previous.pop(); // check ok
   gnode.previous.push(gfork);
   gnode.forkIndex = forkIndex;
@@ -144,6 +146,7 @@ const alternate = (frag1, frag2, token) => {
 
 const repeat01 = (frag, token) => {
   const fork = newNode(token);
+  fork.gnode = frag.firstNode.gnode; // @check
 
   connect(fork, frag.firstNode);
   setRange(token, frag);
@@ -164,7 +167,8 @@ const repeat01 = (frag, token) => {
 
 const repeat0N = (frag, token) => {
   const fork = newNode(token);
-  fork.gnode = frag.terminalNodes[0].gnode; // @check
+  const gfork = newGNode(fork);
+  gconnectMerge(frag, gfork);
 
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
@@ -176,7 +180,7 @@ const repeat0N = (frag, token) => {
     frag.begin,
     token.index,
     frag.height + QUANT_HEIGHT,
-    [...frag.gnodes]
+    [...frag.gnodes, gfork]
   );
 };
 
@@ -184,7 +188,8 @@ const repeat0N = (frag, token) => {
 
 const repeat1N = (frag, token) => {
   const fork = newNode(token);
-  fork.gnode = frag.terminalNodes[0].gnode; // @check
+  const gfork = newGNode(fork);
+  gconnectMerge(frag, gfork);
 
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
@@ -196,7 +201,7 @@ const repeat1N = (frag, token) => {
     frag.begin,
     token.index,
     frag.height + QUANT_HEIGHT,
-    frag.gnodes
+    [...frag.gnodes, gfork]
   );
 };
 //------------------------------------------------------------------------------
@@ -317,6 +322,8 @@ const graph = (nodes) => {
   const links = [];
   const forks = [];
   const merges = [];
+
+  console.log(nodes);
 
   nodes.forEach((node) => {
     // First
