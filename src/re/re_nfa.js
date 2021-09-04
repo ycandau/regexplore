@@ -315,6 +315,8 @@ const forkDeltaY = (heights, index) => {
 
 const graph = (nodes) => {
   const links = [];
+  const forks = [];
+  const merges = [];
 
   nodes.forEach((node) => {
     // First
@@ -323,7 +325,7 @@ const graph = (nodes) => {
     }
 
     // Fork
-    else if (node.type === '|') {
+    else if (node.heights) {
       const [x0, y0] = node.previous[0].coord;
       node.coord = [x0 + 1, y0];
       links.push([[x0, y0], node.coord]);
@@ -338,7 +340,7 @@ const graph = (nodes) => {
     }
 
     // Merge
-    else if (node.previous.length !== 1) {
+    else if (node.previous.length > 1) {
       const top = node.previous[0];
       const bottom = node.previous[node.previous.length - 1];
       const x =
@@ -357,7 +359,25 @@ const graph = (nodes) => {
     }
   });
 
-  return { nodes, links };
+  nodes.forEach((node) => {
+    // Forks
+    if (node.heights) {
+      const coords = [];
+      coords.push(node.coord);
+      node.ref.nextNodes.forEach((n) => coords.push(n.gnode.coord));
+      forks.push(coords);
+    }
+
+    // Merges
+    else if (node.previous.length > 1) {
+      const coords = [];
+      coords.push(node.coord);
+      node.previous.forEach((gn) => coords.push(gn.coord));
+      merges.push(coords);
+    }
+  });
+
+  return { nodes, links, forks, merges };
 };
 
 //------------------------------------------------------------------------------
