@@ -1,7 +1,7 @@
-const Node = ({ label, x, y }) => {
-  const coord = { left: `${x}px`, top: `${y}px` };
+const Node = ({ coord, label }) => {
+  const coordObj = { left: `${coord[0]}px`, top: `${coord[1]}px` };
   return (
-    <div className="node" style={coord}>
+    <div className="node" style={coordObj}>
       {/* Test */}
       {label}
     </div>

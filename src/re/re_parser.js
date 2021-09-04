@@ -514,5 +514,5 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('a|(b|(c|d))');
-parser.logAll();
+// const parser = new Parser('a|(b|(c|d))');
+// parser.logAll();

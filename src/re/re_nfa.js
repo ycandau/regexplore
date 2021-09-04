@@ -332,18 +332,33 @@ const deltaY = (heights, index) => {
     sum += heights[i];
   }
   dy += heights[index] / 2;
-  return dy - sum / 2;
+  const offset = (heights[0] / 2 + sum - heights[heights.length - 1] / 2) / 2;
+  return dy - offset;
+};
+
+const nodeFromCoord = (label, x, y) => ({ label, coord: [x, y] });
+
+const nodeFromOffset = (label, dx, dy, previous) => {
+  const x = previous.coord[0] + dx;
+  const y = previous.coord[1] + dy;
+  return { label, coord: [x, y] };
+};
+
+const link = (node1, node2) => {
+  return [
+    [node1.coord[0], node1.coord[1]],
+    [node2.coord[0], node2.coord[1]],
+  ];
 };
 
 const graph = (nfaNodes) => {
   const allNodes = [];
-
-  console.log(nfaNodes);
+  const links = [];
 
   nfaNodes.forEach((node) => {
     // First
     if (node.type === 'first') {
-      const gNode = { x: 0, y: 0, label: '>' };
+      const gNode = nodeFromCoord('>', 0, 0);
       node.gNode = gNode;
       allNodes.push(gNode);
     }
@@ -351,18 +366,15 @@ const graph = (nfaNodes) => {
     // Fork
     else if (node.type === '|' || node.type === '+') {
       const previous = node.previousNodes[0];
-      const x = previous.gNode.x;
-      const y = previous.gNode.y;
-      const gNode = { x, y, label: node.type };
+      const gNode = nodeFromOffset(node.label, 0, 0, previous.gNode);
       node.gNode = gNode;
       allNodes.push(gNode);
 
       // Post fork
     } else if (node.forkIndex !== undefined) {
       const previous = node.previousNodes[0];
-      const x = previous.gNode.x + 1;
-      const y = previous.gNode.y + deltaY(previous.heights, node.forkIndex);
-      const gNode = { x, y, label: node.label };
+      const dy = deltaY(previous.heights, node.forkIndex);
+      const gNode = nodeFromOffset(node.label, 1, dy, previous.gNode);
       node.gNode = gNode;
       allNodes.push(gNode);
     }
@@ -373,10 +385,10 @@ const graph = (nfaNodes) => {
       const bottom = node.previousNodes[node.previousNodes.length - 1];
       const x =
         node.previousNodes.reduce((max, node) => {
-          return Math.max(max, node.gNode.x);
+          return Math.max(max, node.gNode.coord[0]);
         }, 0) + 1;
-      const y = (top.gNode.y + bottom.gNode.y) / 2;
-      const gNode = { x, y, label: node.label };
+      const y = (top.gNode.coord[1] + bottom.gNode.coord[1]) / 2;
+      const gNode = nodeFromCoord(node.label, x, y);
       node.gNode = gNode;
       allNodes.push(gNode);
     }
@@ -384,12 +396,11 @@ const graph = (nfaNodes) => {
     // Link
     else if (node.previousNodes.length === 1) {
       const previous = node.previousNodes[0];
-      // console.log(node.label, previous.label, previous.gNode);
-      const x = previous.gNode.x + 1;
-      const y = previous.gNode.y;
-      const gNode = { x, y, label: node.label };
+      const gNode = nodeFromOffset(node.label, 1, 0, previous.gNode);
       node.gNode = gNode;
       allNodes.push(gNode);
+
+      links.push(link(previous.gNode, gNode));
     }
   });
 
@@ -397,7 +408,7 @@ const graph = (nfaNodes) => {
     (node) => node.label !== '|' && node.label !== '+'
   );
 
-  return { nodes };
+  return { nodes, links };
 };
 
 //------------------------------------------------------------------------------
