@@ -4,7 +4,7 @@ import InputBase from '@material-ui/core/InputBase';
 import Chip from '@material-ui/core/Chip';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({
   flexBox: {
@@ -71,14 +71,41 @@ export default function TagSelector({
   setTags,
   selectedTags,
   setSelectedTags,
-  onSearchChange,
 }) {
   const classes = useStyles();
-  const [search, setSearch] = useState('');
+  const [tsq, setTSQ] = useState('');
+
   const handleSearch = (e) => {
-    setSearch(e.target.value);
-    onSearchChange(e.target.value);
+    setTSQ(e.target.value);
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let res;
+        if (!tsq) {
+          res = await fetch('/tags', {
+            method: 'POST',
+            headers: {
+              Accepts: 'application/json',
+            },
+          });
+        } else {
+          res = await fetch('/tags/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tsq }),
+          });
+        }
+        const tags = await res.json();
+        setTags(tags);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [setTags, tsq]);
 
   return (
     <Paper className={classes.flexBox} elevation={0}>
@@ -92,7 +119,8 @@ export default function TagSelector({
             root: classes.inputRoot,
             input: classes.inputInput,
           }}
-          value={search}
+          value={tsq}
+          spellCheck={false}
           inputProps={{ 'aria-label': 'search' }}
           onChange={handleSearch}
         />
@@ -101,28 +129,30 @@ export default function TagSelector({
         <Typography variant="h6">Selected Tags</Typography>
       </div>
       <ul className={classes.selectedTagsChips}>
-        {selectedTags.map((tag, i) => (
-          <li key={i}>
+        {selectedTags.map(({ id, tag_name }) => (
+          <li key={id}>
             <Chip
-              label={tag}
+              label={tag_name}
               className={classes.chip}
               onDelete={() => {
-                setSelectedTags((tags) => tags.filter((t) => tag !== t));
-                setTags((tags) => tags.concat(tag));
+                setSelectedTags((tags) =>
+                  tags.filter((t) => tag_name !== t.tag_name)
+                );
+                setTags(() => tags.concat({ id, tag_name }));
               }}
             />
           </li>
         ))}
       </ul>
       <ul className={classes.bagOfChips}>
-        {tags.map((tag, i) => (
-          <li key={i}>
+        {tags.map(({ id, tag_name }) => (
+          <li key={id}>
             <Chip
-              label={tag}
+              label={tag_name}
               className={classes.chip}
               onClick={() => {
-                setSelectedTags((tags) => tags.concat(tag));
-                setTags((tags) => tags.filter((t) => tag !== t));
+                setSelectedTags(() => selectedTags.concat({ id, tag_name }));
+                setTags((tags) => tags.filter((t) => tag_name !== t.tag_name));
               }}
             />
           </li>
