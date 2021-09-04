@@ -77,6 +77,7 @@ const App = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [index, setIndex] = useState(null);
   const [parser, setParser] = useState(new Parser('a(b|c)de'));
+  const [fetchStr, setFetchStr] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -107,6 +108,27 @@ const App = () => {
       }
     })();
   }, [tsq, selectedTags, setRegexes]);
+
+  useEffect(() => {
+    if (!!fetchStr)
+      (async () => {
+        try {
+          const res = await fetch('/test-strings/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: fetchStr }),
+          });
+          const { rows } = await res.json();
+          const [{ test_string }] = rows;
+          setTestString(test_string);
+        } catch (e) {
+          console.error(e);
+        }
+        setFetchStr(false);
+      })();
+  }, [fetchStr, setFetchStr, setTestString]);
 
   //----------------------------------------------------------------------------
   // Parser for the Regex Editor
@@ -153,6 +175,14 @@ const App = () => {
   };
   const onSearchChange = (str) => console.log('Tag Search:', str);
   const onSave = () => console.log('Save Action Detected');
+
+  const onExploreRegex = ({ id, title, desc, literal }) => {
+    setScreen('main');
+    setParser(() => new Parser(literal));
+    setTitle(title);
+    setDesc(desc);
+    setFetchStr(id);
+  };
 
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
@@ -209,11 +239,13 @@ const App = () => {
           <div className={classes.regexCardBox} key={id}>
             <RegexCard
               {...{
+                id,
                 title,
                 desc: notes,
                 literal: regex,
                 tagsObj: tags,
                 user_name,
+                onExploreRegex,
               }}
             />
           </div>

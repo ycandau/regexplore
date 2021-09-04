@@ -99,7 +99,6 @@ export default function SaveBox({
       >
         <div className={classes.detailsLeft}>
           <TextField
-            autoFocus
             fullWidth
             id="regexName"
             variant="filled"
@@ -109,7 +108,6 @@ export default function SaveBox({
             label="Name"
             required
             size="small"
-            color="secondary"
             className={classes.nameBox}
           />
           <TextField

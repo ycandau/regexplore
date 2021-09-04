@@ -3,6 +3,8 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
+import { CardHeader, IconButton } from '@material-ui/core';
+import { PlayArrowRounded } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -31,11 +33,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function RegexCard({
+  id,
   title,
   desc,
   literal,
   tagsObj,
   user_name,
+  onExploreRegex,
 }) {
   const classes = useStyles();
   const tags = Object.entries(tagsObj).map(([id, tag_name]) => ({
@@ -45,17 +49,31 @@ export default function RegexCard({
 
   return (
     <Card>
+      <CardHeader
+        title={title}
+        subheader={literal}
+        action={
+          <IconButton
+            onClick={() =>
+              onExploreRegex({
+                id,
+                title,
+                desc,
+                literal,
+              })
+            }
+          >
+            <PlayArrowRounded fontSize="large" />
+          </IconButton>
+        }
+      />
       <CardContent className={classes.root}>
         <div className={classes.detailsLeft}>
-          <Typography component="h6" variant="h6">
-            {title}
-          </Typography>
           <Typography variant="body2" color="textSecondary">
             {desc}
           </Typography>
         </div>
         <div className={classes.detailsRigth}>
-          <Typography variant="overline">{literal}</Typography>
           <ul className={classes.bagOfChips}>
             {tags.map(({ id, tag_name }) => (
               <li key={id}>
