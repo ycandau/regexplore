@@ -6,25 +6,24 @@ import Node from './Node';
 
 import Parser from '../re/re_parser';
 
-const scaleNode = (xmin, height, gap, diameter) => (coord) => {
-  const x = xmin + coord[0] * (gap + diameter);
-  const y = height / 2 + coord[1] * (gap + diameter) - diameter / 2;
+const scaleNode = (xmin, height, dx, dy) => (coord) => {
+  const x = xmin + coord[0] * dx;
+  const y = height / 2 + coord[1] * dy;
   return [x, y];
 };
 
 //------------------------------------------------------------------------------
 
 const Graph = () => {
-  const parser = new Parser('ab|cdef');
+  const parser = new Parser('ab|cd|ef');
   const { graph } = parser;
 
   const canvasRef = useRef(null);
+  const scale = scaleNode(40, 300, 80, 80);
 
-  // console.log(graph.links);
+  console.log(graph);
 
   useEffect(() => {
-    const scale = scaleNode(40, 300, 50, 40);
-
     const canvas = canvasRef.current;
     canvas.width = 800;
     canvas.height = 300;
@@ -38,22 +37,25 @@ const Graph = () => {
       const [x1, y1] = scale(p1);
       const [x2, y2] = scale(p2);
 
-      console.log(x1, y1, x2, y2);
-
       ctx.beginPath();
-      ctx.moveTo(x1 + 25, y1 + 25);
-      ctx.lineTo(x2 + 25, y2 + 25);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
     });
-  }, [graph]);
-
-  const scale = scaleNode(40, 300, 50, 40);
+  }, [graph, scale]);
 
   return (
     <div id="graph-container">
       {graph.nodes.map(({ coord, label }, index) => {
         const scaledCoord = scale(coord);
-        return <Node key={`${index}`} coord={scaledCoord} label={label} />;
+        return (
+          <Node
+            key={`${index}`}
+            coord={scaledCoord}
+            label={label}
+            diameter={50}
+          />
+        );
       })}
       <canvas id="canvas" ref={canvasRef}></canvas>
     </div>
