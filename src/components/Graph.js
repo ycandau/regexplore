@@ -15,14 +15,12 @@ const scaleNode = (xmin, height, dx, dy) => (coord) => {
 //------------------------------------------------------------------------------
 
 const Graph = () => {
-  const parser = new Parser('a*c');
+  const parser = new Parser('aaaa|(bbb|(c|d))');
   const { graph } = parser;
 
   const canvasRef = useRef(null);
   const scale = scaleNode(40, 300, 70, 60);
   const diameter = 40;
-
-  // console.log(graph);
 
   useEffect(() => {
     const canvas = canvasRef.current;

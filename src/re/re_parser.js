@@ -6,7 +6,7 @@ import { logHeading, toString, inspect } from './re_helpers.js';
 
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, list, graph } from './re_nfa.js';
+import { compile, graph } from './re_nfa.js';
 import { descriptions, warnings } from './re_static_info.js';
 
 //------------------------------------------------------------------------------
@@ -122,12 +122,24 @@ class Parser {
 
   logNFA() {
     logHeading('NFA');
-    this.nodes.forEach((node) => {
+    this.nfa.forEach((node) => {
       const toLabel = (n) => `[${n.label}]`;
       const next = node.nextNodes.map(toLabel).join(' ');
       const previous = node.previousNodes.map(toLabel).join(' ');
       const heights = node.heights ? ` - ${node.heights}` : '';
       const str = `  ${node.label} : ${previous} - ${next}${heights}`;
+      console.log(str);
+    });
+  }
+
+  logGNodes() {
+    logHeading('GNodes');
+    this.gnodes.forEach((gnode) => {
+      const previous = gnode.previous.map((gn) => gn.label).join(' , ');
+      const forkIndex = gnode.forkIndex
+        ? ` - i: ${gnode.forkIndex}`
+        : ' - i: _';
+      const str = `  ${gnode.label} : [ ${previous} ]` + forkIndex;
       console.log(str);
     });
   }
@@ -145,8 +157,8 @@ class Parser {
     // this.logRPN();
     // this.logDescriptions();
     // this.logWarnings();
-    this.logNFA();
-    this.logGraph();
+    // this.logNFA();
+    this.logGNodes();
   }
 
   //----------------------------------------------------------------------------
@@ -414,7 +426,9 @@ class Parser {
   // Compile NFA
 
   compile() {
-    this.nfa = compile(this.rpn);
+    const { nfa, gnodes } = compile(this.rpn);
+    this.nfa = nfa;
+    this.gnodes = gnodes;
 
     // Merge compile information from tokens back into descriptions
     const filter = isNotIn('label', 'type', 'match');
@@ -424,14 +438,14 @@ class Parser {
       merge(this.descriptions[token.index], token, filter);
     });
 
+    // Generate editorInfo object
     this.editorInfo = this.descriptions.map((descrip) => ({
       ...descrip,
       displayType: typeToDisplayType[descrip.type],
     }));
 
-    this.nodes = list(this.nfa);
-
-    this.graph = graph(this.nodes);
+    // console.log(gnodes);
+    this.graph = graph(gnodes);
   }
 
   //----------------------------------------------------------------------------
@@ -514,5 +528,5 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('a|(b|(c|d))');
+// const parser = new Parser('abc');
 // parser.logAll();
