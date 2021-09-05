@@ -108,7 +108,11 @@ export default function Page({
       ));
 
   const pageContent = !!regexes &&
-    !!regexes.length && [pagination('t'), ...cards, pagination('b')];
+    !!regexes.length && [
+      totalPages > 1 && pagination('t'),
+      ...cards,
+      totalPages > 1 && pagination('b'),
+    ];
 
   return <Box className={classes.page}>{pageContent}</Box>;
 }

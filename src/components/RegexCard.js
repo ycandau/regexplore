@@ -22,7 +22,6 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: '700',
     marginBlockStart: theme.spacing(-2),
     marginBlockEnd: theme.spacing(2),
-    textAlign: 'center',
   },
   bagOfChips: {
     display: 'flex',
