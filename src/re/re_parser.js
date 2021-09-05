@@ -3,17 +3,17 @@
 //------------------------------------------------------------------------------
 
 import { logHeading, toString, inspect } from './re_helpers.js';
-
+import { descriptions, warnings } from './re_static_info.js';
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, list } from './re_nfa.js';
-import { descriptions, warnings } from './re_static_info.js';
+import compile from './re_compile.js';
+import graph from './re_graph.js';
 
 //------------------------------------------------------------------------------
 
 const typeToDisplayType = {
   charLiteral: 'value',
-  escapedChar: 'value-special',
+  escapedChar: 'value',
   charClass: 'value-special',
   bracketChar: 'value',
   bracketRangeLow: 'value-special',
@@ -120,23 +120,45 @@ class Parser {
     this.warnings.forEach((warning) => console.log(`  ${toString(warning)}`));
   }
 
-  logGraph() {
-    logHeading('Graph');
-    this.nodes.forEach((node) => {
-      const toLabel = (n) => n.label;
-      const nextNodes = node.nextNodes.map(toLabel).join(' , ');
-      const heights = node.heights ? ` ${node.heights}` : '';
-      const str = `  ${node.label} : [ ${nextNodes} ]${heights}`;
+  logNFA() {
+    logHeading('NFA');
+    this.nfa.forEach((node) => {
+      const toLabel = (n) => `[${n.label}]`;
+      const next = node.nextNodes.map(toLabel).join(' ');
+      const previous = node.previousNodes.map(toLabel).join(' ');
+      const heights = node.heights ? ` - ${node.heights}` : '';
+      const str = `  ${node.label} : ${previous} - ${next}${heights}`;
       console.log(str);
     });
   }
 
-  log() {
+  logGNodes() {
+    logHeading('GNodes');
+    this.gnodes.forEach((gnode) => {
+      const previous = gnode.previous.map((gn) => gn.label).join(' , ');
+      const forkIndex = gnode.forkIndex
+        ? ` - i: ${gnode.forkIndex}`
+        : ' - i: _';
+      const str = `  ${gnode.label} : [ ${previous} ]` + forkIndex;
+      console.log(str);
+    });
+  }
+
+  logGraph() {
+    logHeading('Graph');
+    this.graph.nodes.forEach((node) => {
+      const str = `  ${node.label} : ( ${node.x} , ${node.y} )`;
+      console.log(str);
+    });
+  }
+
+  logAll() {
     this.logStr();
-    this.logRPN();
-    this.logDescriptions();
-    this.logWarnings();
-    this.logGraph();
+    // this.logRPN();
+    // this.logDescriptions();
+    // this.logWarnings();
+    // this.logNFA();
+    this.logGNodes();
   }
 
   //----------------------------------------------------------------------------
@@ -404,7 +426,9 @@ class Parser {
   // Compile NFA
 
   compile() {
-    this.nfa = compile(this.rpn);
+    const { nfa, nodes } = compile(this.rpn);
+    this.nfa = nfa;
+    this.nodes = nodes;
 
     // Merge compile information from tokens back into descriptions
     const filter = isNotIn('label', 'type', 'match');
@@ -414,12 +438,13 @@ class Parser {
       merge(this.descriptions[token.index], token, filter);
     });
 
+    // Generate editorInfo object
     this.editorInfo = this.descriptions.map((descrip) => ({
       ...descrip,
       displayType: typeToDisplayType[descrip.type],
     }));
 
-    this.nodes = list(this.nfa);
+    this.graph = graph(nodes);
   }
 
   //----------------------------------------------------------------------------
@@ -494,7 +519,7 @@ class Parser {
           break;
       }
     });
-    return stack[0];
+    return stack[0] || '';
   }
 }
 
@@ -502,5 +527,5 @@ class Parser {
 
 export default Parser;
 
-const parser = new Parser('(a*b|c*d)|e');
-parser.log();
+// const parser = new Parser('abc');
+// parser.logAll();

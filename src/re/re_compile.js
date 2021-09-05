@@ -3,11 +3,10 @@
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
-const QUANT_HEIGHT = 0.5;
+const QUANT_HEIGHT = 0;
 
 const nodeBase = () => ({
   nextNodes: [],
-  nextLink: null,
   gen: 0, // used during simulation
 });
 
@@ -15,21 +14,20 @@ const newNode = (token, config) => {
   return { ...token, ...nodeBase(), ...config };
 };
 
-const newFragment = (
+const newFragment = (firstNode, terminalNodes, begin, end, height, nodes) => ({
   firstNode,
   terminalNodes,
   begin,
   end,
-  lastNode,
-  height
-) => {
-  return { firstNode, terminalNodes, begin, end, lastNode, height };
-};
+  height,
+  nodes,
+});
 
 //------------------------------------------------------------------------------
 
-const connect = (node1, node2) => {
+const connect = (node1, node2, index) => {
   node1.nextNodes.push(node2);
+  if (index !== undefined) node2.forkIndex = index;
 };
 
 const connectFragment = (frag, node) => {
@@ -50,60 +48,76 @@ const setRange = (token, frag1, frag2) => {
 const concat = (frag1, frag2) => {
   connectFragment(frag1, frag2.firstNode);
 
-  frag1.lastNode.nextLink = frag2.firstNode;
-  const height = Math.max(frag1.height, frag2.height);
-
-  const terminals = [...frag2.terminalNodes];
   return newFragment(
     frag1.firstNode,
-    terminals,
+    [...frag2.terminalNodes],
     frag1.begin,
     frag2.end,
-    frag2.lastNode,
-    height
+    Math.max(frag1.height, frag2.height),
+    [...frag1.nodes, ...frag2.nodes]
   );
 };
+
+//------------------------------------------------------------------------------
 
 const alternate = (frag1, frag2, token) => {
   const fork = newNode(token);
-  connect(fork, frag1.firstNode);
-  connect(fork, frag2.firstNode);
+  const first1 = frag1.firstNode;
+  const first2 = frag2.firstNode;
+  let nodes = null;
+
+  // No fork merging
+  if (first1.type !== '|' && first2.type !== '|') {
+    connect(fork, first1, 0);
+    connect(fork, first2, 1);
+
+    fork.heights = [frag1.height, frag2.height];
+    nodes = [fork, ...frag1.nodes, ...frag2.nodes];
+  }
+
+  // Merge left hand fork
+  else if (first1.type === '|') {
+    first1.nextNodes.forEach((next, ind) => {
+      connect(fork, next, ind);
+    });
+    connect(fork, first2, first1.nextNodes.length);
+
+    fork.heights = [...first1.heights, frag2.height];
+    nodes = [fork, ...frag1.nodes.slice(1), ...frag2.nodes];
+  } else {
+    throw new Error('NFA: Fork merge should not happen');
+  }
+
   setRange(token, frag1, frag2);
 
-  fork.nextLink = frag1.firstNode;
-  frag1.lastNode.nextLink = frag2.firstNode;
-  const height = frag1.height + frag2.height;
-  fork.heights = [frag1.height, frag2.height];
-
-  const terminals = [...frag1.terminalNodes, ...frag2.terminalNodes];
   return newFragment(
     fork,
-    terminals,
+    [...frag1.terminalNodes, ...frag2.terminalNodes],
     frag1.begin,
     frag2.end,
-    frag2.lastNode,
-    height
+    frag1.height + frag2.height,
+    nodes
   );
 };
+
+//------------------------------------------------------------------------------
 
 const repeat01 = (frag, token) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
   setRange(token, frag);
 
-  fork.nextLink = frag.firstNode;
-  const height = frag.height + QUANT_HEIGHT;
-
-  const terminals = [...frag.terminalNodes, fork];
   return newFragment(
     fork,
-    terminals,
+    [...frag.terminalNodes, fork],
     frag.begin,
     token.index,
-    frag.lastNode,
-    height
+    frag.height + QUANT_HEIGHT,
+    [fork, ...frag.nodes]
   );
 };
+
+//------------------------------------------------------------------------------
 
 const repeat0N = (frag, token) => {
   const fork = newNode(token);
@@ -111,18 +125,17 @@ const repeat0N = (frag, token) => {
   connectFragment(frag, fork);
   setRange(token, frag);
 
-  fork.nextLink = frag.firstNode;
-  const height = frag.height + QUANT_HEIGHT;
-
   return newFragment(
     fork,
     [fork],
     frag.begin,
     token.index,
-    frag.lastNode,
-    height
+    frag.height + QUANT_HEIGHT,
+    [fork, ...frag.nodes]
   );
 };
+
+//------------------------------------------------------------------------------
 
 const repeat1N = (frag, token) => {
   const fork = newNode(token);
@@ -130,30 +143,28 @@ const repeat1N = (frag, token) => {
   connectFragment(frag, fork);
   setRange(token, frag);
 
-  frag.lastNode.nextLink = fork;
-  const height = frag.height + QUANT_HEIGHT;
-
   return newFragment(
     frag.firstNode,
     [fork],
     frag.begin,
     token.index,
-    fork,
-    height
+    frag.height + QUANT_HEIGHT,
+    [...frag.nodes, fork]
   );
 };
+//------------------------------------------------------------------------------
 
 const parentheses = (frag, token) => {
   const open = newNode(token);
   const close = newNode(token, { label: ')', type: ')', index: open.end });
   connect(open, frag.firstNode);
   connectFragment(frag, close);
+  open.close = close;
 
-  open.nextLink = frag.firstNode;
-  frag.lastNode.nextLink = close;
   const height = frag.height;
+  const nodes = [open, ...frag.nodes, close];
 
-  return newFragment(open, [close], token.begin, token.end, close, height);
+  return newFragment(open, [close], token.begin, token.end, height, nodes);
 };
 
 //------------------------------------------------------------------------------
@@ -162,9 +173,12 @@ const pushValue = (fragments, token) => {
   const node = newNode(token);
   const end = token.end || token.index; // in case of bracket expressions
   const height = HEIGHT;
-  const fragment = newFragment(node, [node], token.index, end, node, height);
+
+  const fragment = newFragment(node, [node], token.index, end, height, [node]);
   fragments.push(fragment);
 };
+
+//------------------------------------------------------------------------------
 
 const unary = (fragments, operation, token) => {
   const frag = fragments.pop();
@@ -217,25 +231,19 @@ const compile = (rpn) => {
     }
   });
 
-  binary(fragments, concat);
+  if (fragments.length === 2) {
+    binary(fragments, concat);
+  }
+
   pushValue(fragments, { label: '>', type: 'last' });
   binary(fragments, concat);
 
-  return fragments[0].firstNode;
+  return {
+    nfa: fragments[0].firstNode,
+    nodes: fragments[0].nodes,
+  };
 };
 
 //------------------------------------------------------------------------------
 
-const list = (first) => {
-  const array = [];
-  let node = first;
-  while (node !== null) {
-    array.push(node);
-    node = node.nextLink;
-  }
-  return array;
-};
-
-//------------------------------------------------------------------------------
-
-export { compile, list };
+export default compile;

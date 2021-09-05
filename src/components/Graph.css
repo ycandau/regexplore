@@ -1,0 +1,69 @@
+#graph-container {
+  width: 1000px;
+  height: 300px;
+  color: white;
+  background-color: black;
+  position: relative;
+}
+
+#canvas {
+  /* width: 100%;
+  height: 100%; */
+  /* width: 800px;
+  height: 300px; */
+}
+
+.node {
+  border-radius: 1em;
+  font-size: 20px;
+  font-weight: 600;
+  color: black;
+  background-color: orange;
+  padding-top: 0.35em;
+  position: absolute;
+  text-align: center;
+  vertical-align: bottom;
+  font-family: 'Fira Code';
+}
+
+.node.operator {
+  color: transparent;
+  background-color: transparent;
+}
+
+.node.first,
+.node.last {
+  color: orange;
+  background-color: black;
+  border: 2px solid orange;
+}
+
+.node.value,
+.node.value-special {
+  color: orange;
+  background-color: black;
+  border: 2px solid orange;
+}
+
+.node.quantifier {
+  color: greenyellow;
+  background-color: black;
+  border: 2px solid greenyellow;
+}
+
+.node.delimiter {
+  color: rgb(255, 133, 255);
+  background-color: black;
+  border: 2px solid rgb(255, 133, 255);
+}
+
+.node.delimiter.quantifier {
+  color: rgb(0, 195, 255);
+  background-color: black;
+  border: 2px solid rgb(0, 195, 255);
+}
+
+#graph-container .node.active {
+  color: black;
+  background-color: orange;
+}

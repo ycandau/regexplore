@@ -38,7 +38,7 @@ const inspect = (...keys) => (obj) => {
     .map(([key, value]) => `${key}: ${value}`);
   const length = entries.reduce((count, { length }) => count + length, 0);
   const separator = length <= 60 ? ', ' : '\n    ';
-  const str = `  ${obj.label} : ${obj.type} { ${entries.join(separator)} }`;
+  const str = `  ${obj.label} : { ${entries.join(separator)} }`;
   console.log(str);
 };
 
