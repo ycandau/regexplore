@@ -1,5 +1,5 @@
 import TagSelector from './TagSelector';
-import RegexCard from './RegexCard';
+import Page from './Page';
 import SaveBox from './SaveBox';
 import InfoBox from './InfoBox';
 import LogBox from './LogBox';
@@ -74,41 +74,11 @@ const App = () => {
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
   const [tags, setTags] = useState([]);
-  const [regexes, setRegexes] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [page, setPage] = useState(null);
   const [index, setIndex] = useState(null);
   const [parser, setParser] = useState(new Parser('a(b|c)de'));
   const [fetchStr, setFetchStr] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        let res;
-        let baseBody = { tags: selectedTags.map(({ id }) => id) };
-        if (!tsq) {
-          res = await fetch('/regexes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ ...baseBody }),
-          });
-        } else {
-          res = await fetch('/regexes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ tsq, ...baseBody }),
-          });
-        }
-        const { regexes } = await res.json();
-        setRegexes(regexes);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, [tsq, selectedTags, setRegexes]);
 
   useEffect(() => {
     if (!!fetchStr)
@@ -245,27 +215,21 @@ const App = () => {
   const exploreScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.regexCards}>
-        {regexes.map(({ id, user_name, title, notes, regex, tags }) => (
-          <div className={classes.regexCardBox} key={id}>
-            <RegexCard
-              {...{
-                id,
-                title,
-                desc: notes,
-                literal: regex,
-                tagsObj: tags,
-                user_name,
-                onExploreRegex,
-                onSelectTag,
-              }}
-            />
-          </div>
-        ))}
+        {
+          <Page
+            {...{
+              tsq,
+              selectedTags,
+              page,
+              setPage,
+              onExploreRegex,
+              onSelectTag,
+            }}
+          />
+        }
       </div>
       <div className={classes.tagSelectBox}>
-        <TagSelector
-          {...{ tags, setTags, selectedTags, onSelectTag, onSearchChange }}
-        />
+        <TagSelector {...{ tags, setTags, selectedTags, onSelectTag }} />
       </div>
     </div>
   );
