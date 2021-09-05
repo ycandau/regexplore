@@ -70,8 +70,8 @@ const App = () => {
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
   const [testString, setTestString] = useState('');
-  const [title, setTitle] = useState('Regex Title');
-  const [desc, setDesc] = useState('Regex Description');
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
   const [tags, setTags] = useState([]);
   const [regexes, setRegexes] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -185,6 +185,10 @@ const App = () => {
     setTags(tags);
   };
 
+  const onSelectTag = ({ id, tag_name }) => {
+    setSelectedTags((tags) => tags.concat({ id, tag_name }));
+  };
+
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
@@ -247,6 +251,7 @@ const App = () => {
                 tagsObj: tags,
                 user_name,
                 onExploreRegex,
+                onSelectTag,
               }}
             />
           </div>

@@ -38,6 +38,7 @@ export default function RegexCard({
   desc,
   literal,
   tagsObj,
+  onSelectTag,
   user_name,
   onExploreRegex,
 }) {
@@ -78,7 +79,11 @@ export default function RegexCard({
           <ul className={classes.bagOfChips}>
             {tags.map(({ id, tag_name }) => (
               <li key={id}>
-                <Chip label={tag_name} className={classes.chip} />
+                <Chip
+                  label={tag_name}
+                  className={classes.chip}
+                  onClick={() => onSelectTag({ id, tag_name })}
+                />
               </li>
             ))}
           </ul>
