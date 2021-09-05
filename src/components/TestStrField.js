@@ -18,6 +18,7 @@ const useStyles = makeStyles((theme) => ({
   },
   pap: {
     position: 'absolute',
+    backgroundColor: 'transparent',
     width: `calc(100% + ${theme.spacing(4)}px)`,
     minHeight: `calc(100% + ${theme.spacing(4)}px)`,
     margin: theme.spacing(-2),
@@ -68,7 +69,7 @@ export default function TestStrField({
 
   return (
     <div className={classes.contextWrapper}>
-      <Paper className={classes.pap}>
+      <Paper className={classes.pap} elevation={0}>
         <Typography className={classes.ghostText}>{highlightedStr}</Typography>
       </Paper>
       <TextField

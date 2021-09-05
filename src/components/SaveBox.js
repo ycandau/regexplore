@@ -69,8 +69,11 @@ const useStyles = makeStyles((theme) => ({
     transition: theme.transitions.create('width'),
     width: '100%',
   },
-  cardHeight: {
+  cardPad: {
     height: '100%',
+    backgroundColor: 'transparent',
+    padding: 0,
+    overflow: 'visible',
   },
 }));
 
@@ -92,11 +95,8 @@ export default function SaveBox({
   };
 
   return (
-    <Card classes={{ root: classes.cardHeight }}>
-      <CardContent
-        className={classes.root}
-        classes={{ root: classes.cardHeight }}
-      >
+    <Card classes={{ root: classes.cardPad }} elevation={0}>
+      <CardContent className={classes.root} classes={{ root: classes.cardPad }}>
         <div className={classes.detailsLeft}>
           <TextField
             fullWidth

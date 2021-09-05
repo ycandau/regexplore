@@ -28,18 +28,16 @@ const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
     gridTemplateColumns: '8fr 3fr',
-    gap: theme.spacing(2),
-    padding: theme.spacing(2),
+    gap: theme.spacing(3),
+    padding: theme.spacing(3),
   },
   editorBox: {
     gridColumn: '1/2',
     gridRow: '1/2',
-    padding: theme.spacing(2),
   },
   testStrBox: {
     gridColumn: '1/2',
     gridRow: '2/3',
-    padding: theme.spacing(2),
   },
   infoBox: {
     gridColumn: '2/3',
