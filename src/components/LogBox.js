@@ -33,7 +33,10 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
   },
   headerRoot: {
-    alignItems: 'flex-start',
+    '& [class*="MuiCardHeader-action"]': {
+      alignSelf: 'center',
+      margin: 0,
+    },
   },
 }));
 
