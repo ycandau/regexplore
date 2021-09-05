@@ -9,6 +9,12 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column',
     paddingInline: theme.spacing(8),
   },
+  pagination: {
+    paddingBlock: theme.spacing(2),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 }));
 
 export default function Page({
@@ -67,19 +73,20 @@ export default function Page({
     !!regexes &&
     !!regexes.length &&
     regexes.map(({ id, user_name, title, notes, regex, tags }) => (
-      <RegexCard
-        {...{
-          id,
-          title,
-          desc: notes,
-          literal: regex,
-          tagsObj: tags,
-          user_name,
-          onExploreRegex,
-          onSelectTag,
-          key: id,
-        }}
-      />
+      <div className={classes.pagination} key={id}>
+        <RegexCard
+          {...{
+            id,
+            title,
+            user_name,
+            onExploreRegex,
+            onSelectTag,
+          }}
+          literal={regex}
+          tagsObj={tags}
+          desc={notes}
+        />
+      </div>
     ));
 
   const pagination =
@@ -87,15 +94,17 @@ export default function Page({
     !!regexes.length &&
     ((key) =>
       regexes.length > 1 && (
-        <Pagination
-          key={key}
-          shape="rounded"
-          count={totalPages}
-          page={pageNum}
-          onChange={(event, page) =>
-            setPageInfo({ regexes, totalPages, pageNum: page })
-          }
-        />
+        <div className={classes.pagination}>
+          <Pagination
+            key={key}
+            shape="rounded"
+            count={totalPages}
+            page={pageNum}
+            onChange={(e, page) =>
+              setPageInfo({ regexes, totalPages, pageNum: page })
+            }
+          />
+        </div>
       ));
 
   const pageContent = !!regexes &&
