@@ -186,8 +186,11 @@ const App = () => {
   };
 
   const onSelectTag = ({ id, tag_name }) => {
-    if (selectedTags.some((t) => id === t.id)) return;
-    setSelectedTags((tags) => tags.concat({ id, tag_name }));
+    setSelectedTags((tags) =>
+      tags.some((t) => id === t.id)
+        ? tags.filter((t) => id !== t.id)
+        : tags.concat({ id, tag_name })
+    );
   };
 
   const classes = useStyles();
@@ -260,7 +263,7 @@ const App = () => {
       </div>
       <div className={classes.tagSelectBox}>
         <TagSelector
-          {...{ tags, setTags, selectedTags, setSelectedTags, onSearchChange }}
+          {...{ tags, setTags, selectedTags, onSelectTag, onSearchChange }}
         />
       </div>
     </div>
