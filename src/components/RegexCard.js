@@ -3,29 +3,32 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
-import { CardHeader, IconButton } from '@material-ui/core';
-import { PlayArrowRounded } from '@material-ui/icons';
+import { CardHeader, Button } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
+  cardRoot: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    width: '100%',
   },
-  detailsLeft: {
-    display: 'flex',
-    flexDirection: 'column',
+  headerRoot: {
+    '& [class*="MuiCardHeader-action"]': {
+      alignSelf: 'flex-end',
+      margin: 0,
+    },
   },
-  detailsRigth: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+  regex: {
+    fontFamily: 'Fira Code',
+    fontWeight: '700',
+    marginBlockStart: theme.spacing(-2),
+    marginBlockEnd: theme.spacing(2),
   },
   bagOfChips: {
     display: 'flex',
-    justifyContent: 'flex-end',
     flexWrap: 'wrap',
     listStyle: 'none',
+    justifyContent: 'flex-end',
     padding: theme.spacing(0.5),
-    margin: 0,
   },
   chip: {
     margin: theme.spacing(0.5),
@@ -43,18 +46,24 @@ export default function RegexCard({
   onExploreRegex,
 }) {
   const classes = useStyles();
-  const tags = Object.entries(tagsObj).map(([id, tag_name]) => ({
-    id,
-    tag_name,
-  }));
+  const tags =
+    (tagsObj &&
+      Object.entries(tagsObj).map(([id, tag_name]) => ({
+        id,
+        tag_name,
+      }))) ||
+    [];
 
   return (
-    <Card>
+    <Card variant="outlined" className={classes.cardRoot}>
       <CardHeader
+        classes={{ root: classes.headerRoot }}
         title={title}
-        subheader={literal}
+        subheader={'by ' + user_name}
         action={
-          <IconButton
+          <Button
+            variant="outlined"
+            size="large"
             onClick={() =>
               onExploreRegex({
                 id,
@@ -65,32 +74,26 @@ export default function RegexCard({
               })
             }
           >
-            <PlayArrowRounded fontSize="large" />
-          </IconButton>
+            Explore
+          </Button>
         }
       />
-      <CardContent className={classes.root}>
-        <div className={classes.detailsLeft}>
-          <Typography variant="body2" color="textSecondary">
-            {desc}
-          </Typography>
-        </div>
-        <div className={classes.detailsRigth}>
-          <ul className={classes.bagOfChips}>
-            {tags.map(({ id, tag_name }) => (
-              <li key={id}>
-                <Chip
-                  label={tag_name}
-                  className={classes.chip}
-                  onClick={() => onSelectTag({ id, tag_name })}
-                />
-              </li>
-            ))}
-          </ul>
-          <Typography variant="body2" color="textSecondary">
-            by {user_name}
-          </Typography>
-        </div>
+      <CardContent>
+        <Typography className={classes.regex}>{literal}</Typography>
+        <Typography color="textSecondary">{desc}</Typography>
+        <ul className={classes.bagOfChips}>
+          {tags.map(({ id, tag_name }) => (
+            <li key={id}>
+              <Chip
+                label={tag_name}
+                className={classes.chip}
+                onClick={() =>
+                  onSelectTag({ id: Number.parseInt(id), tag_name })
+                }
+              />
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );

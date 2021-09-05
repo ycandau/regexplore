@@ -70,7 +70,7 @@ export default function TagSelector({
   tags,
   setTags,
   selectedTags,
-  setSelectedTags,
+  onSelectTag,
 }) {
   const classes = useStyles();
   const [tsq, setTSQ] = useState('');
@@ -135,10 +135,8 @@ export default function TagSelector({
               label={tag_name}
               className={classes.chip}
               onDelete={() => {
-                setSelectedTags((tags) =>
-                  tags.filter((t) => tag_name !== t.tag_name)
-                );
-                setTags(() => tags.concat({ id, tag_name }));
+                onSelectTag({ id, tag_name });
+                // setTags(() => tags.concat({ id, tag_name }));
               }}
             />
           </li>
@@ -151,8 +149,8 @@ export default function TagSelector({
               label={tag_name}
               className={classes.chip}
               onClick={() => {
-                setSelectedTags(() => selectedTags.concat({ id, tag_name }));
-                setTags((tags) => tags.filter((t) => tag_name !== t.tag_name));
+                onSelectTag({ id, tag_name });
+                // setTags((tags) => tags.filter((t) => tag_name !== t.tag_name));
               }}
             />
           </li>

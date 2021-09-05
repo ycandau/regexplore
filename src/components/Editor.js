@@ -13,6 +13,7 @@ const useStyles = makeStyles((theme) => ({
   },
   paperPad: {
     position: 'absolute',
+    backgroundColor: 'transparent',
     width: `calc(100% + ${theme.spacing(4)}px)`,
     minHeight: `calc(100% + ${theme.spacing(4)}px)`,
     margin: theme.spacing(-2),
@@ -74,7 +75,7 @@ const Editor = ({ index, editorInfo, onRegexChange, onHover }) => {
 
   return (
     <div className={classes.contextWrapper}>
-      <Paper className={classes.paperPad}>
+      <Paper className={classes.paperPad} elevation={0}>
         <div className={'display'} onClick={onClick(null)}>
           <Typography className={classes.ghostText}>
             {labelsAndClasses}
