@@ -151,6 +151,7 @@ export default function TagSelector({
               label={tag_name}
               className={classes.chip}
               onClick={() => {
+                if (selectedTags.some((t) => id === t.id)) return;
                 setSelectedTags(() => selectedTags.concat({ id, tag_name }));
                 setTags((tags) => tags.filter((t) => tag_name !== t.tag_name));
               }}

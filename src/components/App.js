@@ -186,6 +186,7 @@ const App = () => {
   };
 
   const onSelectTag = ({ id, tag_name }) => {
+    if (selectedTags.some((t) => id === t.id)) return;
     setSelectedTags((tags) => tags.concat({ id, tag_name }));
   };
 

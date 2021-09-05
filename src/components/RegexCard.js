@@ -82,7 +82,9 @@ export default function RegexCard({
                 <Chip
                   label={tag_name}
                   className={classes.chip}
-                  onClick={() => onSelectTag({ id, tag_name })}
+                  onClick={() =>
+                    onSelectTag({ id: Number.parseInt(id), tag_name })
+                  }
                 />
               </li>
             ))}
