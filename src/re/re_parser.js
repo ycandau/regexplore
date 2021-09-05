@@ -426,9 +426,9 @@ class Parser {
   // Compile NFA
 
   compile() {
-    const { nfa, gnodes } = compile(this.rpn);
+    const { nfa, nodes } = compile(this.rpn);
     this.nfa = nfa;
-    this.gnodes = gnodes;
+    this.nodes = nodes;
 
     // Merge compile information from tokens back into descriptions
     const filter = isNotIn('label', 'type', 'match');
@@ -445,7 +445,7 @@ class Parser {
     }));
 
     // console.log(gnodes);
-    this.graph = graph(gnodes);
+    this.graph = graph(nodes);
   }
 
   //----------------------------------------------------------------------------

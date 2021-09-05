@@ -14,20 +14,30 @@ const newNode = (token, config) => {
   return { ...token, ...nodeBase(), ...config };
 };
 
-const newFragment = (firstNode, terminalNodes, begin, end, height, nodes) => ({
+const newGNode = (node) => {
+  const gnode = {
+    label: node.label,
+    type: node.type,
+    ref: node,
+    previous: [],
+  };
+  node.gnode = gnode;
+  return gnode;
+};
+
+const newFragment = (firstNode, terminalNodes, begin, end, height, gnodes) => ({
   firstNode,
   terminalNodes,
   begin,
   end,
   height,
-  nodes,
+  gnodes,
 });
 
 //------------------------------------------------------------------------------
 
-const connect = (node1, node2, index) => {
+const connect = (node1, node2) => {
   node1.nextNodes.push(node2);
-  if (index !== undefined) node2.forkIndex = index;
 };
 
 const connectFragment = (frag, node) => {
@@ -43,18 +53,40 @@ const setRange = (token, frag1, frag2) => {
   }
 };
 
+const gconnectLink = (gnode1, gnode2) => {
+  gnode2.previous.push(gnode1);
+};
+
+const gconnectMerge = (frag, gnode) => {
+  frag.terminalNodes.forEach((node) => {
+    if (node.gnode) {
+      gnode.previous.push(node.gnode); // because of repeat01
+    }
+  });
+};
+
+const gconnectBackToFork = (gfork, gnode, forkIndex) => {
+  gnode.previous.pop(); // check ok
+  gnode.previous.push(gfork);
+  gnode.forkIndex = forkIndex;
+};
+
 //------------------------------------------------------------------------------
 
 const concat = (frag1, frag2) => {
   connectFragment(frag1, frag2.firstNode);
+  gconnectMerge(frag1, frag2.gnodes[0]);
+
+  const terminals = [...frag2.terminalNodes];
+  const gnodes = [...frag1.gnodes, ...frag2.gnodes];
 
   return newFragment(
     frag1.firstNode,
-    [...frag2.terminalNodes],
+    terminals,
     frag1.begin,
     frag2.end,
     Math.max(frag1.height, frag2.height),
-    [...frag1.nodes, ...frag2.nodes]
+    gnodes
   );
 };
 
@@ -62,41 +94,49 @@ const concat = (frag1, frag2) => {
 
 const alternate = (frag1, frag2, token) => {
   const fork = newNode(token);
+  const gfork = newGNode(fork);
   const first1 = frag1.firstNode;
   const first2 = frag2.firstNode;
-  let nodes = null;
+  let gnodes = null;
 
   // No fork merging
   if (first1.type !== '|' && first2.type !== '|') {
-    connect(fork, first1, 0);
-    connect(fork, first2, 1);
+    connect(fork, first1);
+    connect(fork, first2);
 
-    fork.heights = [frag1.height, frag2.height];
-    nodes = [fork, ...frag1.nodes, ...frag2.nodes];
+    gconnectBackToFork(gfork, first1.gnode, 0);
+    gconnectBackToFork(gfork, first2.gnode, 1);
+
+    gfork.heights = [frag1.height, frag2.height];
+    gnodes = [gfork, ...frag1.gnodes, ...frag2.gnodes];
   }
 
   // Merge left hand fork
   else if (first1.type === '|') {
     first1.nextNodes.forEach((next, ind) => {
-      connect(fork, next, ind);
+      connect(fork, next);
+      gconnectBackToFork(gfork, next.gnode, ind);
     });
-    connect(fork, first2, first1.nextNodes.length);
+    connect(fork, first2);
+    gconnectBackToFork(gfork, first2.gnode, first1.nextNodes.length);
 
-    fork.heights = [...first1.heights, frag2.height];
-    nodes = [fork, ...frag1.nodes.slice(1), ...frag2.nodes];
+    gfork.heights = [...first1.gnode.heights, frag2.height];
+    gnodes = [gfork, ...frag1.gnodes.slice(1), ...frag2.gnodes];
   } else {
     throw new Error('NFA: Fork merge should not happen');
   }
 
   setRange(token, frag1, frag2);
 
+  const terminals = [...frag1.terminalNodes, ...frag2.terminalNodes];
+
   return newFragment(
     fork,
-    [...frag1.terminalNodes, ...frag2.terminalNodes],
+    terminals,
     frag1.begin,
     frag2.end,
     frag1.height + frag2.height,
-    nodes
+    gnodes
   );
 };
 
@@ -104,16 +144,20 @@ const alternate = (frag1, frag2, token) => {
 
 const repeat01 = (frag, token) => {
   const fork = newNode(token);
+  fork.gnode = frag.firstNode.gnode; // @check
+
   connect(fork, frag.firstNode);
   setRange(token, frag);
 
+  const terminals = [...frag.terminalNodes, fork];
+
   return newFragment(
     fork,
-    [...frag.terminalNodes, fork],
+    terminals,
     frag.begin,
     token.index,
     frag.height + QUANT_HEIGHT,
-    [fork, ...frag.nodes]
+    frag.gnodes
   );
 };
 
@@ -121,6 +165,9 @@ const repeat01 = (frag, token) => {
 
 const repeat0N = (frag, token) => {
   const fork = newNode(token);
+  const gfork = newGNode(fork);
+  gconnectMerge(frag, gfork);
+
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
   setRange(token, frag);
@@ -131,7 +178,7 @@ const repeat0N = (frag, token) => {
     frag.begin,
     token.index,
     frag.height + QUANT_HEIGHT,
-    [fork, ...frag.nodes]
+    [...frag.gnodes, gfork]
   );
 };
 
@@ -139,6 +186,9 @@ const repeat0N = (frag, token) => {
 
 const repeat1N = (frag, token) => {
   const fork = newNode(token);
+  const gfork = newGNode(fork);
+  gconnectMerge(frag, gfork);
+
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
   setRange(token, frag);
@@ -149,7 +199,7 @@ const repeat1N = (frag, token) => {
     frag.begin,
     token.index,
     frag.height + QUANT_HEIGHT,
-    [...frag.nodes, fork]
+    [...frag.gnodes, gfork]
   );
 };
 //------------------------------------------------------------------------------
@@ -157,24 +207,30 @@ const repeat1N = (frag, token) => {
 const parentheses = (frag, token) => {
   const open = newNode(token);
   const close = newNode(token, { label: ')', type: ')', index: open.end });
+  const gopen = newGNode(open);
+  const gclose = newGNode(close);
+
   connect(open, frag.firstNode);
   connectFragment(frag, close);
-  open.close = close;
+
+  gconnectLink(gopen, frag.firstNode.gnode);
+  gconnectMerge(frag, gclose);
 
   const height = frag.height;
-  const nodes = [open, ...frag.nodes, close];
+  const gnodes = [gopen, ...frag.gnodes, gclose];
 
-  return newFragment(open, [close], token.begin, token.end, height, nodes);
+  return newFragment(open, [close], token.begin, token.end, height, gnodes);
 };
 
 //------------------------------------------------------------------------------
 
 const pushValue = (fragments, token) => {
   const node = newNode(token);
+  const gnode = newGNode(node);
   const end = token.end || token.index; // in case of bracket expressions
   const height = HEIGHT;
 
-  const fragment = newFragment(node, [node], token.index, end, height, [node]);
+  const fragment = newFragment(node, [node], token.index, end, height, [gnode]);
   fragments.push(fragment);
 };
 
@@ -240,85 +296,8 @@ const compile = (rpn) => {
 
   return {
     nfa: fragments[0].firstNode,
-    nodes: fragments[0].nodes,
+    gnodes: fragments[0].gnodes,
   };
-};
-
-//------------------------------------------------------------------------------
-
-const newDisplayNode = (node) => {
-  const dnode = {
-    label: node.label,
-    type: node.type,
-    ref: node,
-  };
-  node.dnode = dnode;
-  if (node.heights !== undefined) dnode.heights = node.heights;
-  if (node.forkIndex !== undefined) dnode.forkIndex = node.forkIndex;
-  if (node.close !== undefined) dnode.close = node.close;
-  return dnode;
-};
-
-const createDisplayNodes = (nodes) => {
-  const dnodes = nodes.map(newDisplayNode);
-
-  // Transfer next node references
-  dnodes.forEach((dnode) => {
-    dnode.next = dnode.ref.nextNodes.map((node) => node.dnode);
-    if (dnode.close !== undefined) dnode.close = dnode.close.dnode;
-  });
-  return dnodes;
-};
-
-const mergeNextBack = (node1, node2, prop) => {
-  node1.label = node2.label;
-  node1.type = node2.type;
-  node1.ref = node2.ref;
-  node1.ref.dnode = node1;
-  node2.type = null;
-  node1[prop] = true;
-  if (node2.heights !== undefined) node1.heights = node2.heights;
-  if (node2.forkIndex !== undefined) node1.forkIndex = node2.forkIndex;
-  if (node2.close !== undefined) node1.close = node2.close;
-};
-
-const processQuantifiers = (nodes) => {
-  nodes.forEach((node) => {
-    const next = node.next[0];
-    if (node.type === '?') {
-      mergeNextBack(node, next, 'repeat01');
-      node.next = [...next.next];
-    }
-
-    // Repeat 0N
-    else if (node.type === '*') {
-      // console.log('==========', node);
-      const nextType = next.type;
-      mergeNextBack(node, next, 'repeat0N');
-      if (nextType === '(') {
-        node.close.next = [node.next[1]];
-        node.next = [...next.next];
-      } else {
-        node.next = [node.next[1]];
-      }
-    }
-
-    // Repeat1N
-    else if (next && next.type === '+') {
-      next.type = null;
-      node.next = [next.next[1]];
-      node.repeat1N = true;
-    }
-  });
-  return nodes.filter((node) => node.type !== null);
-};
-
-const setPreviousNodes = (nodes) => {
-  nodes.forEach((node) => (node.previous = []));
-  nodes.forEach((prev) => {
-    prev.next.forEach((node) => node.previous.push(prev));
-  });
-  return nodes;
 };
 
 //------------------------------------------------------------------------------
@@ -337,16 +316,17 @@ const forkDeltaY = (heights, index) => {
 
 //------------------------------------------------------------------------------
 
-const calculateLayout = (nodes) => {
+const graph = (nodes) => {
   const links = [];
   const forks = [];
   const merges = [];
+
+  console.log(nodes);
 
   nodes.forEach((node) => {
     // First
     if (node.type === 'first') {
       node.coord = [0, 0];
-    } else if (node.type === null) {
     }
 
     // Fork
@@ -369,8 +349,8 @@ const calculateLayout = (nodes) => {
       const top = node.previous[0];
       const bottom = node.previous[node.previous.length - 1];
       const x =
-        node.previous.reduce((max, prev) => {
-          return Math.max(max, prev.coord[0]);
+        node.previous.reduce((max, node) => {
+          return Math.max(max, node.coord[0]);
         }, 0) + 1;
       const y = (top.coord[1] + bottom.coord[1]) / 2;
       node.coord = [x, y];
@@ -389,7 +369,7 @@ const calculateLayout = (nodes) => {
     if (node.heights) {
       const coords = [];
       coords.push(node.coord);
-      node.next.forEach((n) => coords.push(n.coord));
+      node.ref.nextNodes.forEach((n) => coords.push(n.gnode.coord));
       forks.push(coords);
     }
 
@@ -397,25 +377,12 @@ const calculateLayout = (nodes) => {
     else if (node.previous.length > 1) {
       const coords = [];
       coords.push(node.coord);
-      node.previous.forEach((n) => coords.push(n.coord));
+      node.previous.forEach((gn) => coords.push(gn.coord));
       merges.push(coords);
     }
   });
 
   return { nodes, links, forks, merges };
-};
-
-const graph = (nodes) => {
-  // console.log(nodes);
-  const dnodes = createDisplayNodes(nodes);
-  const a = processQuantifiers(dnodes);
-  console.log('2 >>', a);
-  setPreviousNodes(a);
-  const g = calculateLayout(a);
-
-  return g;
-
-  // return { nodes: [], links: [], forks: [], merges: [] };
 };
 
 //------------------------------------------------------------------------------

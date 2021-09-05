@@ -11,8 +11,13 @@ import Parser from '../re/re_parser';
 const Graph = () => {
   const canvasRef = useRef(null);
 
-  // const parser = new Parser('(a)|b|(c)*|d');
-  const parser = new Parser('a|b*');
+  // const parser = new Parser('a?bc?|a?bc?|a?bc?');
+  // const parser = new Parser('a*bc*|a*bc*|a*bc*');
+  // const parser = new Parser('a+bc+|a+bc+|a+bc+');
+  // const parser = new Parser('(a)?|b?|(c)?|d?');
+  // const parser = new Parser('(a)*|b*|(c)*|d*');
+  const parser = new Parser('(a)+|(b+|(c)+)|d+');
+  // const parser = new Parser('(a)*');
   const { graph } = parser;
 
   const diameter = 40;
