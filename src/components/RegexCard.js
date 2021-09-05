@@ -43,10 +43,13 @@ export default function RegexCard({
   onExploreRegex,
 }) {
   const classes = useStyles();
-  const tags = Object.entries(tagsObj).map(([id, tag_name]) => ({
-    id,
-    tag_name,
-  }));
+  const tags =
+    (tagsObj &&
+      Object.entries(tagsObj).map(([id, tag_name]) => ({
+        id,
+        tag_name,
+      }))) ||
+    [];
 
   return (
     <Card>
