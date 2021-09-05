@@ -148,6 +148,7 @@ const App = () => {
   const toggleExplore = () =>
     setScreen((screen) => (screen === 'main' ? 'explore' : 'main'));
   const onSearchInput = (e) => {
+    setPage(null);
     setTSQ(e.target.value);
   };
   const onSearchChange = (str) => console.log('Tag Search:', str);
@@ -163,6 +164,7 @@ const App = () => {
   };
 
   const onSelectTag = ({ id, tag_name }) => {
+    setPage(null);
     setSelectedTags((tags) =>
       tags.some((t) => id === t.id)
         ? tags.filter((t) => id !== t.id)
