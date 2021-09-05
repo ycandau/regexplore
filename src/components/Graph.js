@@ -1,25 +1,42 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import './Graph.css';
 
 import Node from './Node';
 
 import Parser from '../re/re_parser';
+import { setGen, stepForward, setGraphNodes } from '../re/re_run';
 
 //------------------------------------------------------------------------------
 
 const Graph = () => {
   const canvasRef = useRef(null);
+  const [step, setStep] = useState(0);
 
   // const parser = new Parser('a?bc?|a?bc?|a?bc?');
   // const parser = new Parser('a*bc*|a*bc*|a*bc*');
   // const parser = new Parser('a+bc+|a+bc+|a+bc+');
   // const parser = new Parser('(a)?|b?|(c)?|d?');
   // const parser = new Parser('(a)*|b*|(c)*|d*');
-  // const parser = new Parser('abs');
-  const parser = new Parser('\\?.?(a)?|\\*\\w*(\\d)*|\\+[a-z]+([0-9])+');
+  // const parser = new Parser('\\?.?(a)?|\\*\\w*(\\d)*|\\+[a-z]+([0-9])+');
+  const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
+  const test = 'aaaaabc';
 
-  const { graph } = parser;
+  const { nfa, nodes, graph } = parser;
+
+  setGen(nodes, 0);
+  let active = [nfa];
+
+  for (let i = 0; i < step; i++) {
+    active = stepForward(active, test[i], i + 1);
+  }
+  setGraphNodes(graph.nodes, active);
+
+  const onForwardClick = () => {
+    setStep(step + 1);
+  };
+
+  //----------------------------------------------------------------------------
 
   const diameter = 40;
   const scale = scaleNode(40, 300, 70, 60);
@@ -38,9 +55,11 @@ const Graph = () => {
     graph.merges.forEach(drawMerge(ctx, scale));
   }, [graph, scale]);
 
+  //----------------------------------------------------------------------------
+
   return (
     <div id="graph-container">
-      {graph.nodes.map(({ coord, label, classes }, index) => {
+      {graph.nodes.map(({ coord, label, classes, active }, index) => {
         const scaledCoord = scale(coord);
         return (
           <Node
@@ -49,10 +68,13 @@ const Graph = () => {
             label={label}
             diameter={diameter}
             classes={classes}
+            active={active}
           />
         );
       })}
       <canvas id="canvas" ref={canvasRef}></canvas>
+      <button onClick={onForwardClick}>Forward</button>
+      <div style={{ color: '#000' }}>{step}</div>
     </div>
   );
 };

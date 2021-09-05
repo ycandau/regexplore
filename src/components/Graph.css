@@ -19,10 +19,11 @@
   font-weight: 600;
   color: black;
   background-color: orange;
-  padding-top: 0.3em;
+  padding-top: 0.35em;
   position: absolute;
   text-align: center;
   vertical-align: bottom;
+  font-family: 'Fira Code';
 }
 
 .node.operator {

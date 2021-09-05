@@ -3,11 +3,11 @@
 //------------------------------------------------------------------------------
 
 import { logHeading, toString, inspect } from './re_helpers.js';
-
+import { descriptions, warnings } from './re_static_info.js';
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
-import { compile, graph } from './re_nfa.js';
-import { descriptions, warnings } from './re_static_info.js';
+import compile from './re_compile.js';
+import graph from './re_graph.js';
 
 //------------------------------------------------------------------------------
 
@@ -444,7 +444,6 @@ class Parser {
       displayType: typeToDisplayType[descrip.type],
     }));
 
-    // console.log(gnodes);
     this.graph = graph(nodes);
   }
 
