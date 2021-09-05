@@ -13,7 +13,7 @@ import { descriptions, warnings } from './re_static_info.js';
 
 const typeToDisplayType = {
   charLiteral: 'value',
-  escapedChar: 'value-special',
+  escapedChar: 'value',
   charClass: 'value-special',
   bracketChar: 'value',
   bracketRangeLow: 'value-special',

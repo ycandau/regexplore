@@ -1,4 +1,4 @@
-const Node = ({ coord, label, diameter }) => {
+const Node = ({ coord, label, diameter, classes }) => {
   const style = {
     left: `${coord[0] - diameter / 2}px`,
     top: `${coord[1] - diameter / 2}px`,
@@ -7,7 +7,7 @@ const Node = ({ coord, label, diameter }) => {
   };
 
   return (
-    <div className="node" style={style}>
+    <div className={`node ${classes}`} style={style}>
       {label}
     </div>
   );

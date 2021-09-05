@@ -13,7 +13,7 @@
   height: 300px; */
 }
 
-#graph-container .node {
+.node {
   border-radius: 1em;
   font-size: 20px;
   font-weight: 600;
@@ -23,4 +23,46 @@
   position: absolute;
   text-align: center;
   vertical-align: bottom;
+}
+
+.node.operator {
+  color: transparent;
+  background-color: transparent;
+}
+
+.node.first,
+.node.last {
+  color: orange;
+  background-color: black;
+  border: 2px solid orange;
+}
+
+.node.value,
+.node.value-special {
+  color: orange;
+  background-color: black;
+  border: 2px solid orange;
+}
+
+.node.quantifier {
+  color: greenyellow;
+  background-color: black;
+  border: 2px solid greenyellow;
+}
+
+.node.delimiter {
+  color: rgb(255, 133, 255);
+  background-color: black;
+  border: 2px solid rgb(255, 133, 255);
+}
+
+.node.delimiter.quantifier {
+  color: rgb(0, 195, 255);
+  background-color: black;
+  border: 2px solid rgb(0, 195, 255);
+}
+
+#graph-container .node.active {
+  color: black;
+  background-color: orange;
 }

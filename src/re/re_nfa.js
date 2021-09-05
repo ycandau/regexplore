@@ -247,17 +247,16 @@ const compile = (rpn) => {
 //------------------------------------------------------------------------------
 
 const newDisplayNode = (node) => {
-  const dnode = {
-    label: node.label,
-    type: node.type,
-    ref: node,
-  };
+  const label = node.type === 'bracketClass' ? '[ ]' : node.label;
+  const dnode = { label, type: node.type, ref: node };
   node.dnode = dnode;
   if (node.heights !== undefined) dnode.heights = node.heights;
   if (node.forkIndex !== undefined) dnode.forkIndex = node.forkIndex;
   if (node.close !== undefined) dnode.close = node.close;
   return dnode;
 };
+
+//------------------------------------------------------------------------------
 
 const createDisplayNodes = (nodes) => {
   const dnodes = nodes.map(newDisplayNode);
@@ -269,6 +268,8 @@ const createDisplayNodes = (nodes) => {
   });
   return dnodes;
 };
+
+//------------------------------------------------------------------------------
 
 const mergeNextBack = (node1, node2, prop) => {
   node1.label = node2.label;
@@ -282,6 +283,8 @@ const mergeNextBack = (node1, node2, prop) => {
   if (node2.close !== undefined) node1.close = node2.close;
 };
 
+//------------------------------------------------------------------------------
+
 const processQuantifiers = (nodes) => {
   nodes.forEach((node) => {
     const next = node.next[0];
@@ -292,7 +295,6 @@ const processQuantifiers = (nodes) => {
 
     // Repeat 0N
     else if (node.type === '*') {
-      // console.log('==========', node);
       const nextType = next.type;
       mergeNextBack(node, next, 'repeat0N');
       if (nextType === '(') {
@@ -333,6 +335,36 @@ const forkDeltaY = (heights, index) => {
   dy += heights[index] / 2;
   const offset = (heights[0] / 2 + sum - heights[heights.length - 1] / 2) / 2;
   return dy - offset;
+};
+
+//------------------------------------------------------------------------------
+
+const typeToNodeType = {
+  charLiteral: 'value',
+  escapedChar: 'value-special',
+  charClass: 'value-special',
+  bracketClass: 'value-special',
+  '.': 'value-special',
+  '|': 'operator',
+  '(': 'delimiter',
+  ')': 'delimiter',
+  first: 'first',
+  last: 'last',
+};
+
+const finalizeDisplayNodes = (nodes) => {
+  const final = nodes.map((node) => {
+    let classes = typeToNodeType[node.type] || '';
+    classes +=
+      node.repeat01 || node.repeat0N || node.repeat1N ? ' quantifier' : '';
+    const fnode = {
+      label: node.label,
+      coord: node.coord,
+      classes,
+    };
+    return fnode;
+  });
+  return final;
 };
 
 //------------------------------------------------------------------------------
@@ -402,20 +434,21 @@ const calculateLayout = (nodes) => {
     }
   });
 
-  return { nodes, links, forks, merges };
+  const fnodes = finalizeDisplayNodes(nodes);
+  console.log(fnodes);
+
+  return { nodes: fnodes, links, forks, merges };
 };
 
+//------------------------------------------------------------------------------
+
 const graph = (nodes) => {
-  // console.log(nodes);
-  const dnodes = createDisplayNodes(nodes);
-  const a = processQuantifiers(dnodes);
-  console.log('2 >>', a);
-  setPreviousNodes(a);
-  const g = calculateLayout(a);
+  const displayNodes = createDisplayNodes(nodes);
+  const filteredNodes = processQuantifiers(displayNodes);
+  const nodesWithPrevious = setPreviousNodes(filteredNodes);
+  const graph = calculateLayout(nodesWithPrevious);
 
-  return g;
-
-  // return { nodes: [], links: [], forks: [], merges: [] };
+  return graph;
 };
 
 //------------------------------------------------------------------------------

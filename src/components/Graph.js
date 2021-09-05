@@ -16,8 +16,9 @@ const Graph = () => {
   // const parser = new Parser('a+bc+|a+bc+|a+bc+');
   // const parser = new Parser('(a)?|b?|(c)?|d?');
   // const parser = new Parser('(a)*|b*|(c)*|d*');
-  const parser = new Parser('(a)+|(b+|(c)+)|d+');
-  // const parser = new Parser('(a)*');
+  // const parser = new Parser('abs');
+  const parser = new Parser('\\?.?(a)?|\\*\\w*(\\d)*|\\+[a-z]+([0-9])+');
+
   const { graph } = parser;
 
   const diameter = 40;
@@ -39,7 +40,7 @@ const Graph = () => {
 
   return (
     <div id="graph-container">
-      {graph.nodes.map(({ coord, label }, index) => {
+      {graph.nodes.map(({ coord, label, classes }, index) => {
         const scaledCoord = scale(coord);
         return (
           <Node
@@ -47,6 +48,7 @@ const Graph = () => {
             coord={scaledCoord}
             label={label}
             diameter={diameter}
+            classes={classes}
           />
         );
       })}
