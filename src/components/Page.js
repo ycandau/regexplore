@@ -25,13 +25,15 @@ export default function Page({
   onExploreRegex,
   onSelectTag,
 }) {
-  const [pageInfo, setPageInfo] = useState({
-    pageNum: page,
-  });
-  const { regexes, totalPages, pageNum } = pageInfo;
+  // const [pageInfo, setPageInfo] = useState({
+  //   pageNum: page,
+  // });
+  // const { regexes, totalPages, pageNum } = pageInfo;
+  const [regexes, setRegexes] = useState([]);
+  const [totalPages, setTotalPages] = useState(null);
 
   useEffect(() => {
-    const prevPageNum = pageNum;
+    const prevPageNum = page;
     (async () => {
       try {
         let res;
@@ -57,15 +59,18 @@ export default function Page({
           });
         }
         const { regexes, totalPages, pageNum } = await res.json();
-        setPageInfo({ regexes, totalPages, pageNum });
+        setRegexes(regexes);
+        setTotalPages(totalPages);
+        setPage(pageNum);
+        // setPageInfo({ regexes, totalPages, pageNum });
       } catch (e) {
         console.error(e);
       }
     })();
     return () => {
-      setPage(pageNum || 1);
+      // setPage(pageNum || 1);
     };
-  }, [tsq, selectedTags, setPageInfo, setPage, pageNum]);
+  }, [tsq, selectedTags, setPage, page]);
 
   const classes = useStyles();
 
@@ -99,10 +104,11 @@ export default function Page({
             key={key}
             shape="rounded"
             count={totalPages}
-            page={pageNum}
-            onChange={(e, page) =>
-              setPageInfo({ regexes, totalPages, pageNum: page })
-            }
+            page={page}
+            onChange={(e, p) => {
+              setPage(p);
+              // setPageInfo({ regexes, totalPages, pageNum: page })
+            }}
           />
         </div>
       ));
