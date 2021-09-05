@@ -101,7 +101,7 @@ export default function SaveBox({
           <TextField
             fullWidth
             id="regexName"
-            variant="filled"
+            variant="outlined"
             onChange={(e) => setTitle(e.target.value)}
             value={title}
             spellCheck="false"
