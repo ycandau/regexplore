@@ -9,7 +9,7 @@ import { setGen, stepForward, setGraphNodes } from '../re/re_run';
 
 //------------------------------------------------------------------------------
 
-const Graph = () => {
+const Graph = ({ nfa, nodes, graph }) => {
   const canvasRef = useRef(null);
   const [step, setStep] = useState(0);
 
@@ -19,10 +19,10 @@ const Graph = () => {
   // const parser = new Parser('(a)?|b?|(c)?|d?');
   // const parser = new Parser('(a)*|b*|(c)*|d*');
   // const parser = new Parser('\\?.?(a)?|\\*\\w*(\\d)*|\\+[a-z]+([0-9])+');
-  const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
-  const test = 'aaaaabc';
+  // const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
+  // const test = 'aaaaabc';
 
-  const { nfa, nodes, graph } = parser;
+  // const { nfa, nodes, graph } = parser;
 
   setGen(nodes, 0);
   let active = [nfa];
@@ -73,8 +73,6 @@ const Graph = () => {
         );
       })}
       <canvas id="canvas" ref={canvasRef}></canvas>
-      <button onClick={onForwardClick}>Forward</button>
-      <div style={{ color: '#000' }}>{step}</div>
     </div>
   );
 };

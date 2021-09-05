@@ -2,8 +2,10 @@
   width: 1000px;
   height: 300px;
   color: white;
-  background-color: black;
+  background-color: rgb(33, 33, 33);
   position: relative;
+  border: 1px solid grey;
+  border-radius: 5px;
 }
 
 #canvas {
@@ -19,7 +21,7 @@
   font-weight: 600;
   color: black;
   background-color: orange;
-  padding-top: 0.35em;
+  padding-top: 0.2em;
   position: absolute;
   text-align: center;
   vertical-align: bottom;

@@ -23,6 +23,9 @@ const useStyles = makeStyles((theme) => ({
         ? theme.palette.info.light
         : theme.palette.info.dark,
   },
+  listText: {
+    fontFamily: 'Fira Code',
+  },
   avatar: {
     color:
       theme.palette.type === 'dark'
@@ -52,7 +55,10 @@ export default function LogBox({
   const logList = logs.map(({ pos, char, count }) => (
     <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
       <ListItemIcon className={classes.avatar}>[{pos}]:</ListItemIcon>
-      <ListItemText primary={`'${char}' => ${count} active states`} />
+      <ListItemText
+        primary={`'${char}' => ${count} active states`}
+        primaryTypographyProps={{ className: classes.listText }}
+      />
     </ListItem>
   ));
 

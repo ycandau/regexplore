@@ -1,3 +1,4 @@
+import Graph from './Graph';
 import TagSelector from './TagSelector';
 import Page from './Page';
 import SaveBox from './SaveBox';
@@ -77,6 +78,7 @@ const App = () => {
   const [index, setIndex] = useState(null);
   const [parser, setParser] = useState(new Parser('a(b|c)de'));
   const [fetchStr, setFetchStr] = useState(false);
+  const [displayGraph, setDisplayGraph] = useState(true);
 
   useEffect(() => {
     if (!!fetchStr)
@@ -127,13 +129,19 @@ const App = () => {
     />
   );
 
+  const doFix = () => {
+    const newRegex = parser.fix();
+    setParser(() => new Parser(newRegex));
+  };
+
   const warningBox = (
     <WarningBox
       warnings={parser.warnings}
       onHover={(pos) => console.log('Hovering over the warning at', pos)}
-      onFix={() => console.log("'FIX' button clicked")}
+      onFix={doFix}
     />
   );
+
   //----------------------------------------------------------------------------
 
   const toggleTheme = () => toggleLight((light) => !light);
@@ -161,6 +169,23 @@ const App = () => {
         : tags.concat({ id, tag_name })
     );
   };
+
+  const graphBox = displayGraph ? (
+    <Graph nfa={parser.nfa} nodes={parser.nodes} graph={parser.graph} />
+  ) : (
+    <SaveBox
+      {...{
+        title,
+        setTitle,
+        desc,
+        setDesc,
+        tags: saveBoxTags,
+        setTags: setSaveBoxTags,
+        onSearchChange,
+        onSave,
+      }}
+    />
+  );
 
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
@@ -193,20 +218,7 @@ const App = () => {
       <div className={classes.logBox}>
         {!!parser.warnings.length ? warningBox : logBox}
       </div>
-      <div className={classes.saveBox}>
-        <SaveBox
-          {...{
-            title,
-            setTitle,
-            desc,
-            setDesc,
-            tags: saveBoxTags,
-            setTags: setSaveBoxTags,
-            onSearchChange,
-            onSave,
-          }}
-        />
-      </div>
+      <div className={classes.saveBox}>{graphBox}</div>
     </div>
   );
 
