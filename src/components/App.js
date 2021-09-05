@@ -72,6 +72,7 @@ const App = () => {
   const [testString, setTestString] = useState('');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
+  const [saveBoxTags, setSaveBoxTags] = useState([]);
   const [tags, setTags] = useState([]);
   const [regexes, setRegexes] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
@@ -182,7 +183,7 @@ const App = () => {
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
-    setTags(tags);
+    setSaveBoxTags(tags);
   };
 
   const onSelectTag = ({ id, tag_name }) => {
@@ -231,8 +232,8 @@ const App = () => {
             setTitle,
             desc,
             setDesc,
-            tags,
-            setTags,
+            tags: saveBoxTags,
+            setTags: setSaveBoxTags,
             onSearchChange,
             onSave,
           }}
