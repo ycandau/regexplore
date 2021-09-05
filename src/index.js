@@ -6,8 +6,7 @@ import Graph from './components/Graph';
 
 ReactDOM.render(
   <React.StrictMode>
-    {/* <App /> */}
-    <Graph />
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );
