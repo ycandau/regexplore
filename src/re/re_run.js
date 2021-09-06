@@ -2,34 +2,53 @@
 // Run the NFA
 //------------------------------------------------------------------------------
 
-const setGen = (nodes, gen) => nodes.forEach((node) => (node.gen = gen));
-
-const getNextActiveNodes = (node, nextActiveNodes, ch, gen) => {
+const getNextActiveNodes = (node, nextActiveNodes, ch) => {
   node.nextNodes.forEach((next) => {
-    console.log(next);
-    if (next.gen === gen) return;
-    next.gen = gen;
+    if (next.visited) return;
+    next.visited = true;
 
     if (next.match !== undefined) {
       if (next.match(ch)) nextActiveNodes.push(next);
     } else {
-      getNextActiveNodes(next, nextActiveNodes, ch, gen);
+      getNextActiveNodes(next, nextActiveNodes, ch);
     }
   });
 };
 
-const stepForward = (activeNodes, ch, gen) => {
-  const nextActiveNodes = [];
-  activeNodes.forEach((node) => {
-    getNextActiveNodes(node, nextActiveNodes, ch, gen);
-  });
-  return nextActiveNodes;
+const checkIfMatch = (node) => {
+  for (const next of node.nextNodes) {
+    if (next.type === 'last') return true;
+    if (next.visited || next.match) break;
+    next.visited = true;
+    if (checkIfMatch(next)) return true;
+  }
+  return false;
 };
 
-const setGraphNodes = (graphNodes, activeNodes) => {
+const stepForward = (nfaNodes, activeNodes, ch) => {
+  nfaNodes.forEach((node) => (node.visited = false));
+  const nextActiveNodes = [];
+  activeNodes.forEach((node) => {
+    getNextActiveNodes(node, nextActiveNodes, ch);
+  });
+
+  nfaNodes.forEach((node) => (node.visited = false));
+  let matchingNode = null;
+  for (const node of nextActiveNodes) {
+    if (checkIfMatch(node)) {
+      matchingNode = node;
+      break;
+    }
+  }
+  console.log(matchingNode, nextActiveNodes);
+  return { nextActiveNodes, match: matchingNode };
+};
+
+const setActiveGraphNodes = (graphNodes, activeNodes, match) => {
   graphNodes.forEach((gnode) => {
     gnode.active = false;
   });
+
   activeNodes.forEach((node) => {
     graphNodes[node.graphNodeIndex].active = true;
   });
@@ -37,4 +56,4 @@ const setGraphNodes = (graphNodes, activeNodes) => {
 
 //------------------------------------------------------------------------------
 
-export { setGen, stepForward, setGraphNodes };
+export { stepForward, setActiveGraphNodes };

@@ -1,27 +1,32 @@
-import Graph from './Graph';
-import TagSelector from './TagSelector';
-import Page from './Page';
-import SaveBox from './SaveBox';
-import InfoBox from './InfoBox';
-import LogBox from './LogBox';
-import { logs } from '../re/re_stubs';
-import TestStrField from './TestStrField';
+import { useEffect, useState } from 'react';
+
 import Header from './Header';
 import Editor from './Editor';
+import InfoBox from './InfoBox';
+import Graph from './Graph';
+import SaveBox from './SaveBox';
+import LogBox from './LogBox';
+import WarningBox from './WarningBox';
+import Page from './Page';
+import TagSelector from './TagSelector';
+import TestStrField from './TestStrField';
+
 import {
   ThemeProvider,
   createTheme,
   makeStyles,
 } from '@material-ui/core/styles';
-import { useEffect, useState } from 'react';
+
 import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import CssBaseline from '@material-ui/core/CssBaseline';
+
 import '@fontsource/roboto';
 import '@fontsource/fira-code';
 
+import { logs } from '../re/re_stubs';
 import Parser from '../re/re_parser';
-import WarningBox from './WarningBox';
+import { stepForward } from '../re/re_run';
 
 // rendering stubs, TODO: clean up once the wiring's done
 
@@ -67,11 +72,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+//------------------------------------------------------------------------------
+
 const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('');
+  const [testString, setTestString] = useState('abcde');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
@@ -79,9 +86,13 @@ const App = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
   const [index, setIndex] = useState(null);
-  const [parser, setParser] = useState(new Parser('a(b|c)de'));
+  const [parser, setParser] = useState(
+    new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x')
+  );
   const [fetchStr, setFetchStr] = useState(false);
   const [displayGraph, setDisplayGraph] = useState(true);
+
+  //----------------------------------------------------------------------------
 
   useEffect(() => {
     if (!!fetchStr)
@@ -105,19 +116,102 @@ const App = () => {
   }, [fetchStr, setFetchStr, setTestString]);
 
   //----------------------------------------------------------------------------
-  // Parser for the Regex Editor
+  // Update parser from regex input
 
-  const onRegexChange = (event) => {
-    if (event.nativeEvent.inputType === 'insertLineBreak') return;
-    const regex = event.target.value;
-    setParser(() => new Parser(regex));
+  const initHistory = (parser) => ({
+    index: 0,
+    logs: [[parser.nfa]],
+    match: null,
+  });
+
+  const [history, setHistory] = useState(initHistory(parser));
+
+  const setNewRegex = (regex) => {
+    const parser = new Parser(regex);
+    setParser(() => parser);
+    setHistory(() => initHistory(parser));
   };
 
-  const onHover = (index) => () => {
+  // Editor
+
+  const onEditorChange = (event) => {
+    if (event.nativeEvent.inputType === 'insertLineBreak') return;
+    const regex = event.target.value;
+    setNewRegex(regex);
+  };
+
+  const onEditorHover = (index) => () => {
     setIndex(index);
   };
 
+  // InfoBox
+
   const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
+
+  // LogBox
+
+  const onStepForward = () => {
+    // End of test string
+    const activeNodes = history.logs[history.index];
+    if (
+      activeNodes.length === 0 ||
+      history.match ||
+      history.index === testString.length
+    ) {
+      return;
+    }
+
+    // Retrace a previous step
+    if (history.index < history.logs.length - 1) {
+      const index = history.index + 1;
+      setHistory({ ...history, index });
+      return;
+    }
+
+    // Run the next step
+    const { nextActiveNodes, match } = stepForward(
+      parser.nodes,
+      history.logs[history.index],
+      testString[history.index]
+    );
+
+    // Found a match
+    if (match) {
+      console.log('success');
+      return;
+    }
+
+    if (nextActiveNodes.length === 0) {
+      console.log('failure');
+      setHistory({ ...history, index: 0 });
+      return;
+    }
+
+    const index = history.index + 1;
+    const logs = [...history.logs, nextActiveNodes];
+    setHistory({ ...history, index, logs });
+  };
+
+  const onStepBack = () => {
+    if (history.index === 0) return;
+    const index = history.index - 1;
+    setHistory({ ...history, index });
+  };
+
+  const onToBeginning = () => {
+    setHistory({ ...history, index: 0 });
+  };
+
+  // Graph
+
+  const activeNodes = history.logs[history.index];
+
+  // TestStrField
+
+  const onTestStrChange = (str) => {
+    setHistory({ ...history, index: 0 });
+    setTestString(str);
+  };
 
   //----------------------------------------------------------------------------
 
@@ -125,9 +219,9 @@ const App = () => {
     <LogBox
       logs={logs}
       onHover={(pos) => console.log('hovered over', pos)}
-      onToBeginnig={() => console.log('Jump to the beginning')}
-      onStepBack={() => console.log('Step Back')}
-      onStepForward={() => console.log('Step Forward')}
+      onToBegining={onToBeginning}
+      onStepBack={onStepBack}
+      onStepForward={onStepForward}
       onToEnd={() => console.log('Jump to the end')}
     />
   );
@@ -176,7 +270,7 @@ const App = () => {
   };
 
   const graphBox = displayGraph ? (
-    <Graph nfa={parser.nfa} nodes={parser.nodes} graph={parser.graph} />
+    <Graph graph={parser.graph} activeNodes={activeNodes} />
   ) : (
     <SaveBox
       {...{
@@ -204,8 +298,8 @@ const App = () => {
         <Editor
           index={index}
           editorInfo={parser.editorInfo}
-          onRegexChange={onRegexChange}
-          onHover={onHover}
+          onRegexChange={onEditorChange}
+          onHover={onEditorHover}
         />
       </div>
       <div className={classes.testStrBox}>
@@ -213,7 +307,7 @@ const App = () => {
           numRows={6}
           widthRems={45}
           string={testString}
-          setString={setTestString}
+          setString={onTestStrChange}
           highlights={[]}
         />
       </div>

@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
-import { setGen, stepForward, setGraphNodes } from '../re/re_run';
+import { setActiveGraphNodes } from '../re/re_run';
 
 import Node from './Node';
 
@@ -18,9 +18,7 @@ const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
-const Graph = ({ nfa, nodes, graph }) => {
-  const [step, setStep] = useState(0);
-  const [dimensions, setDimensions] = useState({ width: 10, height: 10 });
+const Graph = ({ graph, activeNodes }) => {
   const canvasRef = useRef(null);
 
   //----------------------------------------------------------------------------
@@ -52,17 +50,7 @@ const Graph = ({ nfa, nodes, graph }) => {
 
   //----------------------------------------------------------------------------
 
-  setGen(nodes, 0);
-  let active = [nfa];
-
-  for (let i = 0; i < step; i++) {
-    active = stepForward(active, test[i], i + 1);
-  }
-  setGraphNodes(graph.nodes, active);
-
-  const onForwardClick = () => {
-    setStep(step + 1);
-  };
+  setActiveGraphNodes(graph.nodes, activeNodes);
 
   //----------------------------------------------------------------------------
 
