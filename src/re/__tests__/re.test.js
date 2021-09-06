@@ -18,7 +18,6 @@ const token = (rpnIndex, pos, index, label, type) => ({
 const runParser = (input, rpn, ...tokens) => {
   it(`runs the input /${input}/`, () => {
     const parser = new Parser(input);
-    parser.parse();
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
@@ -38,7 +37,6 @@ const runParser = (input, rpn, ...tokens) => {
 const runBracketClass = (input, matches) => {
   it(`runs the bracket class /${input}/`, () => {
     const parser = new Parser(input);
-    parser.parse();
     const token = parser.rpn[0];
 
     expect(token.label).toBe(input);
@@ -61,7 +59,6 @@ const runBracketClass = (input, matches) => {
 const runEdgeCase = (input, rpn, fixed, types, positions) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
     const parser = new Parser(input);
-    parser.parse();
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
