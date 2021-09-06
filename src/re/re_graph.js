@@ -144,7 +144,7 @@ const calculateLayout = (nodes) => {
     // Fork
     else if (node.heights) {
       const [x0, y0] = node.previous[0].coord;
-      node.coord = [x0 + 1, y0];
+      node.coord = [x0, y0];
       links.push([[x0, y0], node.coord]);
     }
 

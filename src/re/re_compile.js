@@ -7,7 +7,6 @@ const QUANT_HEIGHT = 0;
 
 const nodeBase = () => ({
   nextNodes: [],
-  gen: 0, // used during simulation
 });
 
 const newNode = (token, config) => {

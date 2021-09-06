@@ -46,7 +46,7 @@ const useStyles = makeStyles((theme) => ({
 export default function LogBox({
   logs,
   onHover,
-  onToBeginnig,
+  onToBegining,
   onStepBack,
   onStepForward,
   onToEnd,
@@ -69,7 +69,7 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            <IconButton onClick={onToBeginnig}>
+            <IconButton onClick={onToBegining}>
               <FastRewindRounded />
             </IconButton>
             <IconButton onClick={onStepBack}>
