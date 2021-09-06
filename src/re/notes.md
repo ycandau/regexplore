@@ -1,3 +1,11 @@
+Todo:
+
+- engine crashes
+- quantifier display
+- connection shapes
+- center graph vertically
+- could put back quantifier nodes and just not display
+
 Colors:
 
 - red
