@@ -2,9 +2,17 @@ Todo:
 
 - engine crashes
 - quantifier display
-- connection shapes
 - center graph vertically
 - could put back quantifier nodes and just not display
+
+  // const parser = new Parser('a?bc?|a?bc?|a?bc?');
+  // const parser = new Parser('a*bc*|a*bc*|a*bc*');
+  // const parser = new Parser('a+bc+|a+bc+|a+bc+');
+  // const parser = new Parser('(a)?|b?|(c)?|d?');
+  // const parser = new Parser('(a)_|b_|(c)_|d_');
+  // const parser = new Parser('\\?.?(a)?|\\_\\w_(\\d)*|\\+[a-z]+([0-9])+');
+  // const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
+  // a(bffff|ca(a|a|a|a)a)d
 
 Colors:
 

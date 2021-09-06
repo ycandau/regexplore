@@ -29,8 +29,10 @@ const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
     gridTemplateColumns: '8fr 3fr',
+    gridTemplateRows: 'auto auto 1fr',
     gap: theme.spacing(3),
     padding: theme.spacing(3),
+    height: 'calc(100vh - 64px)',
   },
   editorBox: {
     gridColumn: '1/2',
@@ -52,6 +54,7 @@ const useStyles = makeStyles((theme) => ({
   saveBox: {
     gridColumn: '1/2',
     gridRow: '3/4',
+    overflow: 'hidden',
   },
   regexCards: {
     gridColumn: '1/2',
@@ -207,7 +210,7 @@ const App = () => {
       </div>
       <div className={classes.testStrBox}>
         <TestStrField
-          numRows={5}
+          numRows={6}
           widthRems={45}
           string={testString}
           setString={setTestString}

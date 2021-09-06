@@ -11,25 +11,46 @@ import './Graph.css';
 
 const NODE_DIAM = 40;
 const X_MIN = NODE_DIAM * 1.5;
-const X_STEP = 70;
-const Y_STEP = 70;
+const X_STEP = 60;
+const Y_STEP = 60;
 
-const scale = scaleCoord(X_MIN, 300, X_STEP, Y_STEP);
+const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
 const Graph = ({ nfa, nodes, graph }) => {
-  const canvasRef = useRef(null);
   const [step, setStep] = useState(0);
+  const [dimensions, setDimensions] = useState({ width: 10, height: 10 });
+  const canvasRef = useRef(null);
 
-  // const parser = new Parser('a?bc?|a?bc?|a?bc?');
-  // const parser = new Parser('a*bc*|a*bc*|a*bc*');
-  // const parser = new Parser('a+bc+|a+bc+|a+bc+');
-  // const parser = new Parser('(a)?|b?|(c)?|d?');
-  // const parser = new Parser('(a)*|b*|(c)*|d*');
-  // const parser = new Parser('\\?.?(a)?|\\*\\w*(\\d)*|\\+[a-z]+([0-9])+');
-  // const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
-  // const test = 'aaaaabc';
+  //----------------------------------------------------------------------------
+  // Drawing hook
+
+  useEffect(() => {
+    const ctx = canvasRef.current.getContext('2d');
+
+    const draw = (ctx) => {
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      graph.links.forEach(drawLink(ctx, scale));
+      graph.forks.forEach(drawFork(ctx, scale));
+      graph.merges.forEach(drawMerge(ctx, scale));
+    };
+
+    const handleResize = () => {
+      const container = document.querySelector('#graph-container');
+      ctx.canvas.width = container.clientWidth;
+      ctx.canvas.height = container.clientHeight;
+      requestAnimationFrame(() => draw(ctx));
+    };
+
+    requestAnimationFrame(() => draw(ctx));
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [graph]);
+
+  //----------------------------------------------------------------------------
 
   setGen(nodes, 0);
   let active = [nfa];
@@ -42,22 +63,6 @@ const Graph = ({ nfa, nodes, graph }) => {
   const onForwardClick = () => {
     setStep(step + 1);
   };
-
-  //----------------------------------------------------------------------------
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    canvas.width = 1000;
-    canvas.height = 300;
-    const ctx = canvas.getContext('2d');
-
-    ctx.strokeStyle = '#ff0000';
-    ctx.lineWidth = 2;
-
-    graph.links.forEach(drawLink(ctx, scale));
-    graph.forks.forEach(drawFork(ctx, scale));
-    graph.merges.forEach(drawMerge(ctx, scale));
-  }, [graph, scale]);
 
   //----------------------------------------------------------------------------
 

@@ -2,7 +2,6 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import { logHeading, toString, inspect } from './re_helpers.js';
 import { descriptions, warnings } from './re_static_info.js';
 import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
 
