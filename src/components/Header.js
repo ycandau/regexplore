@@ -113,7 +113,13 @@ export default function PrimarySearchAppBar({
             <Button onClick={toggleExplore}>
               {isExploring ? 'Home' : 'Explore'}
             </Button>
-            <Button>{isLoggedIn ? 'Log Out' : 'Log In'}</Button>
+            {isLoggedIn ? (
+              <Button href="http://localhost:8080/auth/logout">LOG OUT</Button>
+            ) : (
+              <Button href="http://localhost:8080/auth/github">
+                LOG IN WITH GITHUB
+              </Button>
+            )}
             {isLoggedIn && (
               <IconButton>
                 <Avatar className={classes.avatar}>{userInitial}</Avatar>

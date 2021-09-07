@@ -92,6 +92,7 @@ const App = () => {
   const [index, setIndex] = useState(null);
   const [parser, setParser] = useState(defaultParser);
   const [fetchStr, setFetchStr] = useState(false);
+  const [user, setUser] = useState({});
   const [displayGraph, setDisplayGraph] = useState(true);
 
   // 'ab(c|x)de|abcxy|a.*.*.*x|.*...x'
@@ -118,6 +119,19 @@ const App = () => {
         setFetchStr(false);
       })();
   }, [fetchStr, setFetchStr, setTestString]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/auth/userinfo');
+        const usr = await res.json();
+        console.log(usr);
+        setUser(usr);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
   //----------------------------------------------------------------------------
   // Update parser from regex input
@@ -295,8 +309,8 @@ const App = () => {
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
-  const isLoggedIn = false;
-  const userInitial = 'U';
+  const isLoggedIn = !!user.id;
+  const userInitial = !!user.name && user.name[0];
 
   const mainScreen = (
     <div className={classes.gridContainer}>
