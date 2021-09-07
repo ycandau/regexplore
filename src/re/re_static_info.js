@@ -131,34 +131,50 @@ const warnings = {
   '![': {
     type: '![',
     label: '[',
-    issue: 'An open bracket has not been closed.',
-    msg:
-      'The parser is adding an implicit closing bracket to correct the regex.',
+    issue: 'Open bracket has not been closed.',
+    msg: 'The parser is adding an implicit closing bracket.',
   },
   '!(': {
     type: '!(',
     label: '(',
-    issue: 'An open parenthesis has not been closed.',
-    msg:
-      'The parser is adding an implicit closing parenthesis to correct the regex.',
+    issue: 'Open parenthesis has not been closed.',
+    msg: 'The parser is adding an implicit closing parenthesis.',
   },
   '!)': {
     type: '!)',
     label: ')',
-    issue: 'A closing parenthesis has no matching opening.',
-    msg: 'The parser is skipping the closing parenthesis to correct the regex.',
-  },
-  '!E': {
-    type: '!E',
-    // label from parser
-    issue: 'A quantifier follows an empty value.',
-    msg: 'The parser is skipping the quantifier as it is of no use.',
+    issue: 'Closing parenthesis has no matching opening.',
+    msg: 'The parser is ignoring the closing parenthesis.',
   },
   '!**': {
     type: '!**',
     // label from parser
     issue: 'Redundant quantifiers.',
     // msg from parser
+  },
+  '!E*': {
+    type: '!E*',
+    // label from parser
+    issue: 'Quantifier follows an empty value.',
+    msg: 'The parser is ignoring the quantifier.',
+  },
+  '!E|': {
+    type: '!E|',
+    label: '|',
+    issue: 'Alternation follows an empty value.',
+    msg: 'The parser is ignoring the alternation.',
+  },
+  '!|E': {
+    type: '!|E',
+    label: '|',
+    issue: 'Alternation precedes an empty value.',
+    msg: 'The parser is ignoring the alternation.',
+  },
+  '!()': {
+    type: '!()',
+    label: '()',
+    issue: 'Parentheses contain an empty value.',
+    msg: 'The parser is ignoring the parentheses.',
   },
 };
 

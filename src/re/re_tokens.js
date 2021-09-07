@@ -90,9 +90,9 @@ const getToken = (label, pos, index) => {
   return token;
 };
 
-const getEmpty = () => value('0', 'empty');
+const getConcat = () => operator('~');
 
-const getConcat = () => operator('~', 'concat');
+const getParenClose = () => operator(')');
 
 const getBracketClass = (label, info) => {
   const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);
@@ -104,4 +104,4 @@ const getBracketClass = (label, info) => {
 
 //------------------------------------------------------------------------------
 
-export { getToken, getConcat, getBracketClass, getEmpty };
+export { getToken, getConcat, getBracketClass, getParenClose };

@@ -40,7 +40,6 @@ const stepForward = (nfaNodes, activeNodes, ch) => {
       break;
     }
   }
-  console.log(matchingNode, nextActiveNodes);
   return { nextActiveNodes, match: matchingNode };
 };
 

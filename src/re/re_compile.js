@@ -205,8 +205,6 @@ const compile = (rpn) => {
       case '.':
         pushValue(fragments, token);
         break;
-      case 'empty':
-        break;
       case '?':
         unary(fragments, repeat01, token);
         break;

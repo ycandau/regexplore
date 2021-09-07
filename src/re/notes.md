@@ -1,8 +1,8 @@
 Todo:
 
-- engine crashes
 - quantifier display
 - center graph vertically
+- unique keys for lists
 - could put back quantifier nodes and just not display
 
   // const parser = new Parser('a?bc?|a?bc?|a?bc?');
