@@ -27,12 +27,14 @@ const useStyles = makeStyles((theme) => ({
       letterSpacing: 'normal',
       lineHeight: 'normal',
       fontFamily: 'Fira Mono',
+      fontSize: 22,
     },
   },
   ghostText: {
     lineHeight: 'normal',
     letterSpacing: 'normal',
     fontFamily: 'Fira Mono',
+    fontSize: 22,
   },
 }));
 //------------------------------------------------------------------------------

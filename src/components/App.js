@@ -57,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
   logBox: {
     gridColumn: '2/3',
     gridRow: '3/4',
+    overflowY: 'hidden',
   },
   saveBox: {
     gridColumn: '1/2',
@@ -82,12 +83,10 @@ const initHistory = (parser) => ({
   begin: 0,
   end: 0,
   states: [{ runState: 'running', activeNodes: [parser.nfa] }],
-  logs: [],
 });
 
 const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
 const defaultHistory = initHistory(defaultParser);
-//
 
 //------------------------------------------------------------------------------
 // App and state
@@ -113,6 +112,7 @@ const App = () => {
 
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
+  const [logs, setLogs] = useState([]);
 
   //----------------------------------------------------------------------------
   // Hooks
@@ -145,6 +145,7 @@ const App = () => {
     const parser = new Parser(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
+    setLogs(() => []);
   };
 
   //----------------------------------------------------------------------------
@@ -164,8 +165,9 @@ const App = () => {
   // TestStrField
 
   const onTestStrChange = (str) => {
-    setHistory(() => initHistory(parser));
     setTestString(str);
+    setHistory(() => initHistory(parser));
+    setLogs(() => []);
   };
 
   //----------------------------------------------------------------------------
@@ -180,34 +182,49 @@ const App = () => {
 
   const onStepForward = () => {
     // Block forward step
-    const { activeNodes } = history.states[history.index];
-    if (activeNodes.length === 0 || history.index === testString.length) {
+    const index = history.index;
+    const prevActiveNodes = history.states[index].activeNodes;
+    if (prevActiveNodes.length === 0 || index === testString.length) {
       return;
     }
 
     // Retrace a previous step
-    if (history.index < history.states.length - 1) {
-      setHistory({ ...history, index: history.index + 1 });
+    if (index < history.states.length - 1) {
+      setHistory({ ...history, index: index + 1 });
       return;
     }
 
     // Run the next step
-    let { nextRunState, nextActiveNodes } = stepForward(
+    const ch = testString[index];
+    let { runState, activeNodes } = stepForward(
       parser.nodes,
-      activeNodes,
-      testString[history.index]
+      prevActiveNodes,
+      ch
     );
 
     // If the end of the test string is reached
-    if (nextRunState === 'running' && history.index === testString.length - 1) {
-      nextRunState = 'failure';
+    if (runState === 'running' && index === testString.length - 1) {
+      runState = 'failure';
     }
 
+    // Push a log entry
+    const msg =
+      runState === 'running'
+        ? `Char: ${ch} - Nodes: ${activeNodes.length}`
+        : runState === 'success'
+        ? 'Successful match'
+        : activeNodes.length === 0
+        ? 'No match'
+        : 'End of test string';
+
+    const log = { prompt: `[0:${index}]`, msg };
+    setLogs((logs) => [...logs, log]);
+
     // Set the history state
-    const nextState = { runState: nextRunState, activeNodes: nextActiveNodes };
+    const nextState = { runState, activeNodes };
     setHistory({
       ...history,
-      index: history.index + 1,
+      index: index + 1,
       states: [...history.states, nextState],
     });
   };

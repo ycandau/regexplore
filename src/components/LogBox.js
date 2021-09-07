@@ -52,11 +52,11 @@ export default function LogBox({
   onToEnd,
 }) {
   const classes = useStyles();
-  const logList = logs.map(({ pos, char, count }) => (
-    <ListItem key={pos} button /* onMouseOver={() => onHover(pos)} */>
-      <ListItemIcon className={classes.avatar}>[10:20]</ListItemIcon>
+  const logList = logs.map(({ prompt, msg }, index) => (
+    <ListItem key={index} button /* onMouseOver={() => onHover(pos)} */>
+      <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
-        primary={`'${char}' => ${count} states`}
+        primary={msg}
         primaryTypographyProps={{ className: classes.listText }}
       />
     </ListItem>

@@ -43,11 +43,11 @@ const stepForward = (nfaNodes, activeNodes, ch) => {
     }
   }
   if (matchingNode) {
-    return { nextRunState: 'success', nextActiveNodes: [matchingNode] };
+    return { runState: 'success', activeNodes: [matchingNode] };
   }
 
-  const nextRunState = nextActiveNodes.length !== 0 ? 'running' : 'failure';
-  return { nextRunState, nextActiveNodes };
+  const runState = nextActiveNodes.length !== 0 ? 'running' : 'failure';
+  return { runState, activeNodes: nextActiveNodes };
 };
 
 //------------------------------------------------------------------------------
