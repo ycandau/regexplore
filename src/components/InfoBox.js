@@ -9,6 +9,8 @@ const useStyles = makeStyles((theme) => ({
   avatar: {
     color: theme.palette.primary.contrastText,
     backgroundColor: theme.palette.primary.main,
+    fontFamily: 'Fira Mono',
+    fontSize: 26,
   },
   headerTitle: {
     variant: 'h2',
@@ -43,7 +45,7 @@ export default function InfoBox({ desc }) {
       }}
     >
       <CardHeader
-        avatar={<Avatar className={classes.avatar}>{label || 'i'}</Avatar>}
+        avatar={<Avatar className={classes.avatar}>{label}</Avatar>}
         title={<div className={classes.headerTitle}>{name}</div>}
       />
       <CardContent>

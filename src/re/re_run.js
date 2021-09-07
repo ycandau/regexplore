@@ -27,27 +27,37 @@ const reachesLastNode = (node) => {
 
 //------------------------------------------------------------------------------
 
-const stepForward = (nfaNodes, activeNodes, ch) => {
+const stepForward = (nfaNodes, prevActiveNodes, testString, pos) => {
+  const ch = testString[pos];
+
+  // Next active nodes
   nfaNodes.forEach((node) => (node.visited = false));
-  const nextActiveNodes = [];
-  activeNodes.forEach((node) => {
-    getNextActiveNodes(node, nextActiveNodes, ch);
+  const activeNodes = [];
+  prevActiveNodes.forEach((node) => {
+    getNextActiveNodes(node, activeNodes, ch);
   });
 
+  // Check if match in reach
   nfaNodes.forEach((node) => (node.visited = false));
   let matchingNode = null;
-  for (const node of nextActiveNodes) {
+  for (const node of activeNodes) {
     if (reachesLastNode(node)) {
       matchingNode = node;
       break;
     }
   }
+
+  // Returns
   if (matchingNode) {
     return { runState: 'success', activeNodes: [matchingNode] };
   }
-
-  const runState = nextActiveNodes.length !== 0 ? 'running' : 'failure';
-  return { runState, activeNodes: nextActiveNodes };
+  if (pos === testString.length - 1) {
+    return { runState: 'end', activeNodes };
+  }
+  if (activeNodes.length === 0) {
+    return { runState: 'failure', activeNodes };
+  }
+  return { runState: 'running', activeNodes };
 };
 
 //------------------------------------------------------------------------------

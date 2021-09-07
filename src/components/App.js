@@ -24,7 +24,6 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import { logs } from '../re/re_stubs';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
@@ -80,12 +79,17 @@ const useStyles = makeStyles((theme) => ({
 
 const initHistory = (parser) => ({
   index: 0,
-  begin: 0,
-  end: 0,
-  states: [{ runState: 'running', activeNodes: [parser.nfa] }],
+  states: [
+    {
+      runState: 'running',
+      activeNodes: [parser.nfa],
+      testRange: [0, 0],
+      matchRanges: [],
+    },
+  ],
 });
 
-const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
+const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 const defaultHistory = initHistory(defaultParser);
 
 //------------------------------------------------------------------------------
@@ -97,7 +101,8 @@ const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('abcde');
+  // const [testString, setTestString] = useState('an alpha beta gamma');
+  const [testString, setTestString] = useState('abdx abc');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
@@ -113,6 +118,10 @@ const App = () => {
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
   const [logs, setLogs] = useState([]);
+
+  const { runState, activeNodes, testRange, matchRanges } = history.states[
+    history.index
+  ];
 
   //----------------------------------------------------------------------------
   // Hooks
@@ -173,58 +182,90 @@ const App = () => {
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const msg = 'Hover over any character in the regex to get information on it.';
-  const tokenInfo =
-    index !== null ? parser.tokenInfo(index) : { description: msg };
+  const defaultInfo = {
+    label: '?',
+    name: 'Questions ...',
+    description:
+      'Hover over any character in the regex to get information on it.',
+  };
+
+  const tokenInfo = index !== null ? parser.tokenInfo(index) : defaultInfo;
 
   //----------------------------------------------------------------------------
   // LogBox
 
   const onStepForward = () => {
-    // Block forward step
-    const index = history.index;
-    const prevActiveNodes = history.states[index].activeNodes;
-    if (prevActiveNodes.length === 0 || index === testString.length) {
-      return;
-    }
+    const prevIndex = history.index;
+    const prevState = history.states[prevIndex];
+    const prevActiveNodes = prevState.activeNodes;
+    const prevTestRange = prevState.testRange;
 
-    // Retrace a previous step
-    if (index < history.states.length - 1) {
-      setHistory({ ...history, index: index + 1 });
+    // Return if at end of test string
+    const [begin, prevPos] = prevTestRange;
+    if (prevPos === testString.length) return;
+
+    // Retrace a forward step already taken
+    const index = prevIndex + 1;
+    if (prevIndex < history.states.length - 1) {
+      setHistory({ ...history, index });
       return;
     }
 
     // Run the next step
-    const ch = testString[index];
+    const ch = testString[prevPos];
+    const char = ch === ' ' ? "' '" : ch;
     let { runState, activeNodes } = stepForward(
       parser.nodes,
       prevActiveNodes,
-      ch
+      testString,
+      prevPos
     );
 
-    // If the end of the test string is reached
-    if (runState === 'running' && index === testString.length - 1) {
-      runState = 'failure';
+    const pos = prevPos + 1;
+    let testRange = [];
+    const matchRanges = [...prevState.matchRanges];
+    let msg = '';
+
+    switch (runState) {
+      case 'running':
+        testRange = [begin, pos];
+        msg = `Char: ${char} - Nodes: ${activeNodes.length}`;
+        break;
+      case 'success':
+        activeNodes = [parser.nfa];
+        testRange = [pos, pos];
+        matchRanges.push([begin, pos]);
+        msg = `Match: ${testString.slice(begin, pos)}`;
+        break;
+      case 'failure':
+        activeNodes = [parser.nfa];
+        testRange = [begin + 1, begin + 1];
+        msg = 'No match';
+        break;
+      case 'end':
+        testRange = [-1, -1];
+        msg = 'End of test string';
+        break;
+      default:
+        testRange = [-1, -1];
+        break;
     }
 
-    // Push a log entry
-    const msg =
-      runState === 'running'
-        ? `Char: ${ch} - Nodes: ${activeNodes.length}`
-        : runState === 'success'
-        ? 'Successful match'
-        : activeNodes.length === 0
-        ? 'No match'
-        : 'End of test string';
-
-    const log = { prompt: `[0:${index}]`, msg };
+    // Create new log entry
+    const prompt = `[${0}:${0}]`;
+    const log = { prompt, msg };
     setLogs((logs) => [...logs, log]);
 
-    // Set the history state
-    const nextState = { runState, activeNodes };
+    // Set the next history state
+    const nextState = {
+      runState,
+      activeNodes,
+      testRange,
+      matchRanges,
+    };
     setHistory({
       ...history,
-      index: index + 1,
+      index,
       states: [...history.states, nextState],
     });
   };
@@ -298,8 +339,6 @@ const App = () => {
     />
   );
 
-  const { runState, activeNodes } = history.states[history.index];
-
   const graphBox = displayGraph ? (
     <Graph graph={parser.graph} activeNodes={activeNodes} runState={runState} />
   ) : (
@@ -317,11 +356,30 @@ const App = () => {
     />
   );
 
+  //----------------------------------------------------------------------------
+
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
   const isLoggedIn = false;
   const userInitial = 'U';
+
+  const current = {
+    startInd: testRange[1],
+    endInd: testRange[1] + 1,
+    token: 'current',
+  };
+  const test = {
+    startInd: testRange[0],
+    endInd: testRange[1],
+    token: 'test',
+  };
+  const testStringHighlights = [test, current];
+
+  matchRanges.forEach(([startInd, endInd]) => {
+    const match = { startInd, endInd, token: 'match' };
+    testStringHighlights.push(match);
+  });
 
   const mainScreen = (
     <div className={classes.gridContainer}>
@@ -339,7 +397,7 @@ const App = () => {
           widthRems={45}
           string={testString}
           setString={onTestStrChange}
-          highlights={[]}
+          highlights={testStringHighlights}
         />
       </div>
       <div className={classes.infoBox}>
