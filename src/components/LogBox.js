@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
         : theme.palette.info.dark,
   },
   listText: {
-    fontFamily: 'Fira Code',
+    fontFamily: 'Fira Mono',
   },
   avatar: {
     color:

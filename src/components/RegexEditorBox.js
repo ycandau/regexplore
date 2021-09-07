@@ -23,7 +23,7 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
         'caret-color': '#888',
         letterSpacing: 'normal',
         liteHeight: 'normal',
-        fontFamily: 'Fira Code',
+        fontFamily: 'Fira Mono',
         fontWeight: 'bold',
       },
     },
@@ -40,7 +40,7 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
     ghostText: {
       lineHeight: 'normal',
       letterSpacing: 'normal',
-      fontFamily: 'Fira Code',
+      fontFamily: 'Fira Mono',
       fontWeight: 'bold',
     },
     match: {

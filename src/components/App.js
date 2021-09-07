@@ -22,13 +22,15 @@ import lightTheme from '../mui-themes/base-light';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
 import '@fontsource/roboto';
-import '@fontsource/fira-code';
+import '@fontsource/fira-mono';
 
 import { logs } from '../re/re_stubs';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
 // rendering stubs, TODO: clean up once the wiring's done
+
+//------------------------------------------------------------------------------
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -72,9 +74,21 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const defaultParser = new Parser('(abc)');
+//------------------------------------------------------------------------------
+// Initialization
+
+const initHistory = (parser) => ({
+  index: 0,
+  logs: [[parser.nfa]],
+  match: null,
+});
+
+const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
+const defaultHistory = initHistory(defaultParser);
+//
 
 //------------------------------------------------------------------------------
+// App and state
 
 const App = () => {
   console.log('Render: App');
@@ -90,13 +104,16 @@ const App = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
   const [index, setIndex] = useState(null);
-  const [parser, setParser] = useState(defaultParser);
   const [fetchStr, setFetchStr] = useState(false);
+
+  /*eslint no-unused-vars: 'off' */
   const [displayGraph, setDisplayGraph] = useState(true);
 
-  // 'ab(c|x)de|abcxy|a.*.*.*x|.*...x'
+  const [parser, setParser] = useState(defaultParser);
+  const [history, setHistory] = useState(defaultHistory);
 
   //----------------------------------------------------------------------------
+  // Hooks
 
   useEffect(() => {
     if (!!fetchStr)
@@ -120,22 +137,15 @@ const App = () => {
   }, [fetchStr, setFetchStr, setTestString]);
 
   //----------------------------------------------------------------------------
-  // Update parser from regex input
 
-  const initHistory = (parser) => ({
-    index: 0,
-    logs: [[parser.nfa]],
-    match: null,
-  });
-
-  const [history, setHistory] = useState(initHistory(parser));
-
+  // To set a new regex
   const setNewRegex = (regex) => {
     const parser = new Parser(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
   };
 
+  //----------------------------------------------------------------------------
   // Editor
 
   const onEditorChange = (event) => {
@@ -148,10 +158,12 @@ const App = () => {
     setIndex(index);
   };
 
+  //----------------------------------------------------------------------------
   // InfoBox
 
   const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
 
+  //----------------------------------------------------------------------------
   // LogBox
 
   const onStepForward = () => {
@@ -218,17 +230,7 @@ const App = () => {
   };
 
   //----------------------------------------------------------------------------
-
-  const logBox = (
-    <LogBox
-      logs={logs}
-      onHover={(pos) => console.log('hovered over', pos)}
-      onToBegining={onToBeginning}
-      onStepBack={onStepBack}
-      onStepForward={onStepForward}
-      onToEnd={() => console.log('Jump to the end')}
-    />
-  );
+  // Callbacks
 
   const doFix = () => {
     const newRegex = parser.fix();
@@ -236,16 +238,6 @@ const App = () => {
     setParser(() => newParser);
     setHistory(() => initHistory(parser));
   };
-
-  const warningBox = (
-    <WarningBox
-      warnings={parser.warnings}
-      onHover={(pos) => console.log('Hovering over the warning at', pos)}
-      onFix={doFix}
-    />
-  );
-
-  //----------------------------------------------------------------------------
 
   const toggleTheme = () => toggleLight((light) => !light);
   const toggleExplore = () =>
@@ -274,6 +266,28 @@ const App = () => {
         : tags.concat({ id, tag_name })
     );
   };
+
+  //----------------------------------------------------------------------------
+  // Components
+
+  const logBox = (
+    <LogBox
+      logs={logs}
+      onHover={(pos) => console.log('hovered over', pos)}
+      onToBegining={onToBeginning}
+      onStepBack={onStepBack}
+      onStepForward={onStepForward}
+      onToEnd={() => console.log('Jump to the end')}
+    />
+  );
+
+  const warningBox = (
+    <WarningBox
+      warnings={parser.warnings}
+      onHover={(pos) => console.log('Hovering over the warning at', pos)}
+      onFix={doFix}
+    />
+  );
 
   const graphBox = displayGraph ? (
     <Graph graph={parser.graph} activeNodes={activeNodes} />

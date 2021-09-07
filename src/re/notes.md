@@ -1,5 +1,8 @@
 Todo:
 
+- history
+- logbox
+- Fira code disable ligatures, lighter font weight
 - quantifier display
 - center graph vertically
 - unique keys for lists
