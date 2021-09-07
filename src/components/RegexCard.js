@@ -18,8 +18,8 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   regex: {
-    fontFamily: 'Fira Code',
-    fontWeight: '700',
+    fontFamily: 'Fira Mono',
+    fontWeight: '500',
     marginBlockStart: theme.spacing(-2),
     marginBlockEnd: theme.spacing(2),
   },

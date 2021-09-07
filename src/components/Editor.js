@@ -26,15 +26,15 @@ const useStyles = makeStyles((theme) => ({
       'caret-color': theme.palette.text.primary,
       letterSpacing: 'normal',
       lineHeight: 'normal',
-      fontFamily: 'Fira Code',
-      fontWeight: 'bold',
+      fontFamily: 'Fira Mono',
+      fontSize: 22,
     },
   },
   ghostText: {
     lineHeight: 'normal',
     letterSpacing: 'normal',
-    fontFamily: 'Fira Code',
-    fontWeight: 'bold',
+    fontFamily: 'Fira Mono',
+    fontSize: 22,
   },
 }));
 //------------------------------------------------------------------------------

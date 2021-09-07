@@ -22,13 +22,15 @@ import lightTheme from '../mui-themes/base-light';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
 import '@fontsource/roboto';
-import '@fontsource/fira-code';
+import '@fontsource/fira-mono';
 
 import { logs } from '../re/re_stubs';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
 // rendering stubs, TODO: clean up once the wiring's done
+
+//------------------------------------------------------------------------------
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -55,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
   logBox: {
     gridColumn: '2/3',
     gridRow: '3/4',
+    overflowY: 'hidden',
   },
   saveBox: {
     gridColumn: '1/2',
@@ -72,12 +75,24 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const defaultParser = new Parser('(abc)');
+//------------------------------------------------------------------------------
+// Initialization
+
+const initHistory = (parser) => ({
+  index: 0,
+  begin: 0,
+  end: 0,
+  states: [{ runState: 'running', activeNodes: [parser.nfa] }],
+});
+
+const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
+const defaultHistory = initHistory(defaultParser);
 
 //------------------------------------------------------------------------------
+// App and state
 
 const App = () => {
-  console.log('Render: App');
+  // console.log('Render: App');
 
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
@@ -90,13 +105,17 @@ const App = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
   const [index, setIndex] = useState(null);
-  const [parser, setParser] = useState(defaultParser);
   const [fetchStr, setFetchStr] = useState(false);
+
+  /*eslint no-unused-vars: 'off' */
   const [displayGraph, setDisplayGraph] = useState(true);
 
-  // 'ab(c|x)de|abcxy|a.*.*.*x|.*...x'
+  const [parser, setParser] = useState(defaultParser);
+  const [history, setHistory] = useState(defaultHistory);
+  const [logs, setLogs] = useState([]);
 
   //----------------------------------------------------------------------------
+  // Hooks
 
   useEffect(() => {
     if (!!fetchStr)
@@ -120,22 +139,16 @@ const App = () => {
   }, [fetchStr, setFetchStr, setTestString]);
 
   //----------------------------------------------------------------------------
-  // Update parser from regex input
 
-  const initHistory = (parser) => ({
-    index: 0,
-    logs: [[parser.nfa]],
-    match: null,
-  });
-
-  const [history, setHistory] = useState(initHistory(parser));
-
+  // To set a new regex
   const setNewRegex = (regex) => {
     const parser = new Parser(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
+    setLogs(() => []);
   };
 
+  //----------------------------------------------------------------------------
   // Editor
 
   const onEditorChange = (event) => {
@@ -148,87 +161,85 @@ const App = () => {
     setIndex(index);
   };
 
+  //--------------------------------------------------------------------------
+  // TestStrField
+
+  const onTestStrChange = (str) => {
+    setTestString(str);
+    setHistory(() => initHistory(parser));
+    setLogs(() => []);
+  };
+
+  //----------------------------------------------------------------------------
   // InfoBox
 
-  const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
+  const msg = 'Hover over any character in the regex to get information on it.';
+  const tokenInfo =
+    index !== null ? parser.tokenInfo(index) : { description: msg };
 
+  //----------------------------------------------------------------------------
   // LogBox
 
   const onStepForward = () => {
-    // End of test string
-    const activeNodes = history.logs[history.index];
-    if (
-      activeNodes.length === 0 ||
-      history.match ||
-      history.index === testString.length
-    ) {
+    // Block forward step
+    const index = history.index;
+    const prevActiveNodes = history.states[index].activeNodes;
+    if (prevActiveNodes.length === 0 || index === testString.length) {
       return;
     }
 
     // Retrace a previous step
-    if (history.index < history.logs.length - 1) {
-      const index = history.index + 1;
-      setHistory({ ...history, index });
+    if (index < history.states.length - 1) {
+      setHistory({ ...history, index: index + 1 });
       return;
     }
 
     // Run the next step
-    const { nextActiveNodes, match } = stepForward(
+    const ch = testString[index];
+    let { runState, activeNodes } = stepForward(
       parser.nodes,
-      history.logs[history.index],
-      testString[history.index]
+      prevActiveNodes,
+      ch
     );
 
-    // Found a match
-    if (match) {
-      console.log('success');
-      return;
+    // If the end of the test string is reached
+    if (runState === 'running' && index === testString.length - 1) {
+      runState = 'failure';
     }
 
-    if (nextActiveNodes.length === 0) {
-      console.log('failure');
-      setHistory({ ...history, index: 0 });
-      return;
-    }
+    // Push a log entry
+    const msg =
+      runState === 'running'
+        ? `Char: ${ch} - Nodes: ${activeNodes.length}`
+        : runState === 'success'
+        ? 'Successful match'
+        : activeNodes.length === 0
+        ? 'No match'
+        : 'End of test string';
 
-    const index = history.index + 1;
-    const logs = [...history.logs, nextActiveNodes];
-    setHistory({ ...history, index, logs });
+    const log = { prompt: `[0:${index}]`, msg };
+    setLogs((logs) => [...logs, log]);
+
+    // Set the history state
+    const nextState = { runState, activeNodes };
+    setHistory({
+      ...history,
+      index: index + 1,
+      states: [...history.states, nextState],
+    });
   };
 
   const onStepBack = () => {
     if (history.index === 0) return;
-    const index = history.index - 1;
-    setHistory({ ...history, index });
+    setHistory({ ...history, index: history.index - 1 });
   };
 
   const onToBeginning = () => {
     setHistory({ ...history, index: 0 });
   };
 
-  // Graph
-
-  const activeNodes = history.logs[history.index];
-
-  // TestStrField
-
-  const onTestStrChange = (str) => {
-    setHistory({ ...history, index: 0 });
-    setTestString(str);
-  };
-
   //----------------------------------------------------------------------------
-
-  const logBox = (
-    <LogBox
-      logs={logs}
-      onHover={(pos) => console.log('hovered over', pos)}
-      onToBegining={onToBeginning}
-      onStepBack={onStepBack}
-      onStepForward={onStepForward}
-      onToEnd={() => console.log('Jump to the end')}
-    />
-  );
+  // Callbacks
 
   const doFix = () => {
     const newRegex = parser.fix();
@@ -236,16 +247,6 @@ const App = () => {
     setParser(() => newParser);
     setHistory(() => initHistory(parser));
   };
-
-  const warningBox = (
-    <WarningBox
-      warnings={parser.warnings}
-      onHover={(pos) => console.log('Hovering over the warning at', pos)}
-      onFix={doFix}
-    />
-  );
-
-  //----------------------------------------------------------------------------
 
   const toggleTheme = () => toggleLight((light) => !light);
   const toggleExplore = () =>
@@ -275,8 +276,32 @@ const App = () => {
     );
   };
 
+  //----------------------------------------------------------------------------
+  // Components
+
+  const logBox = (
+    <LogBox
+      logs={logs}
+      onHover={(pos) => console.log('hovered over', pos)}
+      onToBegining={onToBeginning}
+      onStepBack={onStepBack}
+      onStepForward={onStepForward}
+      onToEnd={() => console.log('Jump to the end')}
+    />
+  );
+
+  const warningBox = (
+    <WarningBox
+      warnings={parser.warnings}
+      onHover={(pos) => console.log('Hovering over the warning at', pos)}
+      onFix={doFix}
+    />
+  );
+
+  const { runState, activeNodes } = history.states[history.index];
+
   const graphBox = displayGraph ? (
-    <Graph graph={parser.graph} activeNodes={activeNodes} />
+    <Graph graph={parser.graph} activeNodes={activeNodes} runState={runState} />
   ) : (
     <SaveBox
       {...{

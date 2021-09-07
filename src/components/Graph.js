@@ -18,7 +18,7 @@ const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
-const Graph = ({ graph, activeNodes }) => {
+const Graph = ({ graph, activeNodes, runState }) => {
   const canvasRef = useRef(null);
 
   //----------------------------------------------------------------------------
@@ -28,7 +28,7 @@ const Graph = ({ graph, activeNodes }) => {
     const ctx = canvasRef.current.getContext('2d');
 
     const draw = (ctx) => {
-      ctx.strokeStyle = '#ff0000';
+      ctx.strokeStyle = '#062';
       ctx.lineWidth = 2;
       graph.links.forEach(drawLink(ctx, scale));
       graph.forks.forEach(drawFork(ctx, scale));
@@ -50,13 +50,13 @@ const Graph = ({ graph, activeNodes }) => {
 
   //----------------------------------------------------------------------------
 
-  setActiveGraphNodes(graph.nodes, activeNodes);
+  setActiveGraphNodes(graph.nodes, activeNodes, runState);
 
   //----------------------------------------------------------------------------
 
   return (
     <div id="graph-container">
-      {graph.nodes.map(({ coord, label, classes, active }, index) => {
+      {graph.nodes.map(({ coord, label, classes, runClasses }, index) => {
         const scaledCoord = scale(coord);
         return (
           <Node
@@ -65,7 +65,7 @@ const Graph = ({ graph, activeNodes }) => {
             label={label}
             diameter={NODE_DIAM}
             classes={classes}
-            active={active}
+            runClasses={runClasses}
           />
         );
       })}

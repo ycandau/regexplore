@@ -61,6 +61,8 @@ const concatLabels = (descriptions, begin, end) => {
   return str;
 };
 
+/* eslint no-unused-vars: 0 */
+
 const stringifyTokens = (tokens) => {
   let str = '0';
 

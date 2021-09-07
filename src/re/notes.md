@@ -1,5 +1,10 @@
 Todo:
 
+- curves off when extended
+- history: continue through search string
+- hover events
+- highlight search string
+- logbox: overflow?
 - quantifier display
 - center graph vertically
 - unique keys for lists

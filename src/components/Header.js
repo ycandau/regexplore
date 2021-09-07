@@ -25,6 +25,8 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     display: 'none',
+    fontFamily: 'Fira Mono',
+    fontStyle: 'italic',
     [theme.breakpoints.up('md')]: {
       display: 'block',
     },
@@ -87,7 +89,7 @@ export default function PrimarySearchAppBar({
     <div className={classes.grow}>
       <AppBar position="static" color="default">
         <Toolbar>
-          <Typography className={classes.title} variant="h6" noWrap>
+          <Typography className={classes.title} variant="h5" noWrap>
             RegExpLore
           </Typography>
           <div className={classes.grow} />

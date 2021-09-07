@@ -1,5 +1,5 @@
 import '@fontsource/roboto';
-import '@fontsource/fira-code';
+import '@fontsource/fira-mono';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
