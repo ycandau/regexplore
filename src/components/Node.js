@@ -1,4 +1,4 @@
-const Node = ({ coord, label, diameter, classes, active }) => {
+const Node = ({ coord, label, diameter, classes, runClasses }) => {
   const style = {
     left: `${coord[0] - diameter / 2}px`,
     top: `${coord[1] - diameter / 2}px`,
@@ -6,10 +6,10 @@ const Node = ({ coord, label, diameter, classes, active }) => {
     height: `${diameter}px`,
   };
 
-  const dynClasses = `node ${classes} ${active ? 'active' : ''}`;
+  const allClasses = `node ${classes} ${runClasses}`;
 
   return (
-    <div className={dynClasses} style={style}>
+    <div className={allClasses} style={style}>
       {label}
     </div>
   );

@@ -10,6 +10,10 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.primary.contrastText,
     backgroundColor: theme.palette.primary.main,
   },
+  headerTitle: {
+    variant: 'h2',
+    fontSize: 20,
+  },
   iconBox: {
     display: 'flex',
     alignItems: 'center',
@@ -24,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.info.main,
     paddingRight: theme.spacing(2),
   },
-  cardHeght: {
+  cardHeight: {
     height: '100%',
   },
 }));
@@ -35,12 +39,12 @@ export default function InfoBox({ desc }) {
   return (
     <Card
       classes={{
-        root: classes.cardHeght,
+        root: classes.cardHeight,
       }}
     >
       <CardHeader
         avatar={<Avatar className={classes.avatar}>{label || 'i'}</Avatar>}
-        title={name}
+        title={<div className={classes.headerTitle}>{name}</div>}
       />
       <CardContent>
         <Typography>{description}</Typography>

@@ -79,8 +79,10 @@ const useStyles = makeStyles((theme) => ({
 
 const initHistory = (parser) => ({
   index: 0,
-  logs: [[parser.nfa]],
-  match: null,
+  begin: 0,
+  end: 0,
+  states: [{ runState: 'running', activeNodes: [parser.nfa] }],
+  logs: [],
 });
 
 const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
@@ -91,7 +93,7 @@ const defaultHistory = initHistory(defaultParser);
 // App and state
 
 const App = () => {
-  console.log('Render: App');
+  // console.log('Render: App');
 
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
@@ -158,75 +160,65 @@ const App = () => {
     setIndex(index);
   };
 
+  //--------------------------------------------------------------------------
+  // TestStrField
+
+  const onTestStrChange = (str) => {
+    setHistory(() => initHistory(parser));
+    setTestString(str);
+  };
+
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const tokenInfo = index !== null ? parser.tokenInfo(index) : {};
+  const msg = 'Hover over any character in the regex to get information on it.';
+  const tokenInfo =
+    index !== null ? parser.tokenInfo(index) : { description: msg };
 
   //----------------------------------------------------------------------------
   // LogBox
 
   const onStepForward = () => {
-    // End of test string
-    const activeNodes = history.logs[history.index];
-    if (
-      activeNodes.length === 0 ||
-      history.match ||
-      history.index === testString.length
-    ) {
+    // Block forward step
+    const { activeNodes } = history.states[history.index];
+    if (activeNodes.length === 0 || history.index === testString.length) {
       return;
     }
 
     // Retrace a previous step
-    if (history.index < history.logs.length - 1) {
-      const index = history.index + 1;
-      setHistory({ ...history, index });
+    if (history.index < history.states.length - 1) {
+      setHistory({ ...history, index: history.index + 1 });
       return;
     }
 
     // Run the next step
-    const { nextActiveNodes, match } = stepForward(
+    let { nextRunState, nextActiveNodes } = stepForward(
       parser.nodes,
-      history.logs[history.index],
+      activeNodes,
       testString[history.index]
     );
 
-    // Found a match
-    if (match) {
-      console.log('success');
-      return;
+    // If the end of the test string is reached
+    if (nextRunState === 'running' && history.index === testString.length - 1) {
+      nextRunState = 'failure';
     }
 
-    if (nextActiveNodes.length === 0) {
-      console.log('failure');
-      setHistory({ ...history, index: 0 });
-      return;
-    }
-
-    const index = history.index + 1;
-    const logs = [...history.logs, nextActiveNodes];
-    setHistory({ ...history, index, logs });
+    // Set the history state
+    const nextState = { runState: nextRunState, activeNodes: nextActiveNodes };
+    setHistory({
+      ...history,
+      index: history.index + 1,
+      states: [...history.states, nextState],
+    });
   };
 
   const onStepBack = () => {
     if (history.index === 0) return;
-    const index = history.index - 1;
-    setHistory({ ...history, index });
+    setHistory({ ...history, index: history.index - 1 });
   };
 
   const onToBeginning = () => {
     setHistory({ ...history, index: 0 });
-  };
-
-  // Graph
-
-  const activeNodes = history.logs[history.index];
-
-  // TestStrField
-
-  const onTestStrChange = (str) => {
-    setHistory({ ...history, index: 0 });
-    setTestString(str);
   };
 
   //----------------------------------------------------------------------------
@@ -289,8 +281,10 @@ const App = () => {
     />
   );
 
+  const { runState, activeNodes } = history.states[history.index];
+
   const graphBox = displayGraph ? (
-    <Graph graph={parser.graph} activeNodes={activeNodes} />
+    <Graph graph={parser.graph} activeNodes={activeNodes} runState={runState} />
   ) : (
     <SaveBox
       {...{

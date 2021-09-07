@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
         ? theme.palette.info.light
         : theme.palette.info.dark,
   },
-  cardHeght: {
+  cardHeight: {
     height: '100%',
   },
   headerRoot: {
@@ -53,17 +53,17 @@ export default function LogBox({
 }) {
   const classes = useStyles();
   const logList = logs.map(({ pos, char, count }) => (
-    <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
-      <ListItemIcon className={classes.avatar}>[{pos}]:</ListItemIcon>
+    <ListItem key={pos} button /* onMouseOver={() => onHover(pos)} */>
+      <ListItemIcon className={classes.avatar}>[10:20]</ListItemIcon>
       <ListItemText
-        primary={`'${char}' => ${count} active states`}
+        primary={`'${char}' => ${count} states`}
         primaryTypographyProps={{ className: classes.listText }}
       />
     </ListItem>
   ));
 
   return (
-    <Card className={classes.logList} classes={{ root: classes.cardHeght }}>
+    <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
       <CardHeader
         title="Log"
         classes={{ root: classes.headerRoot }}
