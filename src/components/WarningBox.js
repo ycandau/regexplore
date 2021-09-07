@@ -20,8 +20,8 @@ const useStyles = makeStyles((theme) => ({
 
 export default function WarningBox({ warnings, onHover, onFix }) {
   const classes = useStyles();
-  const warnList = warnings.map(({ pos, excerpt, issue, msg }) => (
-    <ListItem key={pos} button onMouseOver={() => onHover(pos)}>
+  const warnList = warnings.map(({ pos, excerpt, issue, msg }, index) => (
+    <ListItem key={index} button onMouseOver={() => onHover(pos)}>
       <ListItemText
         primary={issue}
         secondary={

@@ -149,7 +149,6 @@ const getLabelsAndClasses = (editorInfo, index) => {
       add('hl-oper-right-inside', token.beginR, token.endR);
       break;
     case 'quantifier':
-      // console.log(token);
       add('hl-quantifier', token.index);
       add('hl-oper-left-inside', token.beginL, token.endL);
       break;

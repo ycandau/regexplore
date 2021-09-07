@@ -3,7 +3,12 @@
 //------------------------------------------------------------------------------
 
 import { descriptions, warnings } from './re_static_info.js';
-import { getToken, getConcat, getBracketClass, getEmpty } from './re_tokens.js';
+import {
+  getToken,
+  getConcat,
+  getBracketClass,
+  getParenClose,
+} from './re_tokens.js';
 
 import compile from './re_compile.js';
 import graph from './re_graph.js';
@@ -32,6 +37,8 @@ const typeToDisplayType = {
 
 //------------------------------------------------------------------------------
 
+const last = (array) => array[array.length - 1];
+
 const isValue = (token) =>
   token.type && token.type !== '|' && token.type !== '(';
 
@@ -53,6 +60,34 @@ const concatLabels = (descriptions, begin, end) => {
   }
   return str;
 };
+
+const stringifyTokens = (tokens) => {
+  let str = '0';
+
+  tokens.reduce((str, token) => {
+    switch (token.type) {
+      case 'charLiteral':
+      case 'escapedChar':
+      case 'charClass':
+      case 'bracketClass':
+        return str + 'a';
+      case '.':
+      case '|':
+      case '?':
+      case '*':
+      case '+':
+      case '(':
+      case ')':
+        return str + token.type;
+      default:
+        throw new Error('Invalid token type');
+    }
+  }, '0');
+
+  return str + '9';
+};
+
+const filterTokens = (tokens) => tokens.filter((token) => !token.invalid);
 
 //------------------------------------------------------------------------------
 
@@ -100,7 +135,6 @@ class Parser {
   }
 
   //----------------------------------------------------------------------------
-  // Convert to Reverse Polish Notation (RPN)
 
   // Read the next token and advance the position in the input string
   readToken() {
@@ -134,15 +168,202 @@ class Parser {
     this.operators.push(getConcat());
   }
 
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+
+  tokenize() {
+    this.tokens = [];
+    while (this.remaining()) {
+      const token = this.readToken();
+      this.tokens.push(token);
+    }
+  }
+
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+
+  ppParentheses() {
+    if (this.tokens.length === 0) return;
+
+    let parens = [];
+
+    for (const token of this.tokens) {
+      if (token.type === '(') {
+        parens.push(token);
+      }
+      if (token.type === ')') {
+        // Syntax error: missing opening parenthesis
+        if (parens.length === 0) {
+          this.addWarning('!)', token.pos, token.index);
+          this.describe({ warning: '!)' }, token.index);
+          token.invalid = true;
+        }
+        parens.pop();
+      }
+    }
+    // Syntax error: missing closing parenthesis
+    const { pos, index } = last(this.tokens);
+    while (parens.length > 0) {
+      const close = getParenClose();
+      const open = parens.pop();
+      close.pos = pos;
+      close.index = index;
+      this.tokens.push(close);
+      this.addWarning('!(', open.pos, open.index);
+    }
+
+    this.tokens = filterTokens(this.tokens);
+  }
+
+  //----------------------------------------------------------------------------
+
+  ppQuantifiers() {
+    let prevToken = {};
+    for (const token of this.tokens) {
+      switch (token.type) {
+        case '?':
+        case '*':
+        case '+':
+          // Syntax error: redundant quantifiers
+          if (isQuantifier(prevToken)) {
+            const label = `${prevToken.type}${token.type}`;
+            const sub = label === '??' ? '?' : label === '++' ? '+' : '*';
+            prevToken.label = sub;
+            prevToken.type = sub;
+            const msg = `The parser is substituting '${label}' with '${sub}'`;
+            this.addWarning('!**', token.pos, token.index, { label, msg });
+            this.describe({ warning: '!**' }, token.index);
+            token.invalid = true;
+          }
+
+          // Syntax error: no value before quantifier
+          else if (!isValue(prevToken)) {
+            const label = token.type;
+            this.addWarning('!E*', token.pos, token.index, { label });
+            this.describe({ warning: '!E*' }, token.index);
+            token.invalid = true;
+          } else {
+            prevToken = token;
+          }
+          break;
+        default:
+          prevToken = token;
+          break;
+      }
+    }
+    this.tokens = filterTokens(this.tokens);
+  }
+
+  //----------------------------------------------------------------------------
+
+  ppAlternationsForward() {
+    let prevToken = {};
+    for (const token of this.tokens) {
+      switch (token.type) {
+        case '|':
+          // Syntax error: no value before alternation
+          if (!isValue(prevToken)) {
+            const label = token.type;
+            this.addWarning('!E|', token.pos, token.index, { label });
+            this.describe({ warning: '!E|' }, token.index);
+            token.invalid = true;
+          } else {
+            prevToken = token;
+          }
+          break;
+        default:
+          prevToken = token;
+          break;
+      }
+    }
+    this.tokens = filterTokens(this.tokens);
+  }
+
+  //----------------------------------------------------------------------------
+
+  ppAlternationsBackward() {
+    let prevToken = { type: ')' };
+    for (let i = this.tokens.length - 1; i >= 0; i--) {
+      const token = this.tokens[i];
+      switch (token.type) {
+        case '|':
+          // Syntax error: no value after alternation
+          if (prevToken.type === ')') {
+            const label = token.type;
+            this.addWarning('!|E', token.pos, token.index, { label });
+            this.describe({ warning: '!|E' }, token.index);
+            token.invalid = true;
+          }
+          break;
+        default:
+          break;
+      }
+      prevToken = token;
+    }
+    this.tokens = filterTokens(this.tokens);
+  }
+
+  //----------------------------------------------------------------------------
+
+  ppEmptyParentheses() {
+    let nOpen = 0;
+    let nClose = 0;
+
+    // Add temporary terminal token
+    this.tokens.push({ type: 'end', invalid: true });
+
+    for (let i = 0; i < this.tokens.length; i++) {
+      const token = this.tokens[i];
+      switch (token.type) {
+        case '(':
+          nOpen++;
+          break;
+        case ')':
+          nClose++;
+          break;
+        default:
+          if (nOpen && nClose) {
+            // Syntax error: no value inside parentheses
+            const count = Math.min(nOpen, nClose);
+            const begin = i - count - nClose;
+            const end = i + count - nClose;
+            for (let ind = begin; ind < end; ind++) {
+              const paren = this.tokens[ind];
+              paren.invalid = true;
+              this.describe({ warning: '!()' }, paren.index);
+            }
+            const first = this.tokens[begin];
+            this.addWarning('!()', first.pos, first.index);
+          }
+          nOpen = 0;
+          nClose = 0;
+          break;
+      }
+    }
+    this.tokens = filterTokens(this.tokens);
+  }
+
+  //----------------------------------------------------------------------------
+
+  preProcess() {
+    this.ppParentheses();
+    this.ppQuantifiers();
+    this.ppAlternationsForward();
+    this.ppAlternationsBackward();
+    this.ppEmptyParentheses();
+  }
+
+  //----------------------------------------------------------------------------
   // Generate a queue of tokens in reverse polish notation (RPN)
   // using a simplified shunting-yard algorithm
-  parse() {
-    let openParenCount = 0;
+  toRpn() {
+    this.rpn = [];
+    this.operators = [];
     let prevToken = {};
-    while (this.remaining()) {
-      let skipped = false;
-      const token = this.readToken();
 
+    for (const token of this.tokens) {
       switch (token.type) {
         case 'charLiteral':
         case 'escapedChar':
@@ -154,9 +375,6 @@ class Parser {
           break;
 
         case '|':
-          // Edge case: empty token before parenthesis
-          if (!isValue(prevToken)) this.rpn.push(getEmpty());
-
           this.transferOperator('~');
           this.transferOperator('|');
           this.operators.push(token);
@@ -165,97 +383,41 @@ class Parser {
         case '?':
         case '*':
         case '+':
-          // Edge case: redundant quantifiers
-          if (isQuantifier(prevToken)) {
-            const label = `${prevToken.type}${token.type}`;
-            const sub = label === '??' ? '?' : label === '++' ? '+' : '*';
-            prevToken.label = sub;
-            prevToken.type = sub;
-            const msg = `The parser is substituting '${label}' with '${sub}'`;
-            this.addWarning('!**', token.pos, token.index, { label, msg });
-            this.describe({ warning: '!**' });
-            skipped = true;
-            break;
-          }
-
-          // Edge case: no value before quantifier
-          if (!isValue(prevToken)) {
-            const label = token.type;
-            this.addWarning('!E', token.pos, token.index, { label });
-            this.describe({ warning: '!E' });
-            skipped = true;
-            break;
-          }
-
           this.rpn.push(token);
           break;
 
         case '(':
           if (isValue(prevToken)) this.concat();
-          token.begin = this.currentIndex();
+          token.begin = token.index;
           this.operators.push(token);
-          openParenCount++;
           break;
 
         case ')':
-          // Edge case: missing opening parenthesis
-          if (openParenCount === 0) {
-            this.addWarning('!)', token.pos, token.index);
-            this.describe({ warning: '!)' });
-            skipped = true;
-            break;
-          }
-
-          // Edge case: empty token before parenthesis
-          if (!isValue(prevToken)) this.rpn.push(getEmpty());
-
           this.transferOperator('~');
           this.transferOperator('|');
-
           const open = this.operators.pop();
           const begin = open.begin;
-          const end = this.currentIndex();
+          const end = token.index;
           open.end = end;
 
           this.rpn.push(open);
           this.describe({ begin, end }, begin);
           this.describe({ begin, end }, end);
-          openParenCount--;
           break;
 
         default:
-          break;
+          throw new Error('Invalid token type');
       }
-      if (!skipped) prevToken = token;
+      prevToken = token;
     }
+    this.transferOperator('~');
+    this.transferOperator('|');
+  }
 
-    // Edge cases: terminal character is '|'
-    const top = this.operators[this.operators.length - 1];
-    if (top && top.type === '|' && top.pos === this.input.length - 1) {
-      this.operators.pop();
-    }
-
-    // Edge cases: terminal character is '('
-    if (top && top.type === '(' && top.pos === this.input.length - 1) {
-      this.operators.pop();
-      this.operators.pop();
-    }
-
-    do {
-      this.transferOperator('~');
-      this.transferOperator('|');
-
-      // Edge case: missing closing parenthesis
-      if (this.topOperatorIs('(')) {
-        const open = this.operators.pop();
-        const begin = open.begin;
-        const end = begin;
-
-        this.rpn.push(open);
-        this.addWarning('!(', open.pos, open.index);
-        this.describe({ begin, end }, begin);
-      }
-    } while (this.operators.length > 0);
+  parse() {
+    this.tokenize();
+    this.preProcess();
+    this.toRpn();
   }
 
   //----------------------------------------------------------------------------
@@ -346,7 +508,7 @@ class Parser {
     const info = { begin, end, negate, matches };
     this.describe(info, begin);
 
-    // Edge case: open bracket with no closing
+    // Syntax error: open bracket with no closing
     const hasClosingBracket = this.ch() === ']';
     if (hasClosingBracket) {
       this.eatToken(']');
@@ -417,6 +579,8 @@ class Parser {
     this.warnings.push(warning);
   }
 
+  //----------------------------------------------------------------------------
+
   fix() {
     let stack = [];
     this.rpn.forEach((token) => {
@@ -429,9 +593,6 @@ class Parser {
         case 'bracketClass':
         case '.':
           stack.push(token.label);
-          break;
-        case 'empty':
-          stack.push('');
           break;
         case '?':
         case '*':
@@ -465,5 +626,4 @@ class Parser {
 
 export default Parser;
 
-// const parser = new Parser('abc');
-// parser.logAll();
+// const parser = new Parser('ab((**((**((');

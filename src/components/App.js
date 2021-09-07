@@ -72,9 +72,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const defaultParser = new Parser('(abc)');
+
 //------------------------------------------------------------------------------
 
 const App = () => {
+  console.log('Render: App');
+
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
@@ -86,11 +90,11 @@ const App = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
   const [index, setIndex] = useState(null);
-  const [parser, setParser] = useState(
-    new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x')
-  );
+  const [parser, setParser] = useState(defaultParser);
   const [fetchStr, setFetchStr] = useState(false);
   const [displayGraph, setDisplayGraph] = useState(true);
+
+  // 'ab(c|x)de|abcxy|a.*.*.*x|.*...x'
 
   //----------------------------------------------------------------------------
 
@@ -228,7 +232,9 @@ const App = () => {
 
   const doFix = () => {
     const newRegex = parser.fix();
-    setParser(() => new Parser(newRegex));
+    const newParser = new Parser(newRegex);
+    setParser(() => newParser);
+    setHistory(() => initHistory(parser));
   };
 
   const warningBox = (
