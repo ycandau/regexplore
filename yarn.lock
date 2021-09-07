@@ -2255,10 +2255,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@fontsource/fira-code@^4.5.1":
-  version "4.5.1"
-  resolved "https://registry.yarnpkg.com/@fontsource/fira-code/-/fira-code-4.5.1.tgz#7e3e8f2f633807c69c45cefe1dd5255563826207"
-  integrity sha512-8KTCsfs5m3UgICpHLglIKAS7vc2FFOu7/vvpWcE/42SWbh+9X8EJbEyJp6W96kU5iDVlAlUv4Cqc36Z9XUpLmA==
+"@fontsource/fira-mono@^4.5.0":
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/fira-mono/-/fira-mono-4.5.0.tgz#bea97a54b60dc269d1c78469b007835af44dfa7f"
+  integrity sha512-KE+d3wmgq/YKM0BqgUF7p2yeBNi805Nfof1lC1wJ7E9i2EWoC363sGdKG+MQBVm+ei3GYZu+Bo8Xha1w1pkB7g==
 
 "@fontsource/roboto@^4.5.0":
   version "4.5.0"

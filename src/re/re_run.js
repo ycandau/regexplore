@@ -15,15 +15,17 @@ const getNextActiveNodes = (node, nextActiveNodes, ch) => {
   });
 };
 
-const checkIfMatch = (node) => {
+const reachesLastNode = (node) => {
   for (const next of node.nextNodes) {
     if (next.type === 'last') return true;
     if (next.visited || next.match) break;
     next.visited = true;
-    if (checkIfMatch(next)) return true;
+    if (reachesLastNode(next)) return true;
   }
   return false;
 };
+
+//------------------------------------------------------------------------------
 
 const stepForward = (nfaNodes, activeNodes, ch) => {
   nfaNodes.forEach((node) => (node.visited = false));
@@ -35,22 +37,31 @@ const stepForward = (nfaNodes, activeNodes, ch) => {
   nfaNodes.forEach((node) => (node.visited = false));
   let matchingNode = null;
   for (const node of nextActiveNodes) {
-    if (checkIfMatch(node)) {
+    if (reachesLastNode(node)) {
       matchingNode = node;
       break;
     }
   }
-  return { nextActiveNodes, match: matchingNode };
+  if (matchingNode) {
+    return { runState: 'success', activeNodes: [matchingNode] };
+  }
+
+  const runState = nextActiveNodes.length !== 0 ? 'running' : 'failure';
+  return { runState, activeNodes: nextActiveNodes };
 };
 
-const setActiveGraphNodes = (graphNodes, activeNodes, match) => {
+//------------------------------------------------------------------------------
+
+const setActiveGraphNodes = (graphNodes, activeNodes, runState) => {
   graphNodes.forEach((gnode) => {
-    gnode.active = false;
+    gnode.runClasses = '';
   });
 
   activeNodes.forEach((node) => {
-    graphNodes[node.graphNodeIndex].active = true;
+    graphNodes[node.graphNodeIndex].runClasses = 'active';
   });
+
+  graphNodes[graphNodes.length - 1].runClasses += ` ${runState}`;
 };
 
 //------------------------------------------------------------------------------

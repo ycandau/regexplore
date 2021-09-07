@@ -1,5 +1,4 @@
 #graph-container {
-  color: white;
   background-color: rgb(33, 33, 33);
   position: relative;
   border: 1px solid grey;
@@ -7,17 +6,25 @@
   height: 100%;
 }
 
+:root {
+  --value-color: orange;
+  --control-color: rgb(255, 133, 255);
+  --paren-color: rgb(255, 133, 255);
+  --quantifier-color: turquoise;
+  --success-color: greenyellow;
+  --failure-color: red;
+  --node-bg-color: black;
+}
+
 .node {
   border-radius: 1em;
   font-size: 20px;
   font-weight: 600;
-  color: black;
-  background-color: orange;
   padding-top: 0.2em;
   position: absolute;
   text-align: center;
   vertical-align: bottom;
-  font-family: 'Fira Code';
+  font-family: 'Fira Mono';
 }
 
 .node.operator {
@@ -25,39 +32,69 @@
   background-color: transparent;
 }
 
-.node.first,
+.node.first {
+  color: var(--control-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--control-color);
+}
+
+.node.first.active {
+  color: var(--node-bg-color);
+  background-color: var(--control-color);
+}
+
 .node.last {
-  color: orange;
-  background-color: black;
-  border: 2px solid orange;
+  color: var(--control-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--control-color);
+}
+
+.node.last.success {
+  color: var(--node-bg-color);
+  background-color: var(--success-color);
+  border: 2px solid var(--success-color);
+}
+
+.node.last.failure {
+  color: var(--node-bg-color);
+  background-color: var(--failure-color);
+  border: 2px solid var(--failure-color);
 }
 
 .node.value,
 .node.value-special {
-  color: orange;
-  background-color: black;
-  border: 2px solid orange;
+  color: var(--value-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--value-color);
+}
+
+.node.value.active,
+.node.value-special.active {
+  color: var(--node-bg-color);
+  background-color: var(--value-color);
+  border: 2px solid var(--value-color);
 }
 
 .node.quantifier {
-  color: greenyellow;
-  background-color: black;
-  border: 2px solid greenyellow;
+  color: var(--quantifier-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--quantifier-color);
+}
+
+.node.quantifier.active {
+  color: var(--node-bg-color);
+  background-color: var(--quantifier-color);
+  border: 2px solid var(--quantifier-color);
 }
 
 .node.delimiter {
-  color: rgb(255, 133, 255);
-  background-color: black;
-  border: 2px solid rgb(255, 133, 255);
+  color: var(--paren-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--paren-color);
 }
 
 .node.delimiter.quantifier {
-  color: rgb(0, 195, 255);
-  background-color: black;
-  border: 2px solid rgb(0, 195, 255);
-}
-
-#graph-container .node.active {
-  color: black;
-  background-color: orange;
+  color: var(--quantifier-color);
+  background-color: var(--node-bg-color);
+  border: 2px solid var(--quantifier-color);
 }
