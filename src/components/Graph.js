@@ -28,6 +28,8 @@ const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
 const Graph = ({ graph, activeNodes, runState }) => {
   const canvasRef = useRef(null);
 
+  // console.log('GRAPH', graph);
+
   //----------------------------------------------------------------------------
   // Drawing hook
 
@@ -63,19 +65,22 @@ const Graph = ({ graph, activeNodes, runState }) => {
 
   return (
     <div id="graph-container">
-      {graph.nodes.map(({ coord, label, classes, runClasses }, index) => {
-        const scaledCoord = scale(coord);
-        return (
-          <Node
-            key={`${index}`}
-            coord={scaledCoord}
-            label={label}
-            diameter={NODE_DIAM}
-            classes={classes}
-            runClasses={runClasses}
-          />
-        );
-      })}
+      {graph.nodes.map(
+        ({ coord, label, quantifier, classes, runClasses }, index) => {
+          const scaledCoord = scale(coord);
+          return (
+            <Node
+              key={`${index}`}
+              coord={scaledCoord}
+              label={label}
+              quantifier={quantifier}
+              classes={classes}
+              runClasses={runClasses}
+              diameter={NODE_DIAM}
+            />
+          );
+        }
+      )}
       <canvas id="canvas" ref={canvasRef}></canvas>
     </div>
   );

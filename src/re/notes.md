@@ -1,13 +1,8 @@
 ## Todo
 
-- LogBox: overflow?
-- Highlight in TestStringBox
-
-- curves off when extended
-- history: continue through search string
-- hover events
-- highlight search string
 - quantifier display
+- play mode
+- hover events
 - center graph vertically
 
 ## For Later

@@ -27,13 +27,13 @@ const createDisplayNodes = (nodes) => {
 
 //------------------------------------------------------------------------------
 
-const mergeNextBack = (node1, node2, prop) => {
+const mergeNextBack = (node1, node2, quantifier) => {
+  node1.quantifier = node1.type;
   node1.label = node2.label;
   node1.type = node2.type;
   node1.ref = node2.ref;
   node1.ref.dnode = node1;
   node2.type = null;
-  node1[prop] = true;
   if (node2.heights !== undefined) node1.heights = node2.heights;
   if (node2.forkIndex !== undefined) node1.forkIndex = node2.forkIndex;
   if (node2.close !== undefined) node1.close = node2.close;
@@ -45,14 +45,14 @@ const processQuantifiers = (nodes) => {
   nodes.forEach((node) => {
     const next = node.next[0];
     if (node.type === '?') {
-      mergeNextBack(node, next, 'repeat01');
+      mergeNextBack(node, next);
       node.next = [...next.next];
     }
 
     // Repeat 0N
     else if (node.type === '*') {
       const nextType = next.type;
-      mergeNextBack(node, next, 'repeat0N');
+      mergeNextBack(node, next);
       if (nextType === '(') {
         node.close.next = [node.next[1]];
         node.next = [...next.next];
@@ -65,7 +65,7 @@ const processQuantifiers = (nodes) => {
     else if (next && next.type === '+') {
       next.type = null;
       node.next = [next.next[1]];
-      node.repeat1N = true;
+      node.quantifier = '+';
     }
   });
   return nodes.filter((node) => node.type !== null);
@@ -113,15 +113,15 @@ const finalizeDisplayNodes = (nodes) => {
     // Set the index in the NFA
     node.ref.graphNodeIndex = ind;
 
-    const quantifier =
-      node.repeat01 || node.repeat0N || node.repeat1N ? ' quantifier' : '';
-    const classes = `${typeToNodeType[node.type]} ${quantifier}`;
+    const addClass = node.quantifier ? ' quantifier' : '';
+    const classes = `${typeToNodeType[node.type]} ${addClass}`;
 
     return {
       label: node.label,
       coord: node.coord,
       classes,
       active: false,
+      quantifier: node.quantifier,
     };
   });
   return graphNodes;
@@ -195,6 +195,8 @@ const calculateLayout = (nodes) => {
   });
 
   const fnodes = finalizeDisplayNodes(nodes);
+
+  // console.log('RE', fnodes);
 
   return { nodes: fnodes, links, forks, merges };
 };

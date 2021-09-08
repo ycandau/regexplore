@@ -27,6 +27,15 @@
   font-family: 'Fira Mono';
 }
 
+.quant-tag {
+  color: var(--quantifier-color);
+  background-color: transparent;
+  font-size: 20px;
+  font-weight: 600;
+  position: absolute;
+  font-family: 'Fira Mono';
+}
+
 .node.operator {
   color: transparent;
   background-color: transparent;

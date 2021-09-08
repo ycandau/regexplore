@@ -89,7 +89,8 @@ const initHistory = (parser) => ({
 
 const initLogs = () => ({ first: 0, list: [] });
 
-const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
+// const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
+const defaultParser = new Parser('X?aaa|aaY*|aZ+');
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 4;
@@ -112,7 +113,8 @@ const App = () => {
   const [page, setPage] = useState(null);
   const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
-  const [displayGraph, setDisplayGraph] = useState(true);
+  // const [displayGraph, setDisplayGraph] = useState(true);
+  const [displayGraph] = useState(true);
 
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
@@ -188,8 +190,15 @@ const App = () => {
       'Hover over any character in the regex to get information on it.',
   };
 
-  const tokenInfo =
-    editorIndex !== null ? parser.tokenInfo(editorIndex) : defaultInfo;
+  // Issue when deleting under hover @bug
+  const getTokenInfo = (index) => {
+    if (index === null || index === undefined) return defaultInfo;
+    const info = parser.tokenInfo(editorIndex);
+    if (info === null || info === undefined) return defaultInfo;
+    return info;
+  };
+
+  const tokenInfo = getTokenInfo(editorIndex);
 
   //----------------------------------------------------------------------------
   // LogBox
@@ -252,7 +261,7 @@ const App = () => {
         break;
     }
 
-    // Create new log entry
+    // Create a new log entry
     const first = Math.max(history.index - MAX_LOGS + 1, 0);
     const prompt = `[${begin}:${pos}]`;
     const log = { prompt, msg, key: history.index + 1 };
@@ -271,7 +280,6 @@ const App = () => {
       index,
       states: [...history.states, nextState],
     });
-    console.log(logs.first, history.index);
   };
 
   const onStepBack = () => {

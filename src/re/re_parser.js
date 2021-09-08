@@ -553,6 +553,10 @@ class Parser {
 
   tokenInfo(index) {
     const token = this.descriptions[index];
+
+    // @bug: Issue when deleting under hover
+    if (token === undefined) return undefined;
+
     const type = token.type === 'charClass' ? token.label : token.type;
 
     const operands = [];
