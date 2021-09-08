@@ -64,7 +64,7 @@ export default function LogBox({
   play,
   situation,
   onToEnd,
-  
+
   setDisplayGraph,
   onDeleteRegex,
   displayGraph,
@@ -73,12 +73,8 @@ export default function LogBox({
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
   const logList = logs.map(({ prompt, msg, key }) => (
-    <ListItem
-      key={key}
-      selected={currentIndex === key}
-      button
-    >             
-    <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
+    <ListItem key={key} selected={currentIndex === key} button>
+      <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}
         primaryTypographyProps={{ className: classes.listText }}
@@ -92,8 +88,7 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            // Save button
-             {isLoggedIn &&
+            {isLoggedIn &&
               (displayGraph ? (
                 <IconButton onClick={() => setDisplayGraph(false)}>
                   <Save />
@@ -107,8 +102,7 @@ export default function LogBox({
                   <DeleteForever />
                 </IconButton>
               ))}
-          
-            // Play button
+
             <IconButton
               className={play ? classes.playOn : classes.playOff}
               onClick={() => {
@@ -119,7 +113,6 @@ export default function LogBox({
               <PlayArrow />
             </IconButton>
 
-            // Step back
             <IconButton
               disabled={situation === 'atBeginning'}
               onClick={() => {
@@ -130,7 +123,6 @@ export default function LogBox({
               <SkipPreviousRounded />
             </IconButton>
 
-            // Step forward
             <IconButton
               disabled={situation === 'atEnd'}
               onClick={() => {
@@ -141,7 +133,6 @@ export default function LogBox({
               <SkipNextRounded />
             </IconButton>
 
-            // Back to beginning
             <IconButton
               disabled={situation === 'atBeginning'}
               onClick={() => {
