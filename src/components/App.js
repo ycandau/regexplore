@@ -24,13 +24,11 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import { logs } from '../re/re_stubs';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
-// rendering stubs, TODO: clean up once the wiring's done
-
-//------------------------------------------------------------------------------
+// replace with the actial server address when ready
+const serverAddr = 'http://localhost:8080/';
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -121,15 +119,16 @@ const App = () => {
     if (!!fetchStr)
       (async () => {
         try {
-          const res = await fetch('/test-strings/search', {
+          const res = await fetch(serverAddr + 'test-strings/search', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ id: fetchStr }),
           });
-          const { rows } = await res.json();
-          const [{ test_string }] = rows;
+          const {
+            rows: [{ test_string = 'failed to fetch the test string' }],
+          } = await res.json();
           setTestString(test_string);
         } catch (e) {
           console.error(e);
@@ -141,9 +140,10 @@ const App = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/auth/userinfo');
+        const res = await fetch(serverAddr + 'auth/userinfo', {
+          credentials: 'include',
+        });
         const usr = await res.json();
-        console.log(usr);
         setUser(usr);
       } catch (e) {
         console.error(e);
@@ -268,12 +268,14 @@ const App = () => {
     setPage(null);
     setTSQ(e.target.value);
   };
-  const onSearchChange = (str) => console.log('Tag Search:', str);
-  const onSave = () => console.log('Save Action Detected');
+  const onTagSearchChange = (str) => console.log('Tag Search:', str);
+  const onSaveRegex = () => console.log('Save Action Detected');
+  const onShowForm = () => setDisplayGraph((b) => !b);
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
-    setParser(() => new Parser(literal));
+    onTestStrChange('fetching the test string..');
+    setNewRegex(literal);
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
@@ -300,6 +302,8 @@ const App = () => {
       onStepBack={onStepBack}
       onStepForward={onStepForward}
       onToEnd={() => console.log('Jump to the end')}
+      displayGraph={displayGraph}
+      onShowForm={onShowForm}
     />
   );
 
@@ -324,8 +328,8 @@ const App = () => {
         setDesc,
         tags: saveBoxTags,
         setTags: setSaveBoxTags,
-        onSearchChange,
-        onSave,
+        onTagSearchChange,
+        onSaveRegex,
       }}
     />
   );
@@ -333,8 +337,6 @@ const App = () => {
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
-  const isLoggedIn = !!user.id;
-  const userInitial = !!user.name && user.name[0];
 
   const mainScreen = (
     <div className={classes.gridContainer}>
@@ -349,7 +351,6 @@ const App = () => {
       <div className={classes.testStrBox}>
         <TestStrField
           numRows={6}
-          widthRems={45}
           string={testString}
           setString={onTestStrChange}
           highlights={[]}
@@ -394,8 +395,8 @@ const App = () => {
         {...{
           light,
           toggleTheme,
-          isLoggedIn,
-          userInitial,
+          serverAddr,
+          user,
           isExploring,
           toggleExplore,
           search: tsq,
