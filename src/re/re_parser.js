@@ -240,8 +240,8 @@ class Parser {
             const sub = label === '??' ? '?' : label === '++' ? '+' : '*';
             prevToken.label = sub;
             prevToken.type = sub;
-            const msg = `The parser is substituting '${label}' with '${sub}'`;
-            this.addWarning('!**', token.pos, token.index, { label, msg });
+            // const msg = `The parser is substituting '${label}' with '${sub}'`;
+            this.addWarning('!**', token.pos, token.index, { label });
             this.describe({ warning: '!**' }, token.index);
             token.invalid = true;
             countErrors++;

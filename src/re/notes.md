@@ -1,6 +1,5 @@
 ## Todo
 
-- quantifier display
 - play mode
 - hover events
 - center graph vertically

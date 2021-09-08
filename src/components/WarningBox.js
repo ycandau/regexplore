@@ -11,30 +11,46 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   warnList: {
+    height: '100%',
     color:
       theme.palette.type === 'dark'
         ? theme.palette.warning.main
         : theme.palette.error.dark,
   },
+  cardHeight: {
+    height: '100%',
+  },
 }));
 
 export default function WarningBox({ warnings, onHover, onFix }) {
   const classes = useStyles();
-  const warnList = warnings.map(({ pos, excerpt, issue, msg }, index) => (
-    <ListItem key={index} button onMouseOver={() => onHover(pos)}>
-      <ListItemText
-        primary={issue}
-        secondary={
-          <>
-            At position {pos} {excerpt && ", '" + excerpt + "'"} - {msg}
-          </>
-        }
-      />
-    </ListItem>
-  ));
+
+  const aggregateWarnings = {};
+
+  warnings.forEach((warning) => {
+    const aggrWarning = aggregateWarnings[warning.type];
+
+    if (!aggrWarning) {
+      aggregateWarnings[warning.type] = {
+        issue: warning.issue,
+        msg: warning.msg,
+        count: 1,
+      };
+    } else {
+      aggrWarning.count++;
+    }
+  });
+
+  const warnList = Object.values(aggregateWarnings).map(
+    ({ issue, msg, count }, index) => (
+      <ListItem key={index} button onMouseOver={() => onHover()}>
+        <ListItemText primary={`${issue} - [${count}]`} secondary={msg} />
+      </ListItem>
+    )
+  );
 
   return (
-    <div>
+    <div className={classes.cardHeight}>
       <Card className={classes.warnList}>
         <CardContent>
           <CardHeader

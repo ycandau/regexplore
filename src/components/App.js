@@ -55,6 +55,7 @@ const useStyles = makeStyles((theme) => ({
     gridColumn: '2/3',
     gridRow: '3/4',
     overflowY: 'hidden',
+    height: '100%',
   },
   saveBox: {
     gridColumn: '1/2',
@@ -91,7 +92,7 @@ const initLogs = () => ({ first: 0, list: [] });
 
 // const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 // const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
-const defaultParser = new Parser('(ab)*');
+const defaultParser = new Parser('ab');
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 4;
@@ -207,8 +208,9 @@ const App = () => {
   const onStepForward = () => {
     const prevIndex = history.index;
     const prevState = history.states[prevIndex];
-    const prevActiveNodes = prevState.activeNodes;
+    let prevActiveNodes = prevState.activeNodes;
     const prevTestRange = prevState.testRange;
+    const prevRunState = prevState.runState;
 
     // Return if at end of test string
     const [begin, prevPos] = prevTestRange;
@@ -221,6 +223,10 @@ const App = () => {
       const first = Math.max(history.index - MAX_LOGS + 1, 0);
       setLogs({ ...logs, first });
       return;
+    }
+
+    if (prevRunState === 'success' || prevRunState === 'failure') {
+      prevActiveNodes = [parser.nfa];
     }
 
     // Run the next step
@@ -244,13 +250,14 @@ const App = () => {
         msg = `Char: ${char} - Nodes: ${activeNodes.length}`;
         break;
       case 'success':
-        activeNodes = [parser.nfa];
+        // activeNodes = [parser.nfa];
         testRange = [pos, pos];
         matchRanges.push([begin, pos]);
         msg = `Match: ${testString.slice(begin, pos)}`;
         break;
+
       case 'failure':
-        activeNodes = [parser.nfa];
+        // activeNodes = [parser.nfa];
         testRange = [begin + 1, begin + 1];
         msg = 'No match';
         break;
