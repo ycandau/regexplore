@@ -159,6 +159,7 @@ const App = () => {
     setParser(() => parser);
     setHistory(() => initHistory(parser));
     setLogs(() => []);
+    setDisplayGraph(true);
   };
 
   //----------------------------------------------------------------------------
@@ -268,7 +269,6 @@ const App = () => {
     setPage(null);
     setTSQ(e.target.value);
   };
-  const onTagSearchChange = (str) => console.log('Tag Search:', str);
   const onSaveRegex = () => console.log('Save Action Detected');
   const onShowForm = () => setDisplayGraph((b) => !b);
 
@@ -280,6 +280,7 @@ const App = () => {
     setDesc(desc);
     setFetchStr(id);
     setSaveBoxTags(tags);
+    setDisplayGraph(true);
   };
 
   const onSelectTag = ({ id, tag_name }) => {
@@ -326,10 +327,10 @@ const App = () => {
         setTitle,
         desc,
         setDesc,
-        tags: saveBoxTags,
-        setTags: setSaveBoxTags,
-        onTagSearchChange,
+        saveBoxTags,
+        setSaveBoxTags,
         onSaveRegex,
+        serverAddr,
       }}
     />
   );
@@ -378,12 +379,15 @@ const App = () => {
               setPage,
               onExploreRegex,
               onSelectTag,
+              serverAddr,
             }}
           />
         }
       </div>
       <div className={classes.tagSelectBox}>
-        <TagSelector {...{ tags, setTags, selectedTags, onSelectTag }} />
+        <TagSelector
+          {...{ tags, setTags, selectedTags, onSelectTag, serverAddr }}
+        />
       </div>
     </div>
   );
