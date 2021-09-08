@@ -23,6 +23,7 @@ const useStyles = makeStyles((theme) => ({
   },
   title: {
     display: 'none',
+    fontFamily: 'Fira Mono',
     [theme.breakpoints.up('md')]: {
       display: 'block',
     },

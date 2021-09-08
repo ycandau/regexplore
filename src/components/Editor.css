@@ -17,7 +17,7 @@
 }
 
 .display .operator {
-  color: yellow;
+  color: rgb(255, 196, 0);
 }
 
 .display .delimiter {
@@ -47,33 +47,7 @@
   border-bottom: 1px solid yellow;
 }
 
-/* #editor {
-  width: 560px;
-  height: 100px;
-  position: relative;
-  font-size: 24px;
-} */
-
-/* .edit, */
-/* .display { */
-/* background-color: black; */
-/* height: 100%; */
-/* margin: 0em; */
-/* padding: 0.3em 0.5em 0 0.5em; */
-/* font-family: monospace; */
-/* font-size: inherit; */
-/* outline: none; */
-
-/* top: 0; */
-/* left: 0; */
-/* } */
-
-/* .edit {
-  color: transparent;
-  background: transparent;
-  caret-color: red;
-  resize: none;
-  pointer-events: none;
-  z-index: 2;
-  overflow: hidden;
-} */
+.display span.warning {
+  color: red;
+  border-bottom: 1px solid red;
+}

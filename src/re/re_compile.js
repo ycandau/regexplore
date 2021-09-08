@@ -159,6 +159,7 @@ const parentheses = (frag, token) => {
   connect(open, frag.firstNode);
   connectFragment(frag, close);
   open.close = close;
+  close.open = close;
 
   const height = frag.height;
   const nodes = [open, ...frag.nodes, close];

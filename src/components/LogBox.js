@@ -10,10 +10,10 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import {
-  FastForwardRounded,
-  FastRewindRounded,
+  PlayArrow,
   SkipNextRounded,
   SkipPreviousRounded,
+  Replay,
   PlayArrowRounded,
   DeleteForever,
   Save,
@@ -46,16 +46,25 @@ const useStyles = makeStyles((theme) => ({
       margin: 0,
     },
   },
+  playOn: {
+    backgroundColor: theme.palette.action.selected,
+  },
+  playOff: {},
 }));
 
 export default function LogBox({
   logs,
+  currentIndex,
   onHover,
-  onToBegining,
   onStepBack,
   onPlay,
   onStepForward,
+
+  onToBegining,
+  play,
+  situation,
   onToEnd,
+  
   setDisplayGraph,
   onDeleteRegex,
   displayGraph,
@@ -63,9 +72,13 @@ export default function LogBox({
 }) {
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
-  const logList = logs.map(({ prompt, msg }, index) => (
-    <ListItem key={index} button /* onMouseOver={() => onHover(pos)} */>
-      <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
+  const logList = logs.map(({ prompt, msg, key }) => (
+    <ListItem
+      key={key}
+      selected={currentIndex === key}
+      button
+    >             
+    <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}
         primaryTypographyProps={{ className: classes.listText }}
@@ -79,7 +92,8 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            {isLoggedIn &&
+            // Save button
+             {isLoggedIn &&
               (displayGraph ? (
                 <IconButton onClick={() => setDisplayGraph(false)}>
                   <Save />
@@ -93,15 +107,21 @@ export default function LogBox({
                   <DeleteForever />
                 </IconButton>
               ))}
+          
+            // Play button
             <IconButton
+              className={play ? classes.playOn : classes.playOff}
               onClick={() => {
                 showGraph();
-                onToBegining();
+                onPlay();
               }}
             >
-              <FastRewindRounded />
+              <PlayArrow />
             </IconButton>
+
+            // Step back
             <IconButton
+              disabled={situation === 'atBeginning'}
               onClick={() => {
                 showGraph();
                 onStepBack();
@@ -109,15 +129,10 @@ export default function LogBox({
             >
               <SkipPreviousRounded />
             </IconButton>
+
+            // Step forward
             <IconButton
-              onClick={() => {
-                showGraph();
-                onPlay();
-              }}
-            >
-              <PlayArrowRounded />
-            </IconButton>
-            <IconButton
+              disabled={situation === 'atEnd'}
               onClick={() => {
                 showGraph();
                 onStepForward();
@@ -125,13 +140,16 @@ export default function LogBox({
             >
               <SkipNextRounded />
             </IconButton>
+
+            // Back to beginning
             <IconButton
+              disabled={situation === 'atBeginning'}
               onClick={() => {
                 showGraph();
-                onToEnd();
+                onToBegining();
               }}
             >
-              <FastForwardRounded />
+              <Replay />
             </IconButton>
           </>
         }

@@ -1,23 +1,22 @@
-Todo:
+## Todo
 
-- curves off when extended
-- history: continue through search string
+- play mode
 - hover events
-- highlight search string
-- logbox: overflow?
-- quantifier display
 - center graph vertically
+
+## For Later
+
 - unique keys for lists
 - could put back quantifier nodes and just not display
 
-  // const parser = new Parser('a?bc?|a?bc?|a?bc?');
-  // const parser = new Parser('a*bc*|a*bc*|a*bc*');
-  // const parser = new Parser('a+bc+|a+bc+|a+bc+');
-  // const parser = new Parser('(a)?|b?|(c)?|d?');
-  // const parser = new Parser('(a)_|b_|(c)_|d_');
-  // const parser = new Parser('\\?.?(a)?|\\_\\w_(\\d)*|\\+[a-z]+([0-9])+');
-  // const parser = new Parser('(aaaaa|a*b|ab|a?aaa)c');
-  // a(bffff|ca(a|a|a|a)a)d
+'a?bc?|a?bc?|a?bc?'
+'a*bc*|a*bc*|a*bc*'
+'a+bc+|a+bc+|a+bc+'
+'(a)?|b?|(c)?|d?'
+'(a)_|b_|(c)_|d_'
+'\\?.?(a)?|\\_\\w_(\\d)*|\\+[a-z]+([0-9])+'
+'(aaaaa|a*b|ab|a?aaa)c'
+'(bffff|ca(a|a|a|a)a)d'
 
 Colors:
 

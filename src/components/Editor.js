@@ -27,14 +27,14 @@ const useStyles = makeStyles((theme) => ({
       letterSpacing: 'normal',
       lineHeight: 'normal',
       fontFamily: 'Fira Mono',
-      fontSize: 22,
+      fontSize: 24,
     },
   },
   ghostText: {
     lineHeight: 'normal',
     letterSpacing: 'normal',
     fontFamily: 'Fira Mono',
-    fontSize: 22,
+    fontSize: 24,
   },
 }));
 //------------------------------------------------------------------------------
@@ -128,10 +128,17 @@ const addClassTo = (displayInfo) => (cls, ...indexes) => {
 };
 
 const getLabelsAndClasses = (editorInfo, index) => {
-  const displayInfo = editorInfo.map(({ label, displayType }) => ({
-    label,
-    classes: displayType,
-  }));
+  const displayInfo = editorInfo.map((token) => {
+    const info = {
+      label: token.label,
+      classes: token.displayType,
+    };
+
+    if (token.warning) {
+      info.classes += ' warning';
+    }
+    return info;
+  });
 
   const token = editorInfo[index] || {};
   const add = addClassTo(displayInfo);
@@ -160,5 +167,6 @@ const getLabelsAndClasses = (editorInfo, index) => {
     default:
       break;
   }
+
   return displayInfo;
 };

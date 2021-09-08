@@ -28,6 +28,7 @@ import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready
+
 const serverAddr = 'http://localhost:8080/';
 
 const useStyles = makeStyles((theme) => ({
@@ -56,6 +57,7 @@ const useStyles = makeStyles((theme) => ({
     gridColumn: '2/3',
     gridRow: '3/4',
     overflowY: 'hidden',
+    height: '100%',
   },
   saveBox: {
     gridColumn: '1/2',
@@ -78,13 +80,25 @@ const useStyles = makeStyles((theme) => ({
 
 const initHistory = (parser) => ({
   index: 0,
-  begin: 0,
-  end: 0,
-  states: [{ runState: 'running', activeNodes: [parser.nfa] }],
+  end: -1,
+  states: [
+    {
+      runState: 'running',
+      activeNodes: [parser.nfa],
+      testRange: [0, 0],
+      matchRanges: [],
+    },
+  ],
 });
 
-const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|.*...x');
+const initLogs = () => ({ first: 0, list: [] });
+
+// const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
+// const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
+const defaultParser = new Parser('(abc|ab+|ab[^c]|\\w(cd)+)x');
 const defaultHistory = initHistory(defaultParser);
+
+const MAX_LOGS = 4;
 
 //------------------------------------------------------------------------------
 // App and state
@@ -95,15 +109,16 @@ const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('abcde');
+  const [testString, setTestString] = useState('abc abcx abbx ab_x tcdcdcdx');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
-  const [index, setIndex] = useState(null);
+  const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
+
   const [user, setUser] = useState({});
   const [regexID, setRegexID] = useState(null);
   const [literal, setLiteral] = useState('');
@@ -111,7 +126,27 @@ const App = () => {
 
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(initLogs());
+  const [play, setPlay] = useState(false);
+  const [count, setCount] = useState(0);
+
+  const { runState, activeNodes, testRange, matchRanges } = history.states[
+    history.index
+  ];
+
+  //----------------------------------------------------------------------------
+
+  useEffect(() => {
+    let timeout = null;
+    if (play) {
+      timeout = setTimeout(() => {
+        onStepForward();
+        console.log('Playing');
+        setCount((count) => count + 1);
+      }, 500);
+    }
+    return () => clearInterval(timeout);
+  }, [play, count]);
 
   //----------------------------------------------------------------------------
   // Hooks
@@ -189,7 +224,7 @@ const App = () => {
     const parser = new Parser(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
-    setLogs(() => []);
+    setLogs(initLogs());
     setDisplayGraph(true);
     setLiteral(regex);
   };
@@ -203,8 +238,8 @@ const App = () => {
     setNewRegex(regex);
   };
 
-  const onEditorHover = (index) => () => {
-    setIndex(index);
+  const onEditorHover = (ind) => () => {
+    setEditorIndex(ind);
   };
 
   //--------------------------------------------------------------------------
@@ -214,64 +249,117 @@ const App = () => {
     setDisplayGraph(true);
     setTestString(str);
     setHistory(() => initHistory(parser));
-    setLogs(() => []);
+    setLogs(initLogs());
   };
 
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const msg = 'Hover over any character in the regex to get information on it.';
-  const tokenInfo =
-    index !== null ? parser.tokenInfo(index) : { description: msg };
+  const defaultInfo = {
+    label: '?',
+    name: 'Questions ...',
+    description:
+      'Hover over any character in the regex to get information on it.',
+  };
+
+  // Issue when deleting under hover @bug
+  const getTokenInfo = (index) => {
+    if (index === null || index === undefined) return defaultInfo;
+    const info = parser.tokenInfo(editorIndex);
+    if (info === null || info === undefined) return defaultInfo;
+    return info;
+  };
+
+  const tokenInfo = getTokenInfo(editorIndex);
 
   //----------------------------------------------------------------------------
   // LogBox
 
   const onStepForward = () => {
-    // Block forward step
-    const index = history.index;
-    const prevActiveNodes = history.states[index].activeNodes;
-    if (prevActiveNodes.length === 0 || index === testString.length) {
+    const prevIndex = history.index;
+    let end = history.end;
+    const prevState = history.states[prevIndex];
+    let prevActiveNodes = prevState.activeNodes;
+    const prevTestRange = prevState.testRange;
+    const prevRunState = prevState.runState;
+
+    // Return if at end of test string
+    const [begin, prevPos] = prevTestRange;
+    if (prevPos === testString.length) {
+      setPlay(false);
       return;
     }
 
-    // Retrace a previous step
-    if (index < history.states.length - 1) {
-      setHistory({ ...history, index: index + 1 });
+    // Retrace a forward step already taken
+    const index = prevIndex + 1;
+    if (prevIndex < history.states.length - 1) {
+      setHistory({ ...history, index });
+      const first = Math.max(history.index - MAX_LOGS + 1, 0);
+      setLogs({ ...logs, first });
       return;
+    }
+
+    if (prevRunState === 'success' || prevRunState === 'failure') {
+      prevActiveNodes = [parser.nfa];
     }
 
     // Run the next step
-    const ch = testString[index];
+    const ch = testString[prevPos];
+    const char = ch === ' ' ? "' '" : ch;
     let { runState, activeNodes } = stepForward(
       parser.nodes,
       prevActiveNodes,
-      ch
+      testString,
+      prevPos
     );
 
-    // If the end of the test string is reached
-    if (runState === 'running' && index === testString.length - 1) {
-      runState = 'failure';
+    const pos = prevPos + 1;
+    let testRange = [];
+    const matchRanges = [...prevState.matchRanges];
+    let msg = '';
+
+    switch (runState) {
+      case 'running':
+        testRange = [begin, pos];
+        msg = `Char: ${char} - Nodes: ${activeNodes.length}`;
+        break;
+      case 'success':
+        testRange = [pos, pos];
+        matchRanges.push([begin, pos]);
+        msg = `Match: ${testString.slice(begin, pos)}`;
+        break;
+      case 'failure':
+        testRange = [begin + 1, begin + 1];
+        msg = 'No match';
+        break;
+      case 'end':
+        testRange = [pos, pos];
+        msg = 'End of test string';
+        end = index;
+        setPlay(false);
+        break;
+      default:
+        break;
     }
 
-    // Push a log entry
-    const msg =
-      runState === 'running'
-        ? `Char: ${ch} - Nodes: ${activeNodes.length}`
-        : runState === 'success'
-        ? 'Successful match'
-        : activeNodes.length === 0
-        ? 'No match'
-        : 'End of test string';
+    // Create a new log entry
+    const first = Math.max(history.index - MAX_LOGS + 1, 0);
+    const prompt = `[${begin}:${pos}]`;
+    const log = { prompt, msg, key: history.index + 1 };
+    const list = [...logs.list, log];
+    setLogs({ first, list });
 
-    const log = { prompt: `[0:${index}]`, msg };
-    setLogs((logs) => [...logs, log]);
-
-    // Set the history state
-    const nextState = { runState, activeNodes };
+    // Set the next history state
+    const nextState = {
+      runState,
+      activeNodes,
+      testRange,
+      matchRanges,
+    };
     setHistory({
       ...history,
-      index: index + 1,
+      index,
+      end,
       states: [...history.states, nextState],
     });
   };
@@ -279,10 +367,17 @@ const App = () => {
   const onStepBack = () => {
     if (history.index === 0) return;
     setHistory({ ...history, index: history.index - 1 });
+    const first = Math.max(Math.min(history.index - 2, logs.first), 0);
+    setLogs({ ...logs, first });
   };
 
   const onToBeginning = () => {
     setHistory({ ...history, index: 0 });
+    setLogs({ ...logs, first: 0 });
+  };
+
+  const onPlay = () => {
+    setPlay((play) => !play);
   };
 
   //----------------------------------------------------------------------------
@@ -329,19 +424,32 @@ const App = () => {
   //----------------------------------------------------------------------------
   // Components
 
+  const logEnd = Math.min(logs.first + MAX_LOGS, logs.list.length);
+  const clippedLogs = logs.list.slice(logs.first, logEnd);
+  const situation =
+    history.index === 0
+      ? 'atBeginning'
+      : history.index === history.end
+      ? 'atEnd'
+      : '';
+
   const logBox = (
     <LogBox
-      logs={logs}
+      logs={clippedLogs}
+      currentIndex={history.index}
       onHover={(pos) => console.log('hovered over', pos)}
-      onToBegining={onToBeginning}
+      onPlay={onPlay}
       onStepBack={onStepBack}
-      onPlay={() => console.log('Play')}
       onStepForward={onStepForward}
-      onToEnd={() => console.log('Jump to the end')}
+      onToBegining={onToBeginning}
+      play={play}
+      situation={situation}
+      
       displayGraph={displayGraph}
       setDisplayGraph={setDisplayGraph}
       onDeleteRegex={onDeleteRegex}
       isLoggedIn={!!user.id}
+
     />
   );
 
@@ -352,8 +460,6 @@ const App = () => {
       onFix={doFix}
     />
   );
-
-  const { runState, activeNodes } = history.states[history.index];
 
   const graphBox = displayGraph ? (
     <Graph graph={parser.graph} activeNodes={activeNodes} runState={runState} />
@@ -372,15 +478,34 @@ const App = () => {
     />
   );
 
+  //----------------------------------------------------------------------------
+
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
+
+  const current = {
+    startInd: testRange[1],
+    endInd: testRange[1] + 1,
+    token: 'current',
+  };
+  const test = {
+    startInd: testRange[0],
+    endInd: testRange[1],
+    token: 'test',
+  };
+  const testStringHighlights = [test, current];
+
+  matchRanges.forEach(([startInd, endInd]) => {
+    const match = { startInd, endInd, token: 'match' };
+    testStringHighlights.push(match);
+  });
 
   const mainScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.editorBox}>
         <Editor
-          index={index}
+          index={editorIndex}
           editorInfo={parser.editorInfo}
           onRegexChange={onEditorChange}
           onHover={onEditorHover}
@@ -391,7 +516,7 @@ const App = () => {
           numRows={6}
           string={testString}
           setString={onTestStrChange}
-          highlights={[]}
+          highlights={testStringHighlights}
         />
       </div>
       <div className={classes.infoBox}>

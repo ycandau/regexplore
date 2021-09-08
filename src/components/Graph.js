@@ -1,10 +1,17 @@
 import { useRef, useEffect } from 'react';
+// import { makeStyles } from '@material-ui/core';
 
 import { setActiveGraphNodes } from '../re/re_run';
 
 import Node from './Node';
 
 import './Graph.css';
+
+// const useStyles = makeStyles((theme) => ({
+//   links: {
+//     color: theme.palette.primary.contrastText,
+//   }
+//  }));
 
 //------------------------------------------------------------------------------
 // Display constants
@@ -14,7 +21,7 @@ const X_MIN = NODE_DIAM * 1.5;
 const X_STEP = 60;
 const Y_STEP = 60;
 
-const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
+const scale = scaleCoord(X_MIN, 577, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
@@ -28,11 +35,12 @@ const Graph = ({ graph, activeNodes, runState }) => {
     const ctx = canvasRef.current.getContext('2d');
 
     const draw = (ctx) => {
-      ctx.strokeStyle = '#062';
+      ctx.strokeStyle = '#006020';
       ctx.lineWidth = 2;
       graph.links.forEach(drawLink(ctx, scale));
       graph.forks.forEach(drawFork(ctx, scale));
       graph.merges.forEach(drawMerge(ctx, scale));
+      graph.parentheses.forEach(drawParentheses(ctx, scale));
     };
 
     const handleResize = () => {
@@ -56,19 +64,22 @@ const Graph = ({ graph, activeNodes, runState }) => {
 
   return (
     <div id="graph-container">
-      {graph.nodes.map(({ coord, label, classes, runClasses }, index) => {
-        const scaledCoord = scale(coord);
-        return (
-          <Node
-            key={`${index}`}
-            coord={scaledCoord}
-            label={label}
-            diameter={NODE_DIAM}
-            classes={classes}
-            runClasses={runClasses}
-          />
-        );
-      })}
+      {graph.nodes.map(
+        ({ coord, label, quantifier, classes, runClasses }, index) => {
+          const scaledCoord = scale(coord);
+          return (
+            <Node
+              key={`${index}`}
+              coord={scaledCoord}
+              label={label}
+              quantifier={quantifier}
+              classes={classes}
+              runClasses={runClasses}
+              diameter={NODE_DIAM}
+            />
+          );
+        }
+      )}
       <canvas id="canvas" ref={canvasRef}></canvas>
     </div>
   );
@@ -122,4 +133,20 @@ const drawMerge = (ctx, scale) => (merge) => {
   points.forEach(([u, v]) =>
     drawCurve(ctx, scale, dest, [uMax, v], [u, v], false)
   );
+};
+
+const drawParentheses = (ctx, scale) => (paren) => {
+  const [open, close] = paren;
+  const [x1, y1] = scale(open);
+  const [x2] = scale(close);
+
+  // Background
+  ctx.fillStyle = 'rgba(0, 206, 209, 0.08)';
+  ctx.fillRect(x1, y1 - NODE_DIAM * 0.5, x2 - x1, NODE_DIAM);
+
+  // Borders
+  ctx.strokeStyle = 'rgba(0, 206, 209, 0.2)';
+  ctx.lineWidth = 0.5;
+  ctx.rect(x1, y1 - NODE_DIAM * 0.5, x2 - x1, NODE_DIAM);
+  ctx.stroke();
 };

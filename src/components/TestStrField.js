@@ -1,5 +1,5 @@
 import TextField from '@material-ui/core/TextField';
-import { alpha, makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import { Paper, Typography } from '@material-ui/core';
 
 // ghost input magic happens here
@@ -14,6 +14,7 @@ const useStyles = makeStyles((theme) => ({
       'caret-color': theme.palette.text.primary,
       letterSpacing: 'normal',
       lineHeight: 'normal',
+      fontSize: 20,
     },
   },
   pap: {
@@ -28,21 +29,33 @@ const useStyles = makeStyles((theme) => ({
   ghostText: {
     lineHeight: 'normal',
     letterSpacing: 'normal',
+    color: theme.palette.text.secondary,
+    fontSize: 20,
   },
   match: {
-    backgroundColor: alpha(theme.palette.success.main, 0.5),
+    color: theme.palette.custom.green,
+    borderBottomColor: theme.palette.custom.green,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
   },
-  cursor: {
-    backgroundColor: alpha(theme.palette.info.main, 0.5),
+  test: {
+    color: theme.palette.custom.orange,
+    borderBottomColor: theme.palette.custom.orange,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+  },
+  current: {
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.action.selected,
+    borderBottomColor: theme.palette.text.primary,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
   },
 }));
 
-export default function TestStrField({
-  numRows,
-  string,
-  setString,
-  highlights,
-}) {
+//------------------------------------------------------------------------------
+
+const TestStrField = ({ numRows, string, setString, highlights }) => {
   const handleChange = (e) => setString(e.target.value);
   const classes = useStyles();
 
@@ -88,4 +101,6 @@ export default function TestStrField({
       />
     </div>
   );
-}
+};
+
+export default TestStrField;
