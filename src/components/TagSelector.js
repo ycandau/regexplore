@@ -59,7 +59,6 @@ const useStyles = makeStyles((theme) => ({
   inputRoot: {},
   inputInput: {
     padding: theme.spacing(1, 1, 1, 0),
-    // vertical padding + font size from searchIcon
     paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
     transition: theme.transitions.create('width'),
     width: '100%',
@@ -71,6 +70,7 @@ export default function TagSelector({
   setTags,
   selectedTags,
   onSelectTag,
+  serverAddr,
 }) {
   const classes = useStyles();
   const [tsq, setTSQ] = useState('');
@@ -84,14 +84,11 @@ export default function TagSelector({
       try {
         let res;
         if (!tsq) {
-          res = await fetch('/tags', {
+          res = await fetch(serverAddr + 'tags', {
             method: 'POST',
-            headers: {
-              Accepts: 'application/json',
-            },
           });
         } else {
-          res = await fetch('/tags/search', {
+          res = await fetch(serverAddr + 'tags/search', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -105,7 +102,7 @@ export default function TagSelector({
         console.error(e);
       }
     })();
-  }, [setTags, tsq]);
+  }, [serverAddr, setTags, tsq]);
 
   return (
     <Paper className={classes.flexBox} elevation={0}>
@@ -136,7 +133,6 @@ export default function TagSelector({
               className={classes.chip}
               onDelete={() => {
                 onSelectTag({ id, tag_name });
-                // setTags(() => tags.concat({ id, tag_name }));
               }}
             />
           </li>
@@ -150,7 +146,6 @@ export default function TagSelector({
               className={classes.chip}
               onClick={() => {
                 onSelectTag({ id, tag_name });
-                // setTags((tags) => tags.filter((t) => tag_name !== t.tag_name));
               }}
             />
           </li>

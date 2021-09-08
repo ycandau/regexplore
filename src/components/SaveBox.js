@@ -5,7 +5,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import InputBase from '@material-ui/core/InputBase';
 import Chip from '@material-ui/core/Chip';
 import { Button, TextField } from '@material-ui/core';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -16,7 +16,7 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
     marginRight: theme.spacing(2),
-    flexGrow: 1,
+    width: '60%',
   },
   detailsRigth: {
     display: 'flex',
@@ -40,6 +40,13 @@ const useStyles = makeStyles((theme) => ({
   bagOfChips: {
     display: 'flex',
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    listStyle: 'none',
+    padding: theme.spacing(0.5),
+  },
+  selectedChips: {
+    display: 'flex',
+    justifyContent: 'flex-start',
     flexWrap: 'wrap',
     listStyle: 'none',
     padding: theme.spacing(0.5),
@@ -75,6 +82,9 @@ const useStyles = makeStyles((theme) => ({
     padding: 0,
     overflow: 'visible',
   },
+  addButton: {
+    marginTop: theme.spacing(2),
+  },
 }));
 
 export default function SaveBox({
@@ -82,17 +92,50 @@ export default function SaveBox({
   setTitle,
   desc,
   setDesc,
-  tags,
-  setTags,
-  onSearchChange,
-  onSave,
+  saveBoxTags,
+  setSaveBoxTags,
+  onSaveRegex,
+  serverAddr,
 }) {
   const classes = useStyles();
-  const [search, setSearch] = useState('');
+  const [tsq, setTSQ] = useState('');
+  const [tags, setTags] = useState([]);
+
+  const onSelectTag = ({ id, tag_name }) =>
+    setSaveBoxTags((tags) =>
+      !tags.some((t) => tag_name === t.tag_name)
+        ? tags.concat({ id, tag_name })
+        : tags.filter((t) => tag_name !== t.tag_name)
+    );
+
   const handleSearch = (e) => {
-    setSearch(e.target.value);
-    onSearchChange(e.target.value);
+    setTSQ(e.target.value);
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let res;
+        if (!tsq) {
+          res = await fetch(serverAddr + 'tags', {
+            method: 'POST',
+          });
+        } else {
+          res = await fetch(serverAddr + 'tags/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tsq }),
+          });
+        }
+        const tags = await res.json();
+        setTags(tags);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [serverAddr, setTags, tsq]);
 
   return (
     <Card classes={{ root: classes.cardPad }} elevation={0}>
@@ -101,26 +144,35 @@ export default function SaveBox({
           <TextField
             fullWidth
             id="regexName"
-            variant="outlined"
+            variant="filled"
             onChange={(e) => setTitle(e.target.value)}
             value={title}
             spellCheck="false"
             label="Name"
             required
-            size="small"
             className={classes.nameBox}
           />
           <TextField
             fullWidth
             id="regexDesc"
-            variant="outlined"
-            size="small"
+            variant="filled"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             label="Description"
             multiline
             minRows={5}
           />
+          <ul className={classes.selectedChips}>
+            {saveBoxTags.map(({ id, tag_name }) => (
+              <li key={id || tag_name}>
+                <Chip
+                  label={tag_name}
+                  className={classes.chip}
+                  onDelete={() => onSelectTag({ id, tag_name })}
+                />
+              </li>
+            ))}
+          </ul>
         </div>
         <div className={classes.detailsRigth}>
           <div className={classes.search}>
@@ -133,28 +185,34 @@ export default function SaveBox({
                 root: classes.inputRoot,
                 input: classes.inputInput,
               }}
-              value={search}
+              value={tsq}
               inputProps={{ 'aria-label': 'search' }}
               onChange={handleSearch}
             />
           </div>
-          <ul className={classes.bagOfChips}>
-            {tags.map(({ id, tag_name }) => (
-              <li key={id}>
-                <Chip
-                  label={tag_name}
-                  className={classes.chip}
-                  onDelete={() =>
-                    setTags((tags) =>
-                      tags.filter((t) => tag_name !== t.tag_name)
-                    )
-                  }
-                />
-              </li>
-            ))}
-          </ul>
+          {!!tags.length ? (
+            <ul className={classes.bagOfChips}>
+              {tags.slice(0, 15).map(({ id, tag_name }) => (
+                <li key={id}>
+                  <Chip
+                    size="small"
+                    label={tag_name}
+                    className={classes.chip}
+                    onClick={() => onSelectTag({ id, tag_name })}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Button
+              className={classes.addButton}
+              onClick={() => onSelectTag({ tag_name: tsq })}
+            >
+              Create Tag
+            </Button>
+          )}
           <div className={classes.grow} />
-          <Button onClick={onSave}>Save</Button>
+          <Button onClick={onSaveRegex}>Save</Button>
         </div>
       </CardContent>
     </Card>

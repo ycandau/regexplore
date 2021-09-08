@@ -14,6 +14,9 @@ import {
   FastRewindRounded,
   SkipNextRounded,
   SkipPreviousRounded,
+  PlayArrowRounded,
+  DeleteForever,
+  Save,
 } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -35,9 +38,11 @@ const useStyles = makeStyles((theme) => ({
   cardHeight: {
     height: '100%',
   },
+  cardContentRoot: {
+    paddingTop: 0,
+  },
   headerRoot: {
     '& [class*="MuiCardHeader-action"]': {
-      alignSelf: 'center',
       margin: 0,
     },
   },
@@ -48,10 +53,16 @@ export default function LogBox({
   onHover,
   onToBegining,
   onStepBack,
+  onPlay,
   onStepForward,
   onToEnd,
+  setDisplayGraph,
+  onDeleteRegex,
+  displayGraph,
+  isLoggedIn,
 }) {
   const classes = useStyles();
+  const showGraph = () => setDisplayGraph(true);
   const logList = logs.map(({ prompt, msg }, index) => (
     <ListItem key={index} button /* onMouseOver={() => onHover(pos)} */>
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
@@ -65,26 +76,67 @@ export default function LogBox({
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
       <CardHeader
-        title="Log"
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            <IconButton onClick={onToBegining}>
+            {isLoggedIn &&
+              (displayGraph ? (
+                <IconButton onClick={() => setDisplayGraph(false)}>
+                  <Save />
+                </IconButton>
+              ) : (
+                <IconButton
+                  onClick={() => {
+                    onDeleteRegex();
+                  }}
+                >
+                  <DeleteForever />
+                </IconButton>
+              ))}
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onToBegining();
+              }}
+            >
               <FastRewindRounded />
             </IconButton>
-            <IconButton onClick={onStepBack}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onStepBack();
+              }}
+            >
               <SkipPreviousRounded />
             </IconButton>
-            <IconButton onClick={onStepForward}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onPlay();
+              }}
+            >
+              <PlayArrowRounded />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onStepForward();
+              }}
+            >
               <SkipNextRounded />
             </IconButton>
-            <IconButton onClick={onToEnd}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onToEnd();
+              }}
+            >
               <FastForwardRounded />
             </IconButton>
           </>
         }
       />
-      <CardContent>
+      <CardContent classes={{ root: classes.cardContentRoot }}>
         <List dense disablePadding>
           {logList}
         </List>
