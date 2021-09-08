@@ -105,7 +105,8 @@ const App = () => {
   const [index, setIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
   const [user, setUser] = useState({});
-
+  const [regexID, setRegexID] = useState(null);
+  const [literal, setLiteral] = useState('');
   const [displayGraph, setDisplayGraph] = useState(true);
 
   const [parser, setParser] = useState(defaultParser);
@@ -137,6 +138,36 @@ const App = () => {
       })();
   }, [fetchStr, setFetchStr, setTestString]);
 
+  const writeRegex = async (mode) => {
+    try {
+      const newBody = { regexID };
+      if (mode === 'del') {
+        newBody.remove = true;
+      } else {
+        newBody.title = title;
+        newBody.notes = desc;
+        newBody.regex = literal;
+        newBody.testStr = testString;
+        newBody.tags = saveBoxTags.map(({ id, tag_name }) => ({
+          id,
+          tagName: tag_name,
+        }));
+      }
+      const res = await fetch(serverAddr + 'regexes/write', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newBody),
+      });
+      const { id } = await res.json();
+      setRegexID(id);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -160,6 +191,7 @@ const App = () => {
     setHistory(() => initHistory(parser));
     setLogs(() => []);
     setDisplayGraph(true);
+    setLiteral(regex);
   };
 
   //----------------------------------------------------------------------------
@@ -270,8 +302,8 @@ const App = () => {
     setPage(null);
     setTSQ(e.target.value);
   };
-  const onSaveRegex = () => console.log('Save Action Detected');
-  const onDeleteRegex = () => console.log('delete action detected');
+  const onSaveRegex = () => writeRegex();
+  const onDeleteRegex = () => writeRegex('del');
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
@@ -280,6 +312,7 @@ const App = () => {
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
+    setRegexID(id);
     setSaveBoxTags(tags);
     setDisplayGraph(true);
   };
