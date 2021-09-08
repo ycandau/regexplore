@@ -27,7 +27,7 @@ import '@fontsource/fira-mono';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
-//------------------------------------------------------------------------------
+const serverAddr = 'http://localhost:8080/';
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -93,7 +93,9 @@ const initLogs = () => ({ first: 0, list: [] });
 
 // const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 // const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
-const defaultParser = new Parser('ab');
+const defaultParser = new Parser(
+  'a(bcd|ccc|.?.?.?.?|.*.*.*.*)((x|X)?|y|[0-9])+'
+);
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 4;
@@ -116,8 +118,7 @@ const App = () => {
   const [page, setPage] = useState(null);
   const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
-  // const [displayGraph, setDisplayGraph] = useState(true);
-  const [displayGraph] = useState(true);
+  const [displayGraph, setDisplayGraph] = useState(true);
 
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
@@ -376,8 +377,6 @@ const App = () => {
       : history.index === history.end
       ? 'atEnd'
       : '';
-
-  console.log(history.index, history.end, situation);
 
   const logBox = (
     <LogBox

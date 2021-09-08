@@ -330,42 +330,22 @@ class Parser {
 
   ppEmptyParentheses() {
     if (this.tokens.length === 0) return 0;
+    let prevToken = {};
     let countErrors = 0;
-    let nOpen = 0;
-    let nClose = 0;
-
-    // Add temporary terminal token
-    this.tokens.push({ type: 'end', invalid: true });
 
     for (let i = 0; i < this.tokens.length; i++) {
       const token = this.tokens[i];
-      switch (token.type) {
-        case '(':
-          nOpen++;
-          break;
-        case ')':
-          nClose++;
-          break;
-        default:
-          if (nOpen && nClose) {
-            // Syntax error: no value inside parentheses
-            const count = Math.min(nOpen, nClose);
-            const begin = i - count - nClose;
-            const end = i + count - nClose;
-            for (let ind = begin; ind < end; ind++) {
-              const paren = this.tokens[ind];
-              paren.invalid = true;
-              this.describe({ warning: '!()' }, paren.index);
-            }
-            const first = this.tokens[begin];
-            this.addWarning('!()', first.pos, first.index);
-            countErrors++;
-          }
-          nOpen = 0;
-          nClose = 0;
-          break;
+
+      if (prevToken.type === '(' && token.type === ')') {
+        prevToken.invalid = true;
+        token.invalid = true;
+        this.addWarning('!()', prevToken.pos, prevToken.index);
+        this.describe({ warning: '!()' }, prevToken.index);
+        countErrors++;
       }
+      prevToken = token;
     }
+
     this.tokens = filterTokens(this.tokens);
     return countErrors;
   }

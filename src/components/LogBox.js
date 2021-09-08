@@ -14,6 +14,9 @@ import {
   SkipNextRounded,
   SkipPreviousRounded,
   Replay,
+  PlayArrowRounded,
+  DeleteForever,
+  Save,
 } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
