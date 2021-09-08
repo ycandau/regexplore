@@ -34,7 +34,7 @@ const serverAddr = 'http://localhost:8080/';
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: '8fr 3fr',
+    gridTemplateColumns: '4fr 1fr',
     gridTemplateRows: 'auto auto 1fr',
     gap: theme.spacing(3),
     padding: theme.spacing(3),
@@ -95,10 +95,10 @@ const initLogs = () => ({ first: 0, list: [] });
 
 // const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 // const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
-const defaultParser = new Parser('(abc|ab+|ab[^c]|\\w(cd)+)x');
+const defaultParser = new Parser('abc');
 const defaultHistory = initHistory(defaultParser);
 
-const MAX_LOGS = 4;
+const MAX_LOGS = 10;
 
 //------------------------------------------------------------------------------
 // App and state
@@ -163,7 +163,7 @@ const App = () => {
             body: JSON.stringify({ id: fetchStr }),
           });
           const {
-            rows: [{ test_string = 'failed to fetch the test string' }],
+            rows: [{ test_string = '' }],
           } = await res.json();
           setTestString(test_string);
         } catch (e) {
@@ -444,12 +444,10 @@ const App = () => {
       onToBegining={onToBeginning}
       play={play}
       situation={situation}
-      
       displayGraph={displayGraph}
       setDisplayGraph={setDisplayGraph}
       onDeleteRegex={onDeleteRegex}
       isLoggedIn={!!user.id}
-
     />
   );
 

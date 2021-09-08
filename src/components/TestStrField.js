@@ -77,7 +77,7 @@ const TestStrField = ({ numRows, string, setString, highlights }) => {
         );
       }),
     // take the string as a starting value, split for processing
-    string.split('')
+    string ? string.split('') : []
   );
 
   return (
