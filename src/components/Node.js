@@ -12,15 +12,18 @@ const Node = ({ coord, label, quantifier, classes, runClasses, diameter }) => {
   };
 
   const allClasses = `node ${classes} ${runClasses}`;
+  const tag = quantifier && quantifier !== 'open';
 
   return (
     <>
       <div className={allClasses} style={style}>
         {label}
       </div>
-      <div className={'quant-tag'} style={quantStyle}>
-        {quantifier}
-      </div>
+      {tag && (
+        <div className={'quant-tag'} style={quantStyle}>
+          {quantifier}
+        </div>
+      )}
     </>
   );
 };

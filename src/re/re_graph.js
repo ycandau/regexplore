@@ -124,12 +124,13 @@ const finalizeDisplayNodes = (nodes) => {
     // Transfer quantifier from ( to )
     if (node.quantifier && node.close && node.label === '(') {
       node.close.quantifier = node.quantifier;
-      node.quantifier = undefined;
+      node.quantifier = 'open';
     }
 
     // Transfer quantifier from ) to (
     if (node.close && node.close.quantifier === '+') {
       addClass = ' quantifier';
+      node.quantifier = 'open';
     }
 
     const classes = `${typeToNodeType[node.type]}${addClass}`;
@@ -214,7 +215,19 @@ const calculateLayout = (nodes) => {
 
   const fnodes = finalizeDisplayNodes(nodes);
 
-  return { nodes: fnodes, links, forks, merges };
+  // Parentheses with quantifiers
+  let coord = [];
+  const parentheses = [];
+  fnodes.forEach((node) => {
+    if (node.label === '(' && node.quantifier) {
+      coord.push(node.coord);
+    }
+    if (node.label === ')' && node.quantifier) {
+      parentheses.push([coord.pop(), node.coord]);
+    }
+  });
+
+  return { nodes: fnodes, links, forks, merges, parentheses };
 };
 
 //------------------------------------------------------------------------------

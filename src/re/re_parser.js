@@ -187,9 +187,9 @@ class Parser {
   //----------------------------------------------------------------------------
 
   ppParentheses() {
-    if (this.tokens.length === 0) return;
-
+    if (this.tokens.length === 0) return 0;
     let parens = [];
+    let countErrors = 0;
 
     for (const token of this.tokens) {
       if (token.type === '(') {
@@ -201,6 +201,7 @@ class Parser {
           this.addWarning('!)', token.pos, token.index);
           this.describe({ warning: '!)' }, token.index);
           token.invalid = true;
+          countErrors++;
         }
         parens.pop();
       }
@@ -214,15 +215,20 @@ class Parser {
       close.index = index;
       this.tokens.push(close);
       this.addWarning('!(', open.pos, open.index);
+      countErrors++;
     }
 
     this.tokens = filterTokens(this.tokens);
+    return countErrors;
   }
 
   //----------------------------------------------------------------------------
 
   ppQuantifiers() {
+    if (this.tokens.length === 0) return 0;
     let prevToken = {};
+    let countErrors = 0;
+
     for (const token of this.tokens) {
       switch (token.type) {
         case '?':
@@ -238,6 +244,7 @@ class Parser {
             this.addWarning('!**', token.pos, token.index, { label, msg });
             this.describe({ warning: '!**' }, token.index);
             token.invalid = true;
+            countErrors++;
           }
 
           // Syntax error: no value before quantifier
@@ -246,6 +253,7 @@ class Parser {
             this.addWarning('!E*', token.pos, token.index, { label });
             this.describe({ warning: '!E*' }, token.index);
             token.invalid = true;
+            countErrors++;
           } else {
             prevToken = token;
           }
@@ -256,12 +264,16 @@ class Parser {
       }
     }
     this.tokens = filterTokens(this.tokens);
+    return countErrors;
   }
 
   //----------------------------------------------------------------------------
 
   ppAlternationsForward() {
+    if (this.tokens.length === 0) return 0;
     let prevToken = {};
+    let countErrors = 0;
+
     for (const token of this.tokens) {
       switch (token.type) {
         case '|':
@@ -271,6 +283,7 @@ class Parser {
             this.addWarning('!E|', token.pos, token.index, { label });
             this.describe({ warning: '!E|' }, token.index);
             token.invalid = true;
+            countErrors++;
           } else {
             prevToken = token;
           }
@@ -281,12 +294,16 @@ class Parser {
       }
     }
     this.tokens = filterTokens(this.tokens);
+    return countErrors;
   }
 
   //----------------------------------------------------------------------------
 
   ppAlternationsBackward() {
+    if (this.tokens.length === 0) return 0;
     let prevToken = { type: ')' };
+    let countErrors = 0;
+
     for (let i = this.tokens.length - 1; i >= 0; i--) {
       const token = this.tokens[i];
       switch (token.type) {
@@ -297,6 +314,7 @@ class Parser {
             this.addWarning('!|E', token.pos, token.index, { label });
             this.describe({ warning: '!|E' }, token.index);
             token.invalid = true;
+            countErrors++;
           }
           break;
         default:
@@ -305,11 +323,14 @@ class Parser {
       prevToken = token;
     }
     this.tokens = filterTokens(this.tokens);
+    return countErrors;
   }
 
   //----------------------------------------------------------------------------
 
   ppEmptyParentheses() {
+    if (this.tokens.length === 0) return 0;
+    let countErrors = 0;
     let nOpen = 0;
     let nClose = 0;
 
@@ -338,6 +359,7 @@ class Parser {
             }
             const first = this.tokens[begin];
             this.addWarning('!()', first.pos, first.index);
+            countErrors++;
           }
           nOpen = 0;
           nClose = 0;
@@ -345,16 +367,21 @@ class Parser {
       }
     }
     this.tokens = filterTokens(this.tokens);
+    return countErrors;
   }
 
   //----------------------------------------------------------------------------
 
   preProcess() {
-    this.ppParentheses();
-    this.ppQuantifiers();
-    this.ppAlternationsForward();
-    this.ppAlternationsBackward();
-    this.ppEmptyParentheses();
+    let countErrors = 0;
+    do {
+      countErrors = 0;
+      countErrors += this.ppParentheses();
+      countErrors += this.ppQuantifiers();
+      countErrors += this.ppAlternationsForward();
+      countErrors += this.ppAlternationsBackward();
+      countErrors += this.ppEmptyParentheses();
+    } while (countErrors > 0);
   }
 
   //----------------------------------------------------------------------------

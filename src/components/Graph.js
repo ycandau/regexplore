@@ -28,8 +28,6 @@ const scale = scaleCoord(X_MIN, 400, X_STEP, Y_STEP);
 const Graph = ({ graph, activeNodes, runState }) => {
   const canvasRef = useRef(null);
 
-  // console.log('GRAPH', graph);
-
   //----------------------------------------------------------------------------
   // Drawing hook
 
@@ -42,6 +40,7 @@ const Graph = ({ graph, activeNodes, runState }) => {
       graph.links.forEach(drawLink(ctx, scale));
       graph.forks.forEach(drawFork(ctx, scale));
       graph.merges.forEach(drawMerge(ctx, scale));
+      graph.parentheses.forEach(drawParentheses(ctx, scale));
     };
 
     const handleResize = () => {
@@ -134,4 +133,20 @@ const drawMerge = (ctx, scale) => (merge) => {
   points.forEach(([u, v]) =>
     drawCurve(ctx, scale, dest, [uMax, v], [u, v], false)
   );
+};
+
+const drawParentheses = (ctx, scale) => (paren) => {
+  const [open, close] = paren;
+  const [x1, y1] = scale(open);
+  const [x2] = scale(close);
+
+  // Background
+  ctx.fillStyle = 'rgba(0, 206, 209, 0.08)';
+  ctx.fillRect(x1, y1 - NODE_DIAM * 0.5, x2 - x1, NODE_DIAM);
+
+  // Borders
+  ctx.strokeStyle = 'rgba(0, 206, 209, 0.2)';
+  ctx.lineWidth = 0.5;
+  ctx.rect(x1, y1 - NODE_DIAM * 0.5, x2 - x1, NODE_DIAM);
+  ctx.stroke();
 };
