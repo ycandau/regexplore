@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme) => ({
     width: `calc(100% + ${theme.spacing(4)}px)`,
     minHeight: `calc(100% + ${theme.spacing(4)}px)`,
     margin: theme.spacing(-2),
-    paddingTop: theme.spacing(4.1),
+    paddingTop: theme.spacing(4.3),
     paddingInline: theme.spacing(3.75),
   },
   textBox: {
