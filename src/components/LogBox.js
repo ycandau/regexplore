@@ -15,6 +15,8 @@ import {
   SkipNextRounded,
   SkipPreviousRounded,
   PlayArrowRounded,
+  SaveOutlined,
+  Save,
 } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -36,9 +38,11 @@ const useStyles = makeStyles((theme) => ({
   cardHeight: {
     height: '100%',
   },
+  cardContentRoot: {
+    paddingTop: 0,
+  },
   headerRoot: {
     '& [class*="MuiCardHeader-action"]': {
-      alignSelf: 'center',
       margin: 0,
     },
   },
@@ -52,6 +56,8 @@ export default function LogBox({
   onPlay,
   onStepForward,
   onToEnd,
+  onShowForm,
+  displayGraph,
 }) {
   const classes = useStyles();
   const logList = logs.map(({ prompt, msg }, index) => (
@@ -67,10 +73,12 @@ export default function LogBox({
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
       <CardHeader
-        title="Log"
         classes={{ root: classes.headerRoot }}
         action={
           <>
+            <IconButton onClick={onShowForm}>
+              {displayGraph ? <Save /> : <SaveOutlined />}
+            </IconButton>
             <IconButton onClick={onToBegining}>
               <FastRewindRounded />
             </IconButton>
@@ -89,7 +97,7 @@ export default function LogBox({
           </>
         }
       />
-      <CardContent>
+      <CardContent classes={{ root: classes.cardContentRoot }}>
         <List dense disablePadding>
           {logList}
         </List>
