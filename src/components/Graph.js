@@ -21,7 +21,7 @@ const X_MIN = NODE_DIAM * 1.5;
 const X_STEP = 60;
 const Y_STEP = 60;
 
-const scale = scaleCoord(X_MIN, 577, X_STEP, Y_STEP);
+const scale = scaleCoord(X_MIN, 475, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 

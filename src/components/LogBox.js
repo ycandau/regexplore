@@ -14,7 +14,6 @@ import {
   SkipNextRounded,
   SkipPreviousRounded,
   Replay,
-  PlayArrowRounded,
   DeleteForever,
   Save,
 } from '@material-ui/icons';
@@ -45,6 +44,7 @@ const useStyles = makeStyles((theme) => ({
     '& [class*="MuiCardHeader-action"]': {
       margin: 0,
     },
+    color: 'orange',
   },
   playOn: {
     backgroundColor: theme.palette.action.selected,
@@ -86,6 +86,7 @@ export default function LogBox({
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
       <CardHeader
         classes={{ root: classes.headerRoot }}
+        title={'Run'}
         action={
           <>
             {isLoggedIn &&

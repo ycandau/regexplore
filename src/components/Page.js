@@ -97,7 +97,7 @@ export default function Page({
 
   const pagination =
     !!regexes &&
-    regexes.length > 1 &&
+    !!regexes.length &&
     ((key) => (
       <div className={classes.pagination} key={key}>
         <Pagination
