@@ -90,7 +90,8 @@ const initHistory = (parser) => ({
 const initLogs = () => ({ first: 0, list: [] });
 
 // const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
-const defaultParser = new Parser('X?aaa|aaY*|aZ+');
+// const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
+const defaultParser = new Parser('(ab)');
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 4;

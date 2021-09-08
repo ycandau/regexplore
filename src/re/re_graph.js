@@ -9,6 +9,7 @@ const newDisplayNode = (node) => {
   if (node.heights !== undefined) dnode.heights = node.heights;
   if (node.forkIndex !== undefined) dnode.forkIndex = node.forkIndex;
   if (node.close !== undefined) dnode.close = node.close;
+  if (node.open !== undefined) dnode.open = node.open;
   return dnode;
 };
 
@@ -21,6 +22,7 @@ const createDisplayNodes = (nodes) => {
   dnodes.forEach((dnode) => {
     dnode.next = dnode.ref.nextNodes.map((node) => node.dnode);
     if (dnode.close !== undefined) dnode.close = dnode.close.dnode;
+    if (dnode.open !== undefined) dnode.open = dnode.open.dnode;
   });
   return dnodes;
 };
@@ -113,8 +115,24 @@ const finalizeDisplayNodes = (nodes) => {
     // Set the index in the NFA
     node.ref.graphNodeIndex = ind;
 
-    const addClass = node.quantifier ? ' quantifier' : '';
-    const classes = `${typeToNodeType[node.type]} ${addClass}`;
+    let addClass = '';
+
+    if (node.quantifier) {
+      addClass = ' quantifier';
+    }
+
+    // Transfer quantifier from ( to )
+    if (node.quantifier && node.close && node.label === '(') {
+      node.close.quantifier = node.quantifier;
+      node.quantifier = undefined;
+    }
+
+    // Transfer quantifier from ) to (
+    if (node.close && node.close.quantifier === '+') {
+      addClass = ' quantifier';
+    }
+
+    const classes = `${typeToNodeType[node.type]}${addClass}`;
 
     return {
       label: node.label,
@@ -195,8 +213,6 @@ const calculateLayout = (nodes) => {
   });
 
   const fnodes = finalizeDisplayNodes(nodes);
-
-  // console.log('RE', fnodes);
 
   return { nodes: fnodes, links, forks, merges };
 };
