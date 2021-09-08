@@ -93,7 +93,7 @@ const initLogs = () => ({ first: 0, list: [] });
 
 // const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 // const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
-const defaultParser = new Parser('a(');
+const defaultParser = new Parser('(abc|ab+|ab[^c]|\\w(cd)+)x');
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 4;
@@ -107,7 +107,7 @@ const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('abdx abc');
+  const [testString, setTestString] = useState('abc abcx abbx ab_x tcdcdcdx');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
