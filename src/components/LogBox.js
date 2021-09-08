@@ -38,9 +38,11 @@ const useStyles = makeStyles((theme) => ({
   cardHeight: {
     height: '100%',
   },
+  cardContentRoot: {
+    paddingTop: 0,
+  },
   headerRoot: {
     '& [class*="MuiCardHeader-action"]': {
-      alignSelf: 'center',
       margin: 0,
     },
   },
@@ -54,21 +56,29 @@ export default function LogBox({
   logs,
   currentIndex,
   onHover,
-  onPlay,
   onStepBack,
+  onPlay,
   onStepForward,
+
   onToBegining,
   play,
   situation,
+  onToEnd,
+  
+  setDisplayGraph,
+  onDeleteRegex,
+  displayGraph,
+  isLoggedIn,
 }) {
   const classes = useStyles();
+  const showGraph = () => setDisplayGraph(true);
   const logList = logs.map(({ prompt, msg, key }) => (
     <ListItem
       key={key}
       selected={currentIndex === key}
-      button /* onMouseOver={() => onHover(pos)} */
-    >
-      <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
+      button
+    >             
+    <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}
         primaryTypographyProps={{ className: classes.listText }}
@@ -79,38 +89,72 @@ export default function LogBox({
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
       <CardHeader
-        title="Log"
         classes={{ root: classes.headerRoot }}
         action={
           <>
+            // Save button
+             {isLoggedIn &&
+              (displayGraph ? (
+                <IconButton onClick={() => setDisplayGraph(false)}>
+                  <Save />
+                </IconButton>
+              ) : (
+                <IconButton
+                  onClick={() => {
+                    onDeleteRegex();
+                  }}
+                >
+                  <DeleteForever />
+                </IconButton>
+              ))}
+          
+            // Play button
             <IconButton
-              onClick={onPlay}
               className={play ? classes.playOn : classes.playOff}
+              onClick={() => {
+                showGraph();
+                onPlay();
+              }}
             >
               <PlayArrow />
             </IconButton>
+
+            // Step back
             <IconButton
               disabled={situation === 'atBeginning'}
-              onClick={onStepBack}
+              onClick={() => {
+                showGraph();
+                onStepBack();
+              }}
             >
               <SkipPreviousRounded />
             </IconButton>
+
+            // Step forward
             <IconButton
               disabled={situation === 'atEnd'}
-              onClick={onStepForward}
+              onClick={() => {
+                showGraph();
+                onStepForward();
+              }}
             >
               <SkipNextRounded />
             </IconButton>
+
+            // Back to beginning
             <IconButton
               disabled={situation === 'atBeginning'}
-              onClick={onToBegining}
+              onClick={() => {
+                showGraph();
+                onToBegining();
+              }}
             >
               <Replay />
             </IconButton>
           </>
         }
       />
-      <CardContent>
+      <CardContent classes={{ root: classes.cardContentRoot }}>
         <List dense disablePadding>
           {logList}
         </List>

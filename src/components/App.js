@@ -27,6 +27,8 @@ import '@fontsource/fira-mono';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
+// replace with the actial server address when ready
+
 const serverAddr = 'http://localhost:8080/';
 
 const useStyles = makeStyles((theme) => ({
@@ -116,6 +118,10 @@ const App = () => {
   const [page, setPage] = useState(null);
   const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
+
+  const [user, setUser] = useState({});
+  const [regexID, setRegexID] = useState(null);
+  const [literal, setLiteral] = useState('');
   const [displayGraph, setDisplayGraph] = useState(true);
 
   const [parser, setParser] = useState(defaultParser);
@@ -149,15 +155,16 @@ const App = () => {
     if (!!fetchStr)
       (async () => {
         try {
-          const res = await fetch('/test-strings/search', {
+          const res = await fetch(serverAddr + 'test-strings/search', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ id: fetchStr }),
           });
-          const { rows } = await res.json();
-          const [{ test_string }] = rows;
+          const {
+            rows: [{ test_string = 'failed to fetch the test string' }],
+          } = await res.json();
           setTestString(test_string);
         } catch (e) {
           console.error(e);
@@ -165,6 +172,50 @@ const App = () => {
         setFetchStr(false);
       })();
   }, [fetchStr, setFetchStr, setTestString]);
+
+  const writeRegex = async (mode) => {
+    try {
+      const newBody = { regexID };
+      if (mode === 'del') {
+        newBody.remove = true;
+      } else {
+        newBody.title = title;
+        newBody.notes = desc;
+        newBody.regex = literal;
+        newBody.testStr = testString;
+        newBody.tags = saveBoxTags.map(({ id, tag_name }) => ({
+          id,
+          tagName: tag_name,
+        }));
+      }
+      const res = await fetch(serverAddr + 'regexes/write', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(newBody),
+      });
+      const { id } = await res.json();
+      setRegexID(id);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(serverAddr + 'auth/userinfo', {
+          credentials: 'include',
+        });
+        const usr = await res.json();
+        setUser(usr);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
   //----------------------------------------------------------------------------
 
@@ -174,6 +225,8 @@ const App = () => {
     setParser(() => parser);
     setHistory(() => initHistory(parser));
     setLogs(initLogs());
+    setDisplayGraph(true);
+    setLiteral(regex);
   };
 
   //----------------------------------------------------------------------------
@@ -193,6 +246,7 @@ const App = () => {
   // TestStrField
 
   const onTestStrChange = (str) => {
+    setDisplayGraph(true);
     setTestString(str);
     setHistory(() => initHistory(parser));
     setLogs(initLogs());
@@ -343,16 +397,19 @@ const App = () => {
     setPage(null);
     setTSQ(e.target.value);
   };
-  const onSearchChange = (str) => console.log('Tag Search:', str);
-  const onSave = () => console.log('Save Action Detected');
+  const onSaveRegex = () => writeRegex();
+  const onDeleteRegex = () => writeRegex('del');
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
-    setParser(() => new Parser(literal));
+    onTestStrChange('fetching the test string..');
+    setNewRegex(literal);
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
+    setRegexID(id);
     setSaveBoxTags(tags);
+    setDisplayGraph(true);
   };
 
   const onSelectTag = ({ id, tag_name }) => {
@@ -387,6 +444,12 @@ const App = () => {
       onToBegining={onToBeginning}
       play={play}
       situation={situation}
+      
+      displayGraph={displayGraph}
+      setDisplayGraph={setDisplayGraph}
+      onDeleteRegex={onDeleteRegex}
+      isLoggedIn={!!user.id}
+
     />
   );
 
@@ -407,10 +470,10 @@ const App = () => {
         setTitle,
         desc,
         setDesc,
-        tags: saveBoxTags,
-        setTags: setSaveBoxTags,
-        onSearchChange,
-        onSave,
+        saveBoxTags,
+        setSaveBoxTags,
+        onSaveRegex,
+        serverAddr,
       }}
     />
   );
@@ -420,8 +483,6 @@ const App = () => {
   const classes = useStyles();
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
-  const isLoggedIn = false;
-  const userInitial = 'U';
 
   const current = {
     startInd: testRange[1],
@@ -453,7 +514,6 @@ const App = () => {
       <div className={classes.testStrBox}>
         <TestStrField
           numRows={6}
-          widthRems={45}
           string={testString}
           setString={onTestStrChange}
           highlights={testStringHighlights}
@@ -481,12 +541,15 @@ const App = () => {
               setPage,
               onExploreRegex,
               onSelectTag,
+              serverAddr,
             }}
           />
         }
       </div>
       <div className={classes.tagSelectBox}>
-        <TagSelector {...{ tags, setTags, selectedTags, onSelectTag }} />
+        <TagSelector
+          {...{ tags, setTags, selectedTags, onSelectTag, serverAddr }}
+        />
       </div>
     </div>
   );
@@ -498,8 +561,8 @@ const App = () => {
         {...{
           light,
           toggleTheme,
-          isLoggedIn,
-          userInitial,
+          serverAddr,
+          user,
           isExploring,
           toggleExplore,
           search: tsq,
