@@ -1,10 +1,17 @@
 import { useRef, useEffect } from 'react';
+// import { makeStyles } from '@material-ui/core';
 
 import { setActiveGraphNodes } from '../re/re_run';
 
 import Node from './Node';
 
 import './Graph.css';
+
+// const useStyles = makeStyles((theme) => ({
+//   links: {
+//     color: theme.palette.primary.contrastText,
+//   }
+//  }));
 
 //------------------------------------------------------------------------------
 // Display constants
@@ -28,7 +35,7 @@ const Graph = ({ graph, activeNodes, runState }) => {
     const ctx = canvasRef.current.getContext('2d');
 
     const draw = (ctx) => {
-      ctx.strokeStyle = '#062';
+      ctx.strokeStyle = '#006020';
       ctx.lineWidth = 2;
       graph.links.forEach(drawLink(ctx, scale));
       graph.forks.forEach(drawFork(ctx, scale));

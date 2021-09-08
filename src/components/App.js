@@ -27,8 +27,6 @@ import '@fontsource/fira-mono';
 import Parser from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
-// rendering stubs, TODO: clean up once the wiring's done
-
 //------------------------------------------------------------------------------
 
 const useStyles = makeStyles((theme) => ({
@@ -89,8 +87,12 @@ const initHistory = (parser) => ({
   ],
 });
 
+const initLogs = () => ({ first: 0, list: [] });
+
 const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
 const defaultHistory = initHistory(defaultParser);
+
+const MAX_LOGS = 4;
 
 //------------------------------------------------------------------------------
 // App and state
@@ -101,7 +103,6 @@ const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  // const [testString, setTestString] = useState('an alpha beta gamma');
   const [testString, setTestString] = useState('abdx abc');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
@@ -109,15 +110,13 @@ const App = () => {
   const [tags, setTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [page, setPage] = useState(null);
-  const [index, setIndex] = useState(null);
+  const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
-
-  /*eslint no-unused-vars: 'off' */
   const [displayGraph, setDisplayGraph] = useState(true);
 
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(initLogs());
 
   const { runState, activeNodes, testRange, matchRanges } = history.states[
     history.index
@@ -154,7 +153,7 @@ const App = () => {
     const parser = new Parser(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
-    setLogs(() => []);
+    setLogs(initLogs());
   };
 
   //----------------------------------------------------------------------------
@@ -166,8 +165,8 @@ const App = () => {
     setNewRegex(regex);
   };
 
-  const onEditorHover = (index) => () => {
-    setIndex(index);
+  const onEditorHover = (ind) => () => {
+    setEditorIndex(ind);
   };
 
   //--------------------------------------------------------------------------
@@ -176,7 +175,7 @@ const App = () => {
   const onTestStrChange = (str) => {
     setTestString(str);
     setHistory(() => initHistory(parser));
-    setLogs(() => []);
+    setLogs(initLogs());
   };
 
   //----------------------------------------------------------------------------
@@ -189,7 +188,8 @@ const App = () => {
       'Hover over any character in the regex to get information on it.',
   };
 
-  const tokenInfo = index !== null ? parser.tokenInfo(index) : defaultInfo;
+  const tokenInfo =
+    editorIndex !== null ? parser.tokenInfo(editorIndex) : defaultInfo;
 
   //----------------------------------------------------------------------------
   // LogBox
@@ -208,6 +208,8 @@ const App = () => {
     const index = prevIndex + 1;
     if (prevIndex < history.states.length - 1) {
       setHistory({ ...history, index });
+      const first = Math.max(history.index - MAX_LOGS + 1, 0);
+      setLogs({ ...logs, first });
       return;
     }
 
@@ -243,18 +245,19 @@ const App = () => {
         msg = 'No match';
         break;
       case 'end':
-        testRange = [-1, -1];
+        testRange = [pos, pos];
         msg = 'End of test string';
         break;
       default:
-        testRange = [-1, -1];
         break;
     }
 
     // Create new log entry
-    const prompt = `[${0}:${0}]`;
-    const log = { prompt, msg };
-    setLogs((logs) => [...logs, log]);
+    const first = Math.max(history.index - MAX_LOGS + 1, 0);
+    const prompt = `[${begin}:${pos}]`;
+    const log = { prompt, msg, key: history.index + 1 };
+    const list = [...logs.list, log];
+    setLogs({ first, list });
 
     // Set the next history state
     const nextState = {
@@ -268,15 +271,19 @@ const App = () => {
       index,
       states: [...history.states, nextState],
     });
+    console.log(logs.first, history.index);
   };
 
   const onStepBack = () => {
     if (history.index === 0) return;
     setHistory({ ...history, index: history.index - 1 });
+    const first = Math.max(Math.min(history.index - 2, logs.first), 0);
+    setLogs({ ...logs, first });
   };
 
   const onToBeginning = () => {
     setHistory({ ...history, index: 0 });
+    setLogs({ ...logs, first: 0 });
   };
 
   //----------------------------------------------------------------------------
@@ -320,9 +327,13 @@ const App = () => {
   //----------------------------------------------------------------------------
   // Components
 
+  const logEnd = Math.min(logs.first + MAX_LOGS, logs.list.length);
+  const clippedLogs = logs.list.slice(logs.first, logEnd);
+
   const logBox = (
     <LogBox
-      logs={logs}
+      logs={clippedLogs}
+      currentIndex={history.index}
       onHover={(pos) => console.log('hovered over', pos)}
       onToBegining={onToBeginning}
       onStepBack={onStepBack}
@@ -385,7 +396,7 @@ const App = () => {
     <div className={classes.gridContainer}>
       <div className={classes.editorBox}>
         <Editor
-          index={index}
+          index={editorIndex}
           editorInfo={parser.editorInfo}
           onRegexChange={onEditorChange}
           onHover={onEditorHover}

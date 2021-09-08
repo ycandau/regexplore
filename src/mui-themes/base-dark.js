@@ -5,7 +5,8 @@ export default createTheme({
     type: 'dark',
     custom: {
       green: 'rgb(74, 209, 74)',
-      orange: 'rgb(255, 196, 0)',
+      orange: '#ffa500',
+      darkGreen: '#006020',
     },
   },
 });

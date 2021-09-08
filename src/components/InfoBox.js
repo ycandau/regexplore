@@ -8,7 +8,7 @@ import { WarningRounded, InfoRounded } from '@material-ui/icons';
 const useStyles = makeStyles((theme) => ({
   avatar: {
     color: theme.palette.primary.contrastText,
-    backgroundColor: theme.palette.primary.main,
+    backgroundColor: theme.palette.custom.orange,
     fontFamily: 'Fira Mono',
     fontSize: 26,
   },
@@ -30,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.info.main,
     paddingRight: theme.spacing(2),
   },
+  description: {
+    color: theme.palette.text.secondary,
+  },
   cardHeight: {
     height: '100%',
   },
@@ -49,7 +52,7 @@ export default function InfoBox({ desc }) {
         title={<div className={classes.headerTitle}>{name}</div>}
       />
       <CardContent>
-        <Typography>{description}</Typography>
+        <Typography className={classes.description}>{description}</Typography>
         {note && (
           <div className={classes.iconBox}>
             <InfoRounded className={classes.infoIcon} fontSize="large" />

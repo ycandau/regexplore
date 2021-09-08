@@ -7,7 +7,7 @@
 }
 
 :root {
-  --value-color: orange;
+  --value-color: #ffa500;
   --control-color: rgb(255, 133, 255);
   --paren-color: rgb(255, 133, 255);
   --quantifier-color: turquoise;

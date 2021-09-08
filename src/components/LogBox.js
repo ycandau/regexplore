@@ -45,6 +45,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function LogBox({
   logs,
+  currentIndex,
   onHover,
   onToBegining,
   onStepBack,
@@ -52,8 +53,12 @@ export default function LogBox({
   onToEnd,
 }) {
   const classes = useStyles();
-  const logList = logs.map(({ prompt, msg }, index) => (
-    <ListItem key={index} button /* onMouseOver={() => onHover(pos)} */>
+  const logList = logs.map(({ prompt, msg, key }) => (
+    <ListItem
+      key={key}
+      selected={currentIndex === key}
+      button /* onMouseOver={() => onHover(pos)} */
+    >
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}

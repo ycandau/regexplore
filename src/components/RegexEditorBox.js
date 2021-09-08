@@ -60,10 +60,10 @@ export default function RegexEditor({ widthRems, tokens, setTokens }) {
       color: blue[theme.palette.type === 'dark' ? 'A200' : '800'],
     },
     operator: {
-      color: yellow[theme.palette.type === 'dark' ? 'A200' : '800'],
+      color: theme.palette.custom.orange,
     },
     quantifier: {
-      color: orange[theme.palette.type === 'dark' ? 'A200' : '800'],
+      color: theme.palette.custom.orange,
     },
     delimeter: {
       color: purple[theme.palette.type === 'dark' ? 'A200' : '400'],
