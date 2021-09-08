@@ -14,6 +14,7 @@ import {
   FastRewindRounded,
   SkipNextRounded,
   SkipPreviousRounded,
+  PlayArrowRounded,
 } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -48,6 +49,7 @@ export default function LogBox({
   onHover,
   onToBegining,
   onStepBack,
+  onPlay,
   onStepForward,
   onToEnd,
 }) {
@@ -74,6 +76,9 @@ export default function LogBox({
             </IconButton>
             <IconButton onClick={onStepBack}>
               <SkipPreviousRounded />
+            </IconButton>
+            <IconButton onClick={onPlay}>
+              <PlayArrowRounded />
             </IconButton>
             <IconButton onClick={onStepForward}>
               <SkipNextRounded />
