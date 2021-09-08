@@ -58,6 +58,7 @@ export default function LogBox({
   onToEnd,
   onShowForm,
   displayGraph,
+  isLoggedIn,
 }) {
   const classes = useStyles();
   const logList = logs.map(({ prompt, msg }, index) => (
@@ -76,9 +77,11 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            <IconButton onClick={onShowForm}>
-              {displayGraph ? <Save /> : <SaveOutlined />}
-            </IconButton>
+            {isLoggedIn && (
+              <IconButton onClick={onShowForm}>
+                {displayGraph ? <Save /> : <SaveOutlined />}
+              </IconButton>
+            )}
             <IconButton onClick={onToBegining}>
               <FastRewindRounded />
             </IconButton>
