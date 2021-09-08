@@ -179,6 +179,7 @@ const App = () => {
   // TestStrField
 
   const onTestStrChange = (str) => {
+    setDisplayGraph(true);
     setTestString(str);
     setHistory(() => initHistory(parser));
     setLogs(() => []);
@@ -270,7 +271,7 @@ const App = () => {
     setTSQ(e.target.value);
   };
   const onSaveRegex = () => console.log('Save Action Detected');
-  const onShowForm = () => setDisplayGraph((b) => !b);
+  const onDeleteRegex = () => console.log('delete action detected');
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
@@ -301,10 +302,13 @@ const App = () => {
       onHover={(pos) => console.log('hovered over', pos)}
       onToBegining={onToBeginning}
       onStepBack={onStepBack}
+      onPlay={() => console.log('Play')}
       onStepForward={onStepForward}
       onToEnd={() => console.log('Jump to the end')}
       displayGraph={displayGraph}
-      onShowForm={onShowForm}
+      setDisplayGraph={setDisplayGraph}
+      onDeleteRegex={onDeleteRegex}
+      isLoggedIn={!!user.id}
     />
   );
 

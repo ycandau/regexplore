@@ -15,7 +15,7 @@ import {
   SkipNextRounded,
   SkipPreviousRounded,
   PlayArrowRounded,
-  SaveOutlined,
+  DeleteForever,
   Save,
 } from '@material-ui/icons';
 
@@ -56,11 +56,13 @@ export default function LogBox({
   onPlay,
   onStepForward,
   onToEnd,
-  onShowForm,
+  setDisplayGraph,
+  onDeleteRegex,
   displayGraph,
   isLoggedIn,
 }) {
   const classes = useStyles();
+  const showGraph = () => setDisplayGraph(true);
   const logList = logs.map(({ prompt, msg }, index) => (
     <ListItem key={index} button /* onMouseOver={() => onHover(pos)} */>
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
@@ -77,24 +79,58 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            {isLoggedIn && (
-              <IconButton onClick={onShowForm}>
-                {displayGraph ? <Save /> : <SaveOutlined />}
-              </IconButton>
-            )}
-            <IconButton onClick={onToBegining}>
+            {isLoggedIn &&
+              (displayGraph ? (
+                <IconButton onClick={() => setDisplayGraph(false)}>
+                  <Save />
+                </IconButton>
+              ) : (
+                <IconButton
+                  onClick={() => {
+                    onDeleteRegex();
+                  }}
+                >
+                  <DeleteForever />
+                </IconButton>
+              ))}
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onToBegining();
+              }}
+            >
               <FastRewindRounded />
             </IconButton>
-            <IconButton onClick={onStepBack}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onStepBack();
+              }}
+            >
               <SkipPreviousRounded />
             </IconButton>
-            <IconButton onClick={onPlay}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onPlay();
+              }}
+            >
               <PlayArrowRounded />
             </IconButton>
-            <IconButton onClick={onStepForward}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onStepForward();
+              }}
+            >
               <SkipNextRounded />
             </IconButton>
-            <IconButton onClick={onToEnd}>
+            <IconButton
+              onClick={() => {
+                showGraph();
+                onToEnd();
+              }}
+            >
               <FastForwardRounded />
             </IconButton>
           </>
