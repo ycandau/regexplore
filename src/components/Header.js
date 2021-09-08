@@ -20,13 +20,9 @@ const useStyles = makeStyles((theme) => ({
   avatar: {
     width: theme.spacing(4),
     height: theme.spacing(4),
-    color: theme.palette.secondary.contrastText,
-    backgroundColor: theme.palette.secondary.dark,
   },
   title: {
     display: 'none',
-    fontFamily: 'Fira Mono',
-    fontStyle: 'italic',
     [theme.breakpoints.up('md')]: {
       display: 'block',
     },
@@ -76,8 +72,8 @@ const useStyles = makeStyles((theme) => ({
 export default function PrimarySearchAppBar({
   light,
   toggleTheme,
-  isLoggedIn,
-  userInitial,
+  serverAddr,
+  user: { id, name, avatarURL },
   isExploring,
   toggleExplore,
   search,
@@ -85,11 +81,19 @@ export default function PrimarySearchAppBar({
 }) {
   const classes = useStyles();
 
+  const isLoggedIn = !!id;
+  const userInitial = !!name && name[0];
+
   return (
     <div className={classes.grow}>
       <AppBar position="static" color="default">
         <Toolbar>
-          <Typography className={classes.title} variant="h5" noWrap>
+          <Typography
+            className={classes.title}
+            variant="h4"
+            component="h1"
+            noWrap
+          >
             RegExpLore
           </Typography>
           <div className={classes.grow} />
@@ -116,15 +120,19 @@ export default function PrimarySearchAppBar({
               {isExploring ? 'Home' : 'Explore'}
             </Button>
             {isLoggedIn ? (
-              <Button href="http://localhost:8080/auth/logout">LOG OUT</Button>
+              <Button href={serverAddr + 'auth/logout'}>LOG OUT</Button>
             ) : (
-              <Button href="http://localhost:8080/auth/github">
+              <Button href={serverAddr + 'auth/github'}>
                 LOG IN WITH GITHUB
               </Button>
             )}
             {isLoggedIn && (
               <IconButton>
-                <Avatar className={classes.avatar}>{userInitial}</Avatar>
+                <Avatar
+                  className={classes.avatar}
+                  src={avatarURL}
+                  alt={userInitial}
+                />
               </IconButton>
             )}
             <IconButton onClick={toggleTheme} edge="end">
