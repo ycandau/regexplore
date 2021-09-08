@@ -78,6 +78,7 @@ const useStyles = makeStyles((theme) => ({
 
 const initHistory = (parser) => ({
   index: 0,
+  end: -1,
   states: [
     {
       runState: 'running',
@@ -121,10 +122,26 @@ const App = () => {
   const [parser, setParser] = useState(defaultParser);
   const [history, setHistory] = useState(defaultHistory);
   const [logs, setLogs] = useState(initLogs());
+  const [play, setPlay] = useState(false);
+  const [count, setCount] = useState(0);
 
   const { runState, activeNodes, testRange, matchRanges } = history.states[
     history.index
   ];
+
+  //----------------------------------------------------------------------------
+
+  useEffect(() => {
+    let timeout = null;
+    if (play) {
+      timeout = setTimeout(() => {
+        onStepForward();
+        console.log('Playing');
+        setCount((count) => count + 1);
+      }, 500);
+    }
+    return () => clearInterval(timeout);
+  }, [play, count]);
 
   //----------------------------------------------------------------------------
   // Hooks
@@ -207,6 +224,7 @@ const App = () => {
 
   const onStepForward = () => {
     const prevIndex = history.index;
+    let end = history.end;
     const prevState = history.states[prevIndex];
     let prevActiveNodes = prevState.activeNodes;
     const prevTestRange = prevState.testRange;
@@ -214,7 +232,10 @@ const App = () => {
 
     // Return if at end of test string
     const [begin, prevPos] = prevTestRange;
-    if (prevPos === testString.length) return;
+    if (prevPos === testString.length) {
+      setPlay(false);
+      return;
+    }
 
     // Retrace a forward step already taken
     const index = prevIndex + 1;
@@ -250,20 +271,19 @@ const App = () => {
         msg = `Char: ${char} - Nodes: ${activeNodes.length}`;
         break;
       case 'success':
-        // activeNodes = [parser.nfa];
         testRange = [pos, pos];
         matchRanges.push([begin, pos]);
         msg = `Match: ${testString.slice(begin, pos)}`;
         break;
-
       case 'failure':
-        // activeNodes = [parser.nfa];
         testRange = [begin + 1, begin + 1];
         msg = 'No match';
         break;
       case 'end':
         testRange = [pos, pos];
         msg = 'End of test string';
+        end = index;
+        setPlay(false);
         break;
       default:
         break;
@@ -286,6 +306,7 @@ const App = () => {
     setHistory({
       ...history,
       index,
+      end,
       states: [...history.states, nextState],
     });
   };
@@ -300,6 +321,10 @@ const App = () => {
   const onToBeginning = () => {
     setHistory({ ...history, index: 0 });
     setLogs({ ...logs, first: 0 });
+  };
+
+  const onPlay = () => {
+    setPlay((play) => !play);
   };
 
   //----------------------------------------------------------------------------
@@ -345,16 +370,26 @@ const App = () => {
 
   const logEnd = Math.min(logs.first + MAX_LOGS, logs.list.length);
   const clippedLogs = logs.list.slice(logs.first, logEnd);
+  const situation =
+    history.index === 0
+      ? 'atBeginning'
+      : history.index === history.end
+      ? 'atEnd'
+      : '';
+
+  console.log(history.index, history.end, situation);
 
   const logBox = (
     <LogBox
       logs={clippedLogs}
       currentIndex={history.index}
       onHover={(pos) => console.log('hovered over', pos)}
-      onToBegining={onToBeginning}
+      onPlay={onPlay}
       onStepBack={onStepBack}
       onStepForward={onStepForward}
-      onToEnd={() => console.log('Jump to the end')}
+      onToBegining={onToBeginning}
+      play={play}
+      situation={situation}
     />
   );
 

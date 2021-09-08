@@ -10,10 +10,10 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import {
-  FastForwardRounded,
-  FastRewindRounded,
+  PlayArrow,
   SkipNextRounded,
   SkipPreviousRounded,
+  Replay,
 } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
@@ -41,16 +41,22 @@ const useStyles = makeStyles((theme) => ({
       margin: 0,
     },
   },
+  playOn: {
+    backgroundColor: theme.palette.action.selected,
+  },
+  playOff: {},
 }));
 
 export default function LogBox({
   logs,
   currentIndex,
   onHover,
-  onToBegining,
+  onPlay,
   onStepBack,
   onStepForward,
-  onToEnd,
+  onToBegining,
+  play,
+  situation,
 }) {
   const classes = useStyles();
   const logList = logs.map(({ prompt, msg, key }) => (
@@ -74,17 +80,29 @@ export default function LogBox({
         classes={{ root: classes.headerRoot }}
         action={
           <>
-            <IconButton onClick={onToBegining}>
-              <FastRewindRounded />
+            <IconButton
+              onClick={onPlay}
+              className={play ? classes.playOn : classes.playOff}
+            >
+              <PlayArrow />
             </IconButton>
-            <IconButton onClick={onStepBack}>
+            <IconButton
+              disabled={situation === 'atBeginning'}
+              onClick={onStepBack}
+            >
               <SkipPreviousRounded />
             </IconButton>
-            <IconButton onClick={onStepForward}>
+            <IconButton
+              disabled={situation === 'atEnd'}
+              onClick={onStepForward}
+            >
               <SkipNextRounded />
             </IconButton>
-            <IconButton onClick={onToEnd}>
-              <FastForwardRounded />
+            <IconButton
+              disabled={situation === 'atBeginning'}
+              onClick={onToBegining}
+            >
+              <Replay />
             </IconButton>
           </>
         }
