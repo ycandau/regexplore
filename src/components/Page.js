@@ -24,6 +24,7 @@ export default function Page({
   setPage,
   onExploreRegex,
   onSelectTag,
+  serverAddr,
 }) {
   // const [pageInfo, setPageInfo] = useState({
   //   pageNum: page,
@@ -42,7 +43,7 @@ export default function Page({
           requestedPage: prevPageNum || 1,
         };
         if (!tsq) {
-          res = await fetch('/regexes', {
+          res = await fetch(serverAddr + 'regexes', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -50,7 +51,7 @@ export default function Page({
             body: JSON.stringify({ ...baseBody }),
           });
         } else {
-          res = await fetch('/regexes', {
+          res = await fetch(serverAddr + 'regexes', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -70,7 +71,7 @@ export default function Page({
     return () => {
       // setPage(pageNum || 1);
     };
-  }, [tsq, selectedTags, setPage, page]);
+  }, [tsq, selectedTags, setPage, page, serverAddr]);
 
   const classes = useStyles();
 
@@ -96,22 +97,19 @@ export default function Page({
 
   const pagination =
     !!regexes &&
-    !!regexes.length &&
-    ((key) =>
-      regexes.length > 1 && (
-        <div className={classes.pagination}>
-          <Pagination
-            key={key}
-            shape="rounded"
-            count={totalPages}
-            page={page}
-            onChange={(e, p) => {
-              setPage(p);
-              // setPageInfo({ regexes, totalPages, pageNum: page })
-            }}
-          />
-        </div>
-      ));
+    regexes.length > 1 &&
+    ((key) => (
+      <div className={classes.pagination} key={key}>
+        <Pagination
+          shape="rounded"
+          count={totalPages}
+          page={page}
+          onChange={(e, p) => {
+            setPage(p);
+          }}
+        />
+      </div>
+    ));
 
   const pageContent = !!regexes &&
     !!regexes.length && [
