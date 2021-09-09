@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-// import { makeStyles } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core';
 
 import { setActiveGraphNodes } from '../re/re_run';
 
@@ -7,11 +7,11 @@ import Node from './Node';
 
 import './Graph.css';
 
-// const useStyles = makeStyles((theme) => ({
-//   links: {
-//     color: theme.palette.primary.contrastText,
-//   }
-//  }));
+const useStyles = makeStyles((theme) => ({
+  background: {
+    backgroundColor: theme.palette.custom.background,
+  },
+}));
 
 //------------------------------------------------------------------------------
 // Display constants
@@ -21,12 +21,13 @@ const X_MIN = NODE_DIAM * 1.5;
 const X_STEP = 60;
 const Y_STEP = 60;
 
-const scale = scaleCoord(X_MIN, 475, X_STEP, Y_STEP);
+const scale = scaleCoord(X_MIN, 375, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
 const Graph = ({ graph, activeNodes, runState }) => {
   const canvasRef = useRef(null);
+  const classes = useStyles();
 
   //----------------------------------------------------------------------------
   // Drawing hook
@@ -35,7 +36,7 @@ const Graph = ({ graph, activeNodes, runState }) => {
     const ctx = canvasRef.current.getContext('2d');
 
     const draw = (ctx) => {
-      ctx.strokeStyle = '#006020';
+      ctx.strokeStyle = '#208040';
       ctx.lineWidth = 2;
       graph.links.forEach(drawLink(ctx, scale));
       graph.forks.forEach(drawFork(ctx, scale));
@@ -63,7 +64,7 @@ const Graph = ({ graph, activeNodes, runState }) => {
   //----------------------------------------------------------------------------
 
   return (
-    <div id="graph-container">
+    <div id="graph-container" className={classes.background}>
       {graph.nodes.map(
         ({ coord, label, quantifier, classes, runClasses }, index) => {
           const scaledCoord = scale(coord);

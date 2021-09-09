@@ -4,9 +4,10 @@ export default createTheme({
   palette: {
     type: 'dark',
     custom: {
-      green: 'rgb(74, 209, 74)',
+      green: '#4ad14a',
       orange: '#ffa500',
       darkGreen: '#006020',
+      background: '#212121',
     },
   },
 });

@@ -143,7 +143,7 @@ const warnings = {
   '!)': {
     type: '!)',
     label: ')',
-    issue: 'A closing parenthesis has no matching opening',
+    issue: 'A closing parenthesis has no match',
     msg: 'The parser is ignoring the closing parenthesis.',
   },
   '!**': {
@@ -174,7 +174,7 @@ const warnings = {
   '!()': {
     type: '!()',
     label: '()',
-    issue: 'Pairs of parentheses contain empty values',
+    issue: 'A pair of parentheses contains no value',
     msg: 'The parser is ignoring the parentheses.',
   },
 };
