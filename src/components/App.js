@@ -34,7 +34,7 @@ const serverAddr = 'http://localhost:8080/';
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: '4fr 1fr',
+    gridTemplateColumns: '3fr 1fr',
     gridTemplateRows: 'auto auto 1fr',
     gap: theme.spacing(3),
     padding: theme.spacing(3),
@@ -93,23 +93,19 @@ const initHistory = (parser) => ({
 
 const initLogs = () => ({ first: 0, list: [] });
 
-// const defaultParser = new Parser('ab(c|x)de|abcxy|a.*.*.*x|a.*...x');
-// const defaultParser = new Parser('(XY)?aa|aa(XY)*|a(XY)+');
-const defaultParser = new Parser('abc');
+const defaultParser = new Parser('a+(abc)*|abc|def');
 const defaultHistory = initHistory(defaultParser);
 
-const MAX_LOGS = 10;
+const MAX_LOGS = 8;
 
 //------------------------------------------------------------------------------
 // App and state
 
 const App = () => {
-  // console.log('Render: App');
-
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('abc abcx abbx ab_x tcdcdcdx');
+  const [testString, setTestString] = useState('abc def aaabc aaab 123');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);

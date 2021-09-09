@@ -27,12 +27,10 @@ const useStyles = makeStyles((theme) => ({
   },
   listText: {
     fontFamily: 'Fira Mono',
+    color: theme.palette.custom.green,
   },
   avatar: {
-    color:
-      theme.palette.type === 'dark'
-        ? theme.palette.info.light
-        : theme.palette.info.dark,
+    color: theme.palette.custom.green,
   },
   cardHeight: {
     height: '100%',
@@ -44,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
     '& [class*="MuiCardHeader-action"]': {
       margin: 0,
     },
-    color: 'orange',
+    color: theme.palette.custom.orange,
   },
   playOn: {
     backgroundColor: theme.palette.action.selected,
