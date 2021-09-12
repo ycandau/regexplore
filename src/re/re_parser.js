@@ -207,12 +207,9 @@ class Parser {
       }
     }
     // Syntax error: missing closing parenthesis
-    const { pos, index } = last(this.tokens);
     while (parens.length > 0) {
-      const close = getParenClose();
       const open = parens.pop();
-      close.pos = pos;
-      close.index = index;
+      const close = getParenClose(open.pos, open.index);
       this.tokens.push(close);
       this.addWarning('!(', open.pos, open.index);
       countErrors++;
@@ -528,7 +525,7 @@ class Parser {
 
     const closingBracket = hasClosingBracket ? '' : ']';
     const label = this.input.slice(pos, this.pos) + closingBracket;
-    return getBracketClass(label, { ...info, pos, index: begin });
+    return getBracketClass(label, pos, begin, info);
   }
 
   //----------------------------------------------------------------------------

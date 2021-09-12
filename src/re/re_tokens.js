@@ -27,18 +27,19 @@ const matchNotIn = (str) => {
 //------------------------------------------------------------------------------
 // Create token types
 
-const value = (label, type, match) => ({
+const value = (label, type, match) => (pos, index) => ({
   label,
   type,
+  pos,
+  index,
   match,
 });
 
-const charClass = (label, match) => value(label, 'charClass', match);
-
-const operator = (label, config) => ({
+const operator = (label) => (pos, index) => ({
   label,
   type: label,
-  ...config,
+  pos,
+  index,
 });
 
 //------------------------------------------------------------------------------
@@ -48,12 +49,12 @@ const tokens = {
   // Values
   '.': value('.', '.', () => true),
 
-  '\\d': charClass('\\d', matchIn(DIGITS)),
-  '\\D': charClass('\\D', matchNotIn(DIGITS)),
-  '\\w': charClass('\\w', matchIn(DIGITS + WORDS)),
-  '\\W': charClass('\\W', matchNotIn(DIGITS + WORDS)),
-  '\\s': charClass('\\s', matchIn(SPACES)),
-  '\\S': charClass('\\S', matchNotIn(SPACES)),
+  '\\d': value('\\d', 'charClass', matchIn(DIGITS)),
+  '\\D': value('\\D', 'charClass', matchNotIn(DIGITS)),
+  '\\w': value('\\w', 'charClass', matchIn(DIGITS + WORDS)),
+  '\\W': value('\\W', 'charClass', matchNotIn(DIGITS + WORDS)),
+  '\\s': value('\\s', 'charClass', matchIn(SPACES)),
+  '\\S': value('\\S', 'charClass', matchNotIn(SPACES)),
 
   // Operators
   '|': operator('|'),
@@ -69,35 +70,27 @@ const tokens = {
 
 const getToken = (label, pos, index) => {
   const ch = label[0];
-  if (ch in tokens) {
-    return { ...tokens[ch], pos, index };
-  }
 
-  if (label in tokens) {
-    return { ...tokens[label], pos, index };
-  }
+  const createToken =
+    ch in tokens
+      ? tokens[ch]
+      : label in tokens
+      ? tokens[label]
+      : ch === '\\'
+      ? value(label, 'escapedChar', match(label[1]))
+      : value(ch, 'charLiteral', match(ch));
 
-  if (label[0] === '\\') {
-    const token = value(label, 'escapedChar', match(label[1]));
-    token.pos = pos;
-    token.index = index;
-    return token;
-  }
-
-  const token = value(ch, 'charLiteral', match(ch));
-  token.pos = pos;
-  token.index = index;
-  return token;
+  return createToken(pos, index);
 };
 
-const getConcat = () => operator('~');
+const getConcat = () => operator('~')(null, null);
 
-const getParenClose = () => operator(')');
+const getParenClose = (pos, index) => operator(')')(pos, index);
 
-const getBracketClass = (label, info) => {
+const getBracketClass = (label, pos, index, info) => {
   const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);
   return {
-    ...value(label, 'bracketClass', match),
+    ...value(label, 'bracketClass', match)(pos, index),
     ...info,
   };
 };
