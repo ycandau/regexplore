@@ -97,4 +97,25 @@ const getBracketClass = (label, pos, index, info) => {
 
 //------------------------------------------------------------------------------
 
+// readToken() {
+// Bracket expressions
+// if (this.ch() === '[') {
+//   return this.readBracketExpression();
+// }
+
+const tokenize = (regex) => {
+  const tokens = [];
+  let pos = 0;
+  let index = 0;
+
+  while (pos < regex.length) {
+    const token = getToken(this.slice(2), pos, index);
+    pos += token.label.length;
+    index++;
+    tokens.push(token);
+  }
+};
+
+//------------------------------------------------------------------------------
+
 export { getToken, getConcat, getBracketClass, getParenClose };
