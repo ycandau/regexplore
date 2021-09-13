@@ -97,23 +97,55 @@ const getBracketClass = (label, pos, index, info) => {
 
 //------------------------------------------------------------------------------
 
-// readToken() {
-// Bracket expressions
-// if (this.ch() === '[') {
-//   return this.readBracketExpression();
-// }
-
 const tokenize = (regex) => {
-  const tokens = [];
   let pos = 0;
   let index = 0;
+  const lexemes = [];
+  const tokens = [];
 
   while (pos < regex.length) {
-    const token = getToken(this.slice(2), pos, index);
+    const ch = regex[pos];
+    const ch2 = regex[pos + 1];
+    const label = regex.slice(pos, pos + 2);
+    let token = null;
+    let addLexeme = true;
+
+    // Bracket expression
+    if (ch === '[') {
+      token = getBracketClass(regex, pos, index, lexemes);
+      addLexeme = false;
+    }
+
+    // Static tokens (operators and wildcard)
+    else if (ch in tokens) {
+      token = tokens[ch](pos, index);
+    }
+
+    // Character classes
+    else if (label in tokens) {
+      token = tokens[label](pos, index);
+    }
+
+    // Escaped chararacter
+    else if (ch === '\\' && ch2 !== undefined) {
+      token = value(label, 'escapedChar', match(ch2))(pos, index);
+    }
+
+    // Character literal
+    else {
+      token = value(label, 'bracketClass', match(ch))(pos, index);
+    }
+
+    // If lexemes have not already been added (bracket expressions)
+    if (addLexeme) {
+      lexemes.push({ label: token.label, type: token.type, pos, index });
+    }
+    tokens.push(token);
     pos += token.label.length;
     index++;
-    tokens.push(token);
   }
+
+  return { lexemes, tokens };
 };
 
 //------------------------------------------------------------------------------
