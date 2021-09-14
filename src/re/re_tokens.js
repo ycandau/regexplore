@@ -61,6 +61,26 @@ const tokens = {
   ')': operator(')'),
 };
 
+const staticTokens = {
+  // Values
+  '.': value('.', '.', () => true),
+
+  '\\d': value('\\d', 'charClass', matchIn(digits)),
+  '\\D': value('\\D', 'charClass', matchNotIn(digits)),
+  '\\w': value('\\w', 'charClass', matchIn(words)),
+  '\\W': value('\\W', 'charClass', matchNotIn(words)),
+  '\\s': value('\\s', 'charClass', matchIn(spaces)),
+  '\\S': value('\\S', 'charClass', matchNotIn(spaces)),
+
+  // Operators
+  '|': operator('|'),
+  '?': operator('?'),
+  '*': operator('*'),
+  '+': operator('+'),
+  '(': operator('('),
+  ')': operator(')'),
+};
+
 //------------------------------------------------------------------------------
 // Get tokens
 
@@ -127,13 +147,13 @@ const tokenize = (regex) => {
     }
 
     // Static tokens (operators and wildcard)
-    else if (ch in tokens) {
-      token = tokens[ch](pos, index);
+    else if (ch in staticTokens) {
+      token = staticTokens[ch](pos, index);
     }
 
     // Character classes
-    else if (label in tokens) {
-      token = tokens[label](pos, index);
+    else if (label in staticTokens) {
+      token = staticTokens[label](pos, index);
     }
 
     // Escaped chararacter
@@ -143,7 +163,7 @@ const tokenize = (regex) => {
 
     // Character literal
     else {
-      token = value(label, 'charLiteral', match(ch))(pos, index);
+      token = value(ch, 'charLiteral', match(ch))(pos, index);
     }
 
     // If lexemes have not already been added (bracket expressions)
@@ -189,7 +209,7 @@ const tryReadBracketChar = (label, state) => {
 };
 
 const tryReadBracketRange = (state) => {
-  const { regex, pos, lexemes, set } = state;
+  const { regex, pos, set } = state;
 
   if (
     regex.length - pos < 3 ||
@@ -198,9 +218,10 @@ const tryReadBracketRange = (state) => {
   ) {
     return false;
   }
+  // const a = regex[pos];
 
-  const rangeLow = regex[pos].code(0);
-  const rangeHigh = regex[pos + 2].code(2);
+  const rangeLow = regex.charCodeAt(pos);
+  const rangeHigh = regex.charCodeAt(pos + 2);
   for (let i = rangeLow; i <= rangeHigh; i++) {
     set.add(String.fromCharCode(i));
   }
@@ -224,7 +245,7 @@ const readBracketExpression = (regex, pos, lexemes) => {
   tryReadBracketChar(']', state) || tryReadBracketChar('-', state);
 
   // Try char range, otherwise read char literal
-  while (pos < regex.length && regex[pos] !== ']') {
+  while (state.pos < regex.length && regex[state.pos] !== ']') {
     tryReadBracketRange(state) || readBracketChar(state);
   }
 
@@ -235,15 +256,15 @@ const readBracketExpression = (regex, pos, lexemes) => {
   describe(lexemes[begin], info);
 
   // Syntax error: open bracket with no closing
-  const hasClosingBracket = this.ch() === ']';
+  const hasClosingBracket = regex[state.pos] === ']';
   if (hasClosingBracket) {
     eat(']', state);
     describe(lexemes[end], info);
   } else {
-    this.addWarning('![', pos, begin);
+    this.addWarning('![', state.pos, begin);
   }
 
-  const label = regex.slice(begin, end) + hasClosingBracket ? '' : ']';
+  const label = regex.slice(begin, end + 1) + (hasClosingBracket ? '' : ']');
   const match = negate ? matchNotIn(set) : matchIn(set);
   return {
     label,
@@ -256,4 +277,6 @@ const readBracketExpression = (regex, pos, lexemes) => {
 
 //------------------------------------------------------------------------------
 
-export { getToken, getConcat, getBracketClass, getParenClose };
+export { tokenize, getToken, getConcat, getBracketClass, getParenClose };
+
+tokenize('[a-c]');

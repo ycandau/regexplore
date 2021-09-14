@@ -44,7 +44,9 @@ const runBracketClass = (input, matches) => {
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-    expect(token.matches).toBe(matches);
+
+    const matchString = [...token.matches].join('');
+    expect(matchString).toBe(matches);
 
     matches.split('').forEach((ch) => {
       expect(token.match(ch)).toBe(!token.negate);

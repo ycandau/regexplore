@@ -521,7 +521,8 @@ class Parser {
 
     const closingBracket = hasClosingBracket ? '' : ']';
     const label = this.input.slice(pos, this.pos) + closingBracket;
-    return getBracketClass(label, pos, begin, info);
+    const info2 = { begin, end, negate, matches: set };
+    return getBracketClass(label, pos, begin, info2);
   }
 
   //----------------------------------------------------------------------------
