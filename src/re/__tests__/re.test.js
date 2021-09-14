@@ -44,7 +44,9 @@ const runBracketClass = (input, matches) => {
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-    expect(token.matches).toBe(matches);
+
+    const matchString = [...token.matches].join('');
+    expect(matchString).toBe(matches);
 
     matches.split('').forEach((ch) => {
       expect(token.match(ch)).toBe(!token.negate);
@@ -160,14 +162,14 @@ describe('RE parser: Edge cases', () => {
 
   runEdgeCase('()', '', '', 1);
   runEdgeCase('a()b', 'ab~', 'ab', 1);
-  runEdgeCase('a(())b', 'ab~', 'ab', 1);
+  runEdgeCase('a(())b', 'ab~', 'ab', 2);
   runEdgeCase('a(()b)c', 'ab(~c~', 'a(b)c', 1);
   runEdgeCase('a(b())c', 'ab(~c~', 'a(b)c', 1);
 
   runEdgeCase('a(', 'a', 'a', 2);
-  runEdgeCase('a((', 'a', 'a', 3);
+  runEdgeCase('a((', 'a', 'a', 4);
   runEdgeCase('a(*', 'a', 'a', 3);
-  runEdgeCase('a((*)(|))', 'a', 'a', 3);
+  runEdgeCase('a((*)(|))', 'a', 'a', 5);
 });
 
 //------------------------------------------------------------------------------
