@@ -1,6 +1,11 @@
 //------------------------------------------------------------------------------
-// Tokens
+// Parse the regex
 //------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Imports
+
+import { warn } from './re_warnings';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -14,6 +19,8 @@ const spaces = new Set(' \\f\\n\\r\\t\\v');
 //------------------------------------------------------------------------------
 // Matching functions
 
+const matchAll = (ch) => true;
+
 const match = (label) => (ch) => ch === label;
 
 const matchIn = (set) => (ch) => set.has(ch);
@@ -21,7 +28,7 @@ const matchIn = (set) => (ch) => set.has(ch);
 const matchNotIn = (set) => (ch) => !set.has(ch);
 
 //------------------------------------------------------------------------------
-// Create token types
+// Create tokens
 
 const value = (label, type, match) => (pos, index) => ({
   label,
@@ -43,7 +50,7 @@ const operator = (label) => (pos, index) => ({
 
 const tokens = {
   // Values
-  '.': value('.', '.', () => true),
+  '.': value('.', '.', matchAll),
 
   '\\d': value('\\d', 'charClass', matchIn(digits)),
   '\\D': value('\\D', 'charClass', matchNotIn(digits)),
@@ -82,6 +89,181 @@ const staticTokens = {
 };
 
 //------------------------------------------------------------------------------
+// Helper functions for lexemes
+
+const addLexeme = (lexemes, label, type, pos) => {
+  const lexeme = { label, type, pos, index: lexemes.length };
+  lexemes.push(lexeme);
+};
+
+const describe = (lexeme, info) => {
+  Object.entries(info).forEach(([key, value]) => (lexeme[key] = value));
+};
+
+//------------------------------------------------------------------------------
+// Tokenize
+
+const parse = (regex) => {
+  let pos = 0;
+  const lexemes = [];
+  const tokens = [];
+  const warnings = [];
+
+  while (pos < regex.length) {
+    const ch = regex[pos];
+    const ch2 = regex[pos + 1];
+    const label = regex.slice(pos, pos + 2);
+    const index = lexemes.length;
+    let token = null;
+    let lexemesAdded = false;
+
+    // Bracket expression
+    if (ch === '[') {
+      token = readBracketExpression(regex, pos, lexemes, warnings);
+      lexemesAdded = true;
+    }
+
+    // Static tokens (operators and wildcard)
+    else if (ch in staticTokens) {
+      token = staticTokens[ch](pos, index);
+    }
+
+    // Character classes
+    else if (label in staticTokens) {
+      token = staticTokens[label](pos, index);
+    }
+
+    // Escaped chararacter
+    else if (ch === '\\' && ch2 !== undefined) {
+      token = value(label, 'escapedChar', match(ch2))(pos, index);
+    }
+
+    // Syntax error: terminal backslash
+    else if (ch === '\\') {
+      token = value(ch, 'escapedChar', matchAll)(pos, index);
+      token.invalid = true;
+      warn('\\E', pos, index, warnings);
+    }
+
+    // Character literal
+    else {
+      token = value(ch, 'charLiteral', match(ch))(pos, index);
+    }
+
+    // If lexemes have not already been added (bracket expressions)
+    if (!lexemesAdded) addLexeme(lexemes, token.label, token.type, pos);
+    tokens.push(token);
+    pos += token.label.length;
+  }
+
+  return { lexemes, tokens, warnings };
+};
+
+//------------------------------------------------------------------------------
+// Bracket expressions: Helpers
+
+const eat = (type, state) => {
+  const { regex, pos, lexemes } = state;
+  addLexeme(lexemes, regex[pos], type, pos);
+  state.pos++;
+};
+
+const tryEat = (label, type, state) => {
+  if (state.regex[state.pos] === label) {
+    eat(type, state);
+    return true;
+  }
+  return false;
+};
+
+const read = (type, state, action) => {
+  const { regex, pos, lexemes } = state;
+  const label = regex[pos];
+  addLexeme(lexemes, label, type, pos);
+  action(label);
+  state.pos++;
+};
+
+const tryRead = (label, type, state, action) => {
+  if (state.regex[state.pos] === label) {
+    read(type, state, action);
+    return true;
+  }
+  return false;
+};
+
+const tryReadBracketRange = (state, action) => {
+  const { regex, pos } = state;
+
+  if (
+    regex.length - pos < 3 ||
+    regex[pos + 1] !== '-' ||
+    regex[pos + 2] === ']'
+  ) {
+    return false;
+  }
+
+  const rangeLow = regex.charCodeAt(pos);
+  const rangeHigh = regex.charCodeAt(pos + 2);
+  for (let i = rangeLow; i <= rangeHigh; i++) {
+    action(String.fromCharCode(i));
+  }
+
+  eat('bracketRangeLow', state);
+  eat('-', state);
+  eat('bracketRangeHigh', state);
+
+  return true;
+};
+
+//------------------------------------------------------------------------------
+// Bracket expressions: Main
+
+const readBracketExpression = (regex, pos, lexemes, warnings) => {
+  const set = new Set();
+  const add = (label) => set.add(label);
+  const state = { regex, pos, lexemes };
+  const begin = lexemes.length;
+
+  eat('[', state);
+  const negate = tryEat('^', '^', state);
+
+  // Special characters are treated as literals at the beginning
+  tryRead(']', 'bracketChar', state, add) ||
+    tryRead('-', 'bracketChar', state, add);
+
+  // Try char range, otherwise read char literal
+  while (state.pos < regex.length && regex[state.pos] !== ']') {
+    tryReadBracketRange(state, add) || read('bracketChar', state, add);
+  }
+
+  // Finalize
+  const end = lexemes.length;
+  const matches = [...set].join('');
+  const info = { begin, end, negate, matches };
+  describe(lexemes[begin], info);
+
+  // Syntax error: open bracket with no closing
+  const hasClosingBracket = regex[state.pos] === ']';
+  if (hasClosingBracket) {
+    eat(']', state);
+    describe(lexemes[end], info);
+  } else {
+    warn('[', state.pos, begin, warnings);
+  }
+
+  const label = regex.slice(begin, end + 1) + (hasClosingBracket ? '' : ']');
+  const match = negate ? matchNotIn(set) : matchIn(set);
+  return {
+    label,
+    type: 'bracketClass',
+    pos,
+    index: begin,
+    match,
+  };
+};
+
+//------------------------------------------------------------------------------
 // Get tokens
 
 // Used in re_parser, to be refactored out
@@ -115,168 +297,6 @@ const getBracketClass = (label, pos, index, info) => {
 
 //------------------------------------------------------------------------------
 
-const addLexeme = (lexemes, label, type, pos) => {
-  const lexeme = { label, type, pos, index: lexemes.length };
-  lexemes.push(lexeme);
-};
+export { parse, getToken, getConcat, getBracketClass, getParenClose };
 
-const describe = (lexeme, info) => {
-  Object.entries(info).forEach(([key, value]) => (lexeme[key] = value));
-};
-
-//------------------------------------------------------------------------------
-// Tokenize
-
-const tokenize = (regex) => {
-  let pos = 0;
-  const lexemes = [];
-  const tokens = [];
-
-  while (pos < regex.length) {
-    const ch = regex[pos];
-    const ch2 = regex[pos + 1];
-    const label = regex.slice(pos, pos + 2);
-    const index = lexemes.length;
-    let token = null;
-    let lexemesAdded = false;
-
-    // Bracket expression
-    if (ch === '[') {
-      token = readBracketExpression(regex, pos, lexemes);
-      lexemesAdded = true;
-    }
-
-    // Static tokens (operators and wildcard)
-    else if (ch in staticTokens) {
-      token = staticTokens[ch](pos, index);
-    }
-
-    // Character classes
-    else if (label in staticTokens) {
-      token = staticTokens[label](pos, index);
-    }
-
-    // Escaped chararacter
-    else if (ch === '\\' && ch2 !== undefined) {
-      token = value(label, 'escapedChar', match(ch2))(pos, index);
-    }
-
-    // Character literal
-    else {
-      token = value(ch, 'charLiteral', match(ch))(pos, index);
-    }
-
-    // If lexemes have not already been added (bracket expressions)
-    if (!lexemesAdded) addLexeme(lexemes, token.label, token.type, pos);
-    tokens.push(token);
-    pos += token.label.length;
-  }
-
-  return { lexemes, tokens };
-};
-
-//------------------------------------------------------------------------------
-// Bracket expressions
-
-const eat = (type, state) => {
-  const { regex, pos, lexemes } = state;
-  addLexeme(lexemes, regex[pos], type, pos);
-  state.pos++;
-};
-
-const tryEat = (type, state) => {
-  if (state.regex[state.pos] === type) {
-    eat(type, state);
-    return true;
-  }
-  return false;
-};
-
-const readBracketChar = (state) => {
-  const { regex, pos, lexemes, set } = state;
-  const label = regex[pos];
-  addLexeme(lexemes, label, 'bracketChar', pos);
-  set.add(label);
-  state.pos++;
-};
-
-const tryReadBracketChar = (label, state) => {
-  if (state.regex[state.pos] === label) {
-    readBracketChar(state);
-    return true;
-  }
-  return false;
-};
-
-const tryReadBracketRange = (state) => {
-  const { regex, pos, set } = state;
-
-  if (
-    regex.length - pos < 3 ||
-    regex[pos + 1] !== '-' ||
-    regex[pos + 2] === ']'
-  ) {
-    return false;
-  }
-  // const a = regex[pos];
-
-  const rangeLow = regex.charCodeAt(pos);
-  const rangeHigh = regex.charCodeAt(pos + 2);
-  for (let i = rangeLow; i <= rangeHigh; i++) {
-    set.add(String.fromCharCode(i));
-  }
-
-  eat('bracketRangeLow', state);
-  eat('-', state);
-  eat('bracketRangeHigh', state);
-
-  return true;
-};
-
-const readBracketExpression = (regex, pos, lexemes) => {
-  const set = new Set();
-  const state = { regex, pos, lexemes, set };
-  const begin = lexemes.length;
-
-  eat('[', state);
-  const negate = tryEat('^', state);
-
-  // Special characters are treated as literals at the beginning
-  tryReadBracketChar(']', state) || tryReadBracketChar('-', state);
-
-  // Try char range, otherwise read char literal
-  while (state.pos < regex.length && regex[state.pos] !== ']') {
-    tryReadBracketRange(state) || readBracketChar(state);
-  }
-
-  // Finalize
-  const end = lexemes.length;
-  const matches = [...set].join('');
-  const info = { begin, end, negate, matches };
-  describe(lexemes[begin], info);
-
-  // Syntax error: open bracket with no closing
-  const hasClosingBracket = regex[state.pos] === ']';
-  if (hasClosingBracket) {
-    eat(']', state);
-    describe(lexemes[end], info);
-  } else {
-    this.addWarning('![', state.pos, begin);
-  }
-
-  const label = regex.slice(begin, end + 1) + (hasClosingBracket ? '' : ']');
-  const match = negate ? matchNotIn(set) : matchIn(set);
-  return {
-    label,
-    type: 'bracketClass',
-    pos,
-    index: begin,
-    match,
-  };
-};
-
-//------------------------------------------------------------------------------
-
-export { tokenize, getToken, getConcat, getBracketClass, getParenClose };
-
-tokenize('[a-c]');
+parse('[a-c]');
