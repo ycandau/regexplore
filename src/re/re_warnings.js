@@ -52,6 +52,12 @@ const warnings = {
     issue: 'A pair of parentheses contains no value',
     msg: 'The parser is ignoring the parentheses.',
   },
+  '\\E': {
+    type: '\\E',
+    label: '\\',
+    issue: 'No character after backslash',
+    msg: 'The parser is ignoring the backslash.',
+  },
 };
 
 const warn = (type, pos, index, list, info) => {
