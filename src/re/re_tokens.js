@@ -240,9 +240,7 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
   // Finalize lexemes
   const end = lexemes.length;
   const matches = [...set].join('');
-  const info = { begin, end, negate, matches };
-  describe(lexemes[begin], info);
-
+  const info = { begin, end: lexemes.length, negate, matches };
   const label = regex.slice(pos, state.pos) + ']';
 
   // Syntax error: open bracket with no closing
@@ -251,8 +249,11 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     eat(']', state);
     describe(lexemes[end], info);
   } else {
-    warn('[', state.pos, begin, warnings);
+    info.end--;
+    warn('[', pos, begin, warnings);
   }
+
+  describe(lexemes[begin], info);
 
   // Token
   return {
@@ -299,5 +300,3 @@ const getBracketClass = (label, pos, index, info) => {
 //------------------------------------------------------------------------------
 
 export { parse, getToken, getConcat, getBracketClass, getParenClose };
-
-parse('\\+\\+[a-c]okl');

@@ -39,9 +39,20 @@ const bracket = (begin, end, negate) => ({
   argType: 'bracket',
 });
 
+const warning = (type, index) => ({
+  type,
+  index,
+  argType: 'warning',
+});
+
+const invalid = (index) => ({
+  index,
+  argType: 'invalid',
+});
+
 //------------------------------------------------------------------------------
 
-const testParser = (regex, lexlength, tokLength, warnLength, args) => {
+const testParser = (regex, lexlength, tokLength, warnLength, args = []) => {
   it(`parses the regex ${regex}`, () => {
     const { lexemes, tokens, warnings } = parse(regex);
 
@@ -90,12 +101,29 @@ const testParser = (regex, lexlength, tokLength, warnLength, args) => {
         expect(lexeme.end).toBe(end);
         expect(lexeme.negate).toBe(negate);
       });
+
+    // Test warnings
+    args
+      .filter(({ argType }) => argType === 'warning')
+      .forEach(({ type, index }) => {
+        const types = warnings
+          .filter((w) => w.index === index)
+          .map((w) => w.type);
+        expect(types).toContain(type);
+      });
+
+    // Test invalid tokens
+    args
+      .filter(({ argType }) => argType === 'invalid')
+      .forEach(({ index }) => expect(tokens[index].invalid).toBe(true));
   });
 };
 
 //------------------------------------------------------------------------------
 
 describe('Regex engine: Parser', () => {
+  testParser('', 0, 0, 0);
+
   const args1 = [
     lexAndTok('a', 'charLiteral', 0, 0, ['a'], ['x']),
     lexAndTok('b', 'charLiteral', 1, 1),
@@ -119,6 +147,22 @@ describe('Regex engine: Parser', () => {
   testParser('\\ab*', 3, 3, 0, [arg5]);
 
   const args2 = [
+    lexAndTok('\\', 'escapedChar', 3, 2),
+    warning('\\E', 2),
+    invalid(2),
+  ];
+  testParser('\\ab\\', 3, 3, 1, args2);
+
+  const args3 = [
+    lexeme('[', '[', 0, 0),
+    lexeme('a', 'bracketChar', 1, 1),
+    lexeme(']', ']', 2, 2),
+    token('[a]', 'bracketClass', 0, 0, ['a'], ['x']),
+    bracket(0, 2, false),
+  ];
+  testParser('[a]', 3, 1, 0, args3);
+
+  const args4 = [
     lexeme('[', '[', 2, 1),
     lexeme('b', 'bracketChar', 3, 2),
     lexeme(']', ']', 4, 3),
@@ -126,9 +170,9 @@ describe('Regex engine: Parser', () => {
     lexAndTok('c', 'charLiteral', 5, 4),
     bracket(1, 3, false),
   ];
-  testParser('\\a[b]c', 5, 3, 0, args2);
+  testParser('\\a[b]c', 5, 3, 0, args4);
 
-  const args3 = [
+  const args5 = [
     lexeme('b', 'bracketRangeLow', 3, 2),
     lexeme('-', '-', 4, 3),
     lexeme('d', 'bracketRangeHigh', 5, 4),
@@ -136,27 +180,27 @@ describe('Regex engine: Parser', () => {
     lexAndTok('e', 'charLiteral', 7, 6),
     bracket(1, 5, false),
   ];
-  testParser('\\a[b-d]e', 7, 3, 0, args3);
+  testParser('\\a[b-d]e', 7, 3, 0, args5);
 
-  const args4 = [
+  const args6 = [
     lexeme('^', '^', 3, 2),
     lexeme('b', 'bracketChar', 4, 3),
     token('[^b]', 'bracketClass', 2, 1, ['a'], ['b']),
     lexAndTok('c', 'charLiteral', 6, 5),
     bracket(1, 4, true),
   ];
-  testParser('\\a[^b]c', 6, 3, 0, args4);
+  testParser('\\a[^b]c', 6, 3, 0, args6);
 
-  const args5 = [
+  const args7 = [
     lexeme(']', 'bracketChar', 3, 2),
     lexeme('b', 'bracketChar', 4, 3),
     token('[]b]', 'bracketClass', 2, 1, [']', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
     bracket(1, 4, false),
   ];
-  testParser('\\a[]b]c', 6, 3, 0, args5);
+  testParser('\\a[]b]c', 6, 3, 0, args7);
 
-  const args6 = [
+  const args8 = [
     lexeme('^', '^', 3, 2),
     lexeme(']', 'bracketChar', 4, 3),
     lexeme('b', 'bracketChar', 5, 4),
@@ -164,18 +208,18 @@ describe('Regex engine: Parser', () => {
     lexAndTok('c', 'charLiteral', 7, 6),
     bracket(1, 5, true),
   ];
-  testParser('\\a[^]b]c', 7, 3, 0, args6);
+  testParser('\\a[^]b]c', 7, 3, 0, args8);
 
-  const args7 = [
+  const args9 = [
     lexeme('-', 'bracketChar', 3, 2),
     lexeme('b', 'bracketChar', 4, 3),
     token('[-b]', 'bracketClass', 2, 1, ['-', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
     bracket(1, 4, false),
   ];
-  testParser('\\a[-b]c', 6, 3, 0, args7);
+  testParser('\\a[-b]c', 6, 3, 0, args9);
 
-  const args8 = [
+  const args10 = [
     lexeme('^', '^', 3, 2),
     lexeme('-', 'bracketChar', 4, 3),
     lexeme('b', 'bracketChar', 5, 4),
@@ -183,18 +227,18 @@ describe('Regex engine: Parser', () => {
     lexAndTok('c', 'charLiteral', 7, 6),
     bracket(1, 5, true),
   ];
-  testParser('\\a[^-b]c', 7, 3, 0, args8);
+  testParser('\\a[^-b]c', 7, 3, 0, args10);
 
-  const args9 = [
+  const args11 = [
     lexeme('b', 'bracketChar', 3, 2),
     lexeme('-', 'bracketChar', 4, 3),
     token('[b-]', 'bracketClass', 2, 1, ['-', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
     bracket(1, 4, false),
   ];
-  testParser('\\a[b-]c', 6, 3, 0, args9);
+  testParser('\\a[b-]c', 6, 3, 0, args11);
 
-  const args10 = [
+  const args12 = [
     lexeme('^', '^', 3, 2),
     lexeme('b', 'bracketChar', 4, 3),
     lexeme('-', 'bracketChar', 5, 4),
@@ -202,27 +246,59 @@ describe('Regex engine: Parser', () => {
     lexAndTok('c', 'charLiteral', 7, 6),
     bracket(1, 5, true),
   ];
-  testParser('\\a[^b-]c', 7, 3, 0, args10);
+  testParser('\\a[^b-]c', 7, 3, 0, args12);
 
-  const args11 = [
+  const args13 = [
     lexeme('-', 'bracketChar', 3, 2),
     token('[-]', 'bracketClass', 2, 1, ['-'], ['x']),
     lexAndTok('c', 'charLiteral', 5, 4),
     bracket(1, 3, false),
   ];
-  testParser('\\a[-]c', 5, 3, 0, args11);
+  testParser('\\a[-]c', 5, 3, 0, args13);
 
-  const args12 = [
+  const args14 = [
     lexeme('^', '^', 3, 2),
     lexeme('-', 'bracketChar', 4, 3),
     token('[^-]', 'bracketClass', 2, 1, ['x'], ['-']),
     lexAndTok('c', 'charLiteral', 6, 5),
     bracket(1, 4, true),
   ];
-  testParser('\\a[^-]c', 6, 3, 0, args12);
+  testParser('\\a[^-]c', 6, 3, 0, args14);
 
-  // testParser('\\a[-]e', 5, 3)
-  // testParser('\\a[-]e', )
+  const args15 = [
+    token('[]]', 'bracketClass', 0, 0, [']'], ['x']),
+    bracket(0, 1, false),
+    warning('[', 0),
+  ];
+  testParser('[]', 2, 1, 1, args15);
+
+  const args16 = [
+    token('[^]]', 'bracketClass', 0, 0, ['x'], [']']),
+    bracket(0, 2, true),
+    warning('[', 0),
+  ];
+  testParser('[^]', 3, 1, 1, args16);
+
+  const args17 = [
+    token('[b]', 'bracketClass', 2, 1, ['b'], ['x']),
+    bracket(1, 2, false),
+    warning('[', 1),
+  ];
+  testParser('\\a[b', 3, 2, 1, args17);
+
+  const args18 = [
+    token('[b-]', 'bracketClass', 2, 1, ['b', '-'], ['x']),
+    bracket(1, 3, false),
+    warning('[', 1),
+  ];
+  testParser('\\a[b-', 4, 2, 1, args18);
+
+  const args19 = [
+    token('[b-d]', 'bracketClass', 2, 1, ['b', 'c', 'd'], ['x', 'a', 'e']),
+    bracket(1, 4, false),
+    warning('[', 1),
+  ];
+  testParser('\\a[b-d', 5, 2, 1, args19);
 });
 
 //------------------------------------------------------------------------------
