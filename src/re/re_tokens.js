@@ -237,11 +237,13 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     tryReadBracketRange(state, add) || read('bracketChar', state, add);
   }
 
-  // Finalize
+  // Finalize lexemes
   const end = lexemes.length;
   const matches = [...set].join('');
   const info = { begin, end, negate, matches };
   describe(lexemes[begin], info);
+
+  const label = regex.slice(pos, state.pos) + ']';
 
   // Syntax error: open bracket with no closing
   const hasClosingBracket = regex[state.pos] === ']';
@@ -252,15 +254,13 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     warn('[', state.pos, begin, warnings);
   }
 
-  const label = regex.slice(pos, state.pos) + (hasClosingBracket ? '' : ']');
-
-  const match = negate ? matchNotIn(set) : matchIn(set);
+  // Token
   return {
     label,
     type: 'bracketClass',
     pos,
     index: begin,
-    match,
+    match: negate ? matchNotIn(set) : matchIn(set),
   };
 };
 

@@ -32,10 +32,17 @@ const lexAndTok = (label, type, pos, index, passes = [], fails = []) => ({
   argType: 'lexAndTok',
 });
 
+const bracket = (begin, end, negate) => ({
+  begin,
+  end,
+  negate,
+  argType: 'bracket',
+});
+
 //------------------------------------------------------------------------------
 
 const testParser = (regex, lexlength, tokLength, warnLength, args) => {
-  it(`parses the regex /${regex}/`, () => {
+  it(`parses the regex ${regex}`, () => {
     const { lexemes, tokens, warnings } = parse(regex);
 
     expect(lexemes.length).toBe(lexlength);
@@ -73,6 +80,16 @@ const testParser = (regex, lexlength, tokLength, warnLength, args) => {
           expect(token.match(ch)).toBe(false);
         });
       });
+
+    // Test bracket expressions
+    args
+      .filter(({ argType }) => argType === 'bracket')
+      .forEach(({ begin, end, negate }) => {
+        const lexeme = lexemes[begin];
+        expect(lexeme.begin).toBe(begin);
+        expect(lexeme.end).toBe(end);
+        expect(lexeme.negate).toBe(negate);
+      });
   });
 };
 
@@ -107,6 +124,7 @@ describe('Regex engine: Parser', () => {
     lexeme(']', ']', 4, 3),
     token('[b]', 'bracketClass', 2, 1, ['b'], ['a']),
     lexAndTok('c', 'charLiteral', 5, 4),
+    bracket(1, 3, false),
   ];
   testParser('\\a[b]c', 5, 3, 0, args2);
 
@@ -116,6 +134,7 @@ describe('Regex engine: Parser', () => {
     lexeme('d', 'bracketRangeHigh', 5, 4),
     token('[b-d]', 'bracketClass', 2, 1, ['b', 'c', 'd'], ['a', 'e', 'x']),
     lexAndTok('e', 'charLiteral', 7, 6),
+    bracket(1, 5, false),
   ];
   testParser('\\a[b-d]e', 7, 3, 0, args3);
 
@@ -124,6 +143,7 @@ describe('Regex engine: Parser', () => {
     lexeme('b', 'bracketChar', 4, 3),
     token('[^b]', 'bracketClass', 2, 1, ['a'], ['b']),
     lexAndTok('c', 'charLiteral', 6, 5),
+    bracket(1, 4, true),
   ];
   testParser('\\a[^b]c', 6, 3, 0, args4);
 
@@ -132,6 +152,7 @@ describe('Regex engine: Parser', () => {
     lexeme('b', 'bracketChar', 4, 3),
     token('[]b]', 'bracketClass', 2, 1, [']', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
+    bracket(1, 4, false),
   ];
   testParser('\\a[]b]c', 6, 3, 0, args5);
 
@@ -141,6 +162,7 @@ describe('Regex engine: Parser', () => {
     lexeme('b', 'bracketChar', 5, 4),
     token('[^]b]', 'bracketClass', 2, 1, ['x'], [']', 'b']),
     lexAndTok('c', 'charLiteral', 7, 6),
+    bracket(1, 5, true),
   ];
   testParser('\\a[^]b]c', 7, 3, 0, args6);
 
@@ -149,6 +171,7 @@ describe('Regex engine: Parser', () => {
     lexeme('b', 'bracketChar', 4, 3),
     token('[-b]', 'bracketClass', 2, 1, ['-', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
+    bracket(1, 4, false),
   ];
   testParser('\\a[-b]c', 6, 3, 0, args7);
 
@@ -158,6 +181,7 @@ describe('Regex engine: Parser', () => {
     lexeme('b', 'bracketChar', 5, 4),
     token('[^-b]', 'bracketClass', 2, 1, ['x'], ['-', 'b']),
     lexAndTok('c', 'charLiteral', 7, 6),
+    bracket(1, 5, true),
   ];
   testParser('\\a[^-b]c', 7, 3, 0, args8);
 
@@ -166,6 +190,7 @@ describe('Regex engine: Parser', () => {
     lexeme('-', 'bracketChar', 4, 3),
     token('[b-]', 'bracketClass', 2, 1, ['-', 'b'], ['x']),
     lexAndTok('c', 'charLiteral', 6, 5),
+    bracket(1, 4, false),
   ];
   testParser('\\a[b-]c', 6, 3, 0, args9);
 
@@ -175,8 +200,29 @@ describe('Regex engine: Parser', () => {
     lexeme('-', 'bracketChar', 5, 4),
     token('[^b-]', 'bracketClass', 2, 1, ['x'], ['-', 'b']),
     lexAndTok('c', 'charLiteral', 7, 6),
+    bracket(1, 5, true),
   ];
   testParser('\\a[^b-]c', 7, 3, 0, args10);
+
+  const args11 = [
+    lexeme('-', 'bracketChar', 3, 2),
+    token('[-]', 'bracketClass', 2, 1, ['-'], ['x']),
+    lexAndTok('c', 'charLiteral', 5, 4),
+    bracket(1, 3, false),
+  ];
+  testParser('\\a[-]c', 5, 3, 0, args11);
+
+  const args12 = [
+    lexeme('^', '^', 3, 2),
+    lexeme('-', 'bracketChar', 4, 3),
+    token('[^-]', 'bracketClass', 2, 1, ['x'], ['-']),
+    lexAndTok('c', 'charLiteral', 6, 5),
+    bracket(1, 4, true),
+  ];
+  testParser('\\a[^-]c', 6, 3, 0, args12);
+
+  // testParser('\\a[-]e', 5, 3)
+  // testParser('\\a[-]e', )
 });
 
 //------------------------------------------------------------------------------
