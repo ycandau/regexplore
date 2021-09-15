@@ -34,7 +34,7 @@ const runParser = (input, rpn, ...tokens) => {
   });
 };
 
-const runBracketClass = (input, matches) => {
+const runBracketClass = (input) => {
   it(`runs the bracket class /${input}/`, () => {
     const parser = new Parser(input);
     const token = parser.rpn[0];
@@ -44,14 +44,6 @@ const runBracketClass = (input, matches) => {
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-
-    const matchString = [...token.matches].join('');
-    expect(matchString).toBe(matches);
-
-    matches.split('').forEach((ch) => {
-      expect(token.match(ch)).toBe(!token.negate);
-    });
-    expect(token.match('X')).toBe(token.negate);
 
     expect(parser.rpn.length).toBe(1);
     expect(parser.operators.length).toBe(0);
@@ -111,16 +103,16 @@ describe('RE parser: General tests', () => {
 //------------------------------------------------------------------------------
 
 describe('RE parser: Bracket expressions', () => {
-  runBracketClass('[abc]', 'abc');
-  runBracketClass('[a-d]', 'abcd');
+  runBracketClass('[abc]');
+  runBracketClass('[a-d]');
 
-  runBracketClass('[]abc]', ']abc');
-  runBracketClass('[-abc]', '-abc');
-  runBracketClass('[abc-]', 'abc-');
+  runBracketClass('[]abc]');
+  runBracketClass('[-abc]');
+  runBracketClass('[abc-]');
 
-  runBracketClass('[^]abc]', ']abc');
-  runBracketClass('[^-abc]', '-abc');
-  runBracketClass('[^abc-]', 'abc-');
+  runBracketClass('[^]abc]');
+  runBracketClass('[^-abc]');
+  runBracketClass('[^abc-]');
 });
 
 //------------------------------------------------------------------------------
@@ -128,26 +120,26 @@ describe('RE parser: Bracket expressions', () => {
 describe('RE parser: Edge cases', () => {
   runEdgeCase('', '', '', 0);
 
-  runEdgeCase('ab[cd', 'ab~[cd]~', 'ab[cd]', 1, ['!['], [2]);
-  runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', 1, ['!('], [2]);
-  runEdgeCase('a(b(c', 'abc(~(~', 'a(b(c))', 2, ['!(', '!('], [3, 1]);
-  runEdgeCase('a(b[c', 'ab[c]~(~', 'a(b[c])', 2, ['![', '!('], [3, 1]);
-  runEdgeCase('ab)cd', 'ab~c~d~', 'abcd', 1, ['!)'], [2]);
-  runEdgeCase('a)b)c)d', 'ab~c~d~', 'abcd', 3, ['!)', '!)', '!)'], [1, 3, 5]);
-  runEdgeCase(')ab', 'ab~', 'ab', 1, ['!)'], [0]);
+  runEdgeCase('ab[cd', 'ab~[cd]~', 'ab[cd]', 1, ['['], [2]);
+  runEdgeCase('ab(cd', 'ab~cd~(~', 'ab(cd)', 1, ['('], [2]);
+  runEdgeCase('a(b(c', 'abc(~(~', 'a(b(c))', 2, ['(', '('], [3, 1]);
+  runEdgeCase('a(b[c', 'ab[c]~(~', 'a(b[c])', 2, ['[', '('], [3, 1]);
+  runEdgeCase('ab)cd', 'ab~c~d~', 'abcd', 1, [')'], [2]);
+  runEdgeCase('a)b)c)d', 'ab~c~d~', 'abcd', 3, [')', ')', ')'], [1, 3, 5]);
+  runEdgeCase(')ab', 'ab~', 'ab', 1, [')'], [0]);
   runEdgeCase('a(b))c', 'ab(~c~', 'a(b)c', 1);
 
-  runEdgeCase('*ab', 'ab~', 'ab', 1, ['!E*'], [0]);
-  runEdgeCase('a|+b', 'ab|', 'a|b', 1, ['!E*'], [2]);
-  runEdgeCase('a(?b)', 'ab(~', 'a(b)', 1, ['!E*'], [2]);
-  runEdgeCase('*ab', 'ab~', 'ab', 1, ['!E*'], [0]);
-  runEdgeCase('*)ab', 'ab~', 'ab', 2, ['!)', '!E*'], [1, 0]);
+  runEdgeCase('*ab', 'ab~', 'ab', 1, ['E*'], [0]);
+  runEdgeCase('a|+b', 'ab|', 'a|b', 1, ['E*'], [2]);
+  runEdgeCase('a(?b)', 'ab(~', 'a(b)', 1, ['E*'], [2]);
+  runEdgeCase('*ab', 'ab~', 'ab', 1, ['E*'], [0]);
+  runEdgeCase('*)ab', 'ab~', 'ab', 2, [')', 'E*'], [1, 0]);
 
-  runEdgeCase('ab??', 'ab?~', 'ab?', 1, ['!**'], [3]);
-  runEdgeCase('ab**', 'ab*~', 'ab*', 1, ['!**'], [3]);
-  runEdgeCase('ab++', 'ab+~', 'ab+', 1, ['!**'], [3]);
-  runEdgeCase('ab??+', 'ab*~', 'ab*', 2, ['!**', '!**'], [3, 4]);
-  runEdgeCase('ab++?', 'ab*~', 'ab*', 2, ['!**', '!**'], [3, 4]);
+  runEdgeCase('ab??', 'ab?~', 'ab?', 1, ['**'], [3]);
+  runEdgeCase('ab**', 'ab*~', 'ab*', 1, ['**'], [3]);
+  runEdgeCase('ab++', 'ab+~', 'ab+', 1, ['**'], [3]);
+  runEdgeCase('ab??+', 'ab*~', 'ab*', 2, ['**', '**'], [3, 4]);
+  runEdgeCase('ab++?', 'ab*~', 'ab*', 2, ['**', '**'], [3, 4]);
 
   runEdgeCase('|a', 'a', 'a', 1);
   runEdgeCase('||a', 'a', 'a', 2);

@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { warn } from './re_warnings.js';
+import { warn } from './re_warnings';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -45,28 +45,12 @@ const operator = (label) => (pos, index) => ({
   index,
 });
 
+const getConcat = () => operator('~')(null, null);
+
+const getParenClose = (pos, index) => operator(')')(pos, index);
+
 //------------------------------------------------------------------------------
 // Satic tokens
-
-const tokens = {
-  // Values
-  '.': value('.', '.', matchAll),
-
-  '\\d': value('\\d', 'charClass', matchIn(digits)),
-  '\\D': value('\\D', 'charClass', matchNotIn(digits)),
-  '\\w': value('\\w', 'charClass', matchIn(words)),
-  '\\W': value('\\W', 'charClass', matchNotIn(words)),
-  '\\s': value('\\s', 'charClass', matchIn(spaces)),
-  '\\S': value('\\S', 'charClass', matchNotIn(spaces)),
-
-  // Operators
-  '|': operator('|'),
-  '?': operator('?'),
-  '*': operator('*'),
-  '+': operator('+'),
-  '(': operator('('),
-  ')': operator(')'),
-};
 
 const staticTokens = {
   // Values
@@ -262,41 +246,12 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     pos,
     index: begin,
     match: negate ? matchNotIn(set) : matchIn(set),
-  };
-};
-
-//------------------------------------------------------------------------------
-// Get tokens
-
-// Used in re_parser, to be refactored out
-
-const getToken = (label, pos, index) => {
-  const ch = label[0];
-
-  const createToken =
-    ch in tokens
-      ? tokens[ch]
-      : label in tokens
-      ? tokens[label]
-      : ch === '\\'
-      ? value(label, 'escapedChar', match(label[1]))
-      : value(ch, 'charLiteral', match(ch));
-
-  return createToken(pos, index);
-};
-
-const getConcat = () => operator('~')(null, null);
-
-const getParenClose = (pos, index) => operator(')')(pos, index);
-
-const getBracketClass = (label, pos, index, info) => {
-  const match = info.negate ? matchNotIn(info.matches) : matchIn(info.matches);
-  return {
-    ...value(label, 'bracketClass', match)(pos, index),
-    ...info,
+    begin: info.begin, // @todo
+    end: info.end,
+    negate,
   };
 };
 
 //------------------------------------------------------------------------------
 
-export { parse, getToken, getConcat, getBracketClass, getParenClose };
+export { parse, getConcat, getParenClose };
