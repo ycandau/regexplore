@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { warn } from './re_warnings';
+import { warn } from './re_warnings.js';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -232,7 +232,7 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
   tryRead(']', 'bracketChar', state, add) ||
     tryRead('-', 'bracketChar', state, add);
 
-  // Try char range, otherwise read char literal
+  // Try a character range, otherwise read a chararacter literal
   while (state.pos < regex.length && regex[state.pos] !== ']') {
     tryReadBracketRange(state, add) || read('bracketChar', state, add);
   }
@@ -252,7 +252,8 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     warn('[', state.pos, begin, warnings);
   }
 
-  const label = regex.slice(begin, end + 1) + (hasClosingBracket ? '' : ']');
+  const label = regex.slice(pos, state.pos) + (hasClosingBracket ? '' : ']');
+
   const match = negate ? matchNotIn(set) : matchIn(set);
   return {
     label,
@@ -299,4 +300,4 @@ const getBracketClass = (label, pos, index, info) => {
 
 export { parse, getToken, getConcat, getBracketClass, getParenClose };
 
-parse('[a-c]');
+parse('\\+\\+[a-c]okl');
