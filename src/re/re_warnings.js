@@ -60,9 +60,9 @@ const warnings = {
   },
 };
 
-const warn = (type, pos, index, list, info) => {
+const warn = (type, pos, index, warnings, info) => {
   const warning = { type, pos, index, ...info };
-  list.push(warning);
+  warnings.push(warning);
 };
 
 export { warn };
