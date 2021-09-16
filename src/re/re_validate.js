@@ -111,6 +111,12 @@ const validate = (tokens, warnings) => {
     ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
   }
 
+  // Empty term: from alternation to closing parenthesis
+  if (prevAlternation && termIsEmpty) {
+    warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
+    prevAlternation.invalid = true;
+  }
+
   return tokens;
 };
 
