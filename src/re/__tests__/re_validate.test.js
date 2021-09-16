@@ -77,12 +77,6 @@ describe('Regex engine: Validation', () => {
   testValidation('||a', 'a', 2, [warning('E|', 0), warning('E|', 1)]);
   testValidation('a|||b', 'a|b', 2, [warning('E|', 2), warning('E|', 3)]);
 
-  // Quantifiers
-
-  testValidation('?', '', 1, [warning('E*', 0)]);
-  testValidation('*', '', 1, [warning('E*', 0)]);
-  testValidation('+', '', 1, [warning('E*', 0)]);
-
   // Empty parentheses
 
   testValidation('()', '', 1, [warning('()', 1)]);
@@ -91,6 +85,22 @@ describe('Regex engine: Validation', () => {
   testValidation('(())', '', 2, [warning('()', 2), warning('()', 3)]);
   testValidation('(a())', '(a)', 1, [warning('()', 3)]);
   testValidation('(()a)', '(a)', 1, [warning('()', 2)]);
+
+  // Quantifiers
+
+  testValidation('?', '', 1, [warning('E*', 0)]);
+  testValidation('*', '', 1, [warning('E*', 0)]);
+  testValidation('+', '', 1, [warning('E*', 0)]);
+  testValidation('**', '', 2, [warning('E*', 0), warning('E*', 1)]);
+  testValidation('a??', 'a?', 1, [warning('**', 2)]);
+  testValidation('a++', 'a+', 1, [warning('**', 2)]);
+  testValidation('a**', 'a*', 1, [warning('**', 2)]);
+  testValidation('a?*', 'a*', 1, [warning('**', 2)]);
+  testValidation('a*?', 'a*', 1, [warning('**', 2)]);
+  testValidation('a+*', 'a*', 1, [warning('**', 2)]);
+  testValidation('a*+', 'a*', 1, [warning('**', 2)]);
+  testValidation('a?+', 'a*', 1, [warning('**', 2)]);
+  testValidation('a+?', 'a*', 1, [warning('**', 2)]);
 
   // Combination
 
