@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Parse the regex
+// Validate the regex
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -10,10 +10,11 @@ import { getConcat, getParenClose } from './re_parse';
 
 //------------------------------------------------------------------------------
 
-const validate = (tokens) => {
+const validate = (tokens, warnings) => {
   const stack = [];
-  let termIsEmpty = true;
   let exprIsEmpty = true;
+  let termIsEmpty = true;
+  let prevAlternation = null;
   // let prevToken = {};
 
   for (const token of tokens) {
@@ -25,36 +26,73 @@ const validate = (tokens) => {
       case 'charClass':
       case 'bracketClass':
       case '.':
-        termIsEmpty = false;
         exprIsEmpty = false;
+        termIsEmpty = false;
         break;
+
       case '|':
-        if (termIsEmpty) warn();
+        if (termIsEmpty) {
+          warn('E|', token.pos, token.index, warnings);
+          token.invalid = true;
+          break;
+        }
         termIsEmpty = true;
+        prevAlternation = token;
         break;
+
       case '?':
-        if (termIsEmpty) warn();
-        break;
       case '*':
-        if (termIsEmpty) warn();
-        break;
       case '+':
-        if (termIsEmpty) warn();
+        // Empty quantifier operand
+        if (termIsEmpty) {
+          warn('E*', token.pos, token.index, warnings, { label: token.type });
+          token.invalid = true;
+          break;
+        }
         break;
+
       case '(':
-        stack.push({ termIsEmpty, exprIsEmpty });
+        stack.push({ termIsEmpty, exprIsEmpty, prevAlternation, open: token });
         exprIsEmpty = true;
+        termIsEmpty = true;
+        prevAlternation = null;
         break;
+
       case ')':
-        if (exprIsEmpty) warn();
-        if (termIsEmpty) warn();
-        ({ termIsEmpty, exprIsEmpty } = stack.pop());
+        // No opening parenthesis
+        if (stack.length === 0) {
+          warn(')', token.pos, token.index, warnings);
+          token.invalid = true;
+          break;
+        }
+
+        const state = stack.pop();
+
+        // Empty parentheses
+        if (exprIsEmpty) {
+          warn('()', token.pos, token.index, warnings);
+          token.invalid = true;
+          state.open.invalid = true;
+        }
+
+        // Empty term: from alternation to closing parenthesis
+        if (prevAlternation && termIsEmpty) {
+          warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
+          prevAlternation.invalid = true;
+        }
+
+        ({ termIsEmpty, exprIsEmpty, prevAlternation } = stack.pop());
         break;
       default:
         break;
     }
 
     // prevToken = token;
+  }
+
+  // Missing closing parentheses
+  while (stack.length !== 0) {
+    //
   }
 
   return tokens;
