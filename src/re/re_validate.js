@@ -86,13 +86,29 @@ const validate = (tokens, warnings) => {
       default:
         break;
     }
-
-    // prevToken = token;
   }
 
   // Missing closing parentheses
   while (stack.length !== 0) {
-    //
+    const state = stack.pop();
+    const open = state.open;
+
+    // Empty parentheses
+    if (exprIsEmpty) {
+      warn('(E', open.pos, open.index, warnings);
+      open.invalid = true;
+    } else {
+      warn('(', open.pos, open.index, warnings);
+      tokens.push(getParenClose());
+    }
+
+    // Empty term: from alternation to closing parenthesis
+    if (prevAlternation && termIsEmpty) {
+      warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
+      prevAlternation.invalid = true;
+    }
+
+    ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
   }
 
   return tokens;
