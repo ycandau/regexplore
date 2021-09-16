@@ -7,6 +7,7 @@
 
 import { warn } from './re_warnings';
 import { getParenClose } from './re_parse';
+import { TextFormatTwoTone } from '@material-ui/icons';
 
 //------------------------------------------------------------------------------
 
@@ -81,7 +82,10 @@ const validate = (tokens, warnings) => {
           prevAlternation.invalid = true;
         }
 
-        ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
+        termIsEmpty = state.termIsEmpty && exprIsEmpty;
+        exprIsEmpty = state.exprIsEmpty && exprIsEmpty;
+        prevAlternation = state.prevAlternation;
+
         break;
       default:
         break;

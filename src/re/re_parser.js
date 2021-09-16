@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 import { descriptions, warnings } from './re_static_info';
-import { parse, getConcat, getParenClose } from './re_parse';
+import { parse, getConcat, getParenClose2 } from './re_parse';
 
 import compile from './re_compile';
 import graph from './re_graph';
@@ -102,7 +102,7 @@ class Parser {
     // Syntax error: missing closing parenthesis
     while (parens.length > 0) {
       const open = parens.pop();
-      const close = getParenClose(open.pos, open.index);
+      const close = getParenClose2(open.pos, open.index);
       this.tokens.push(close);
       this.addWarning('(', open.pos, open.index);
       countErrors++;
