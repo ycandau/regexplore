@@ -101,6 +101,8 @@ describe('Regex engine: Validation', () => {
   testValidation('a*+', 'a*', 1, [warning('**', 2)]);
   testValidation('a?+', 'a*', 1, [warning('**', 2)]);
   testValidation('a+?', 'a*', 1, [warning('**', 2)]);
+  testValidation('a??+', 'a*', 2, [warning('**', 2), warning('**', 3)]);
+  testValidation('a?++', 'a*', 2, [warning('**', 2), warning('**', 3)]);
 
   // Combination
 

@@ -49,8 +49,6 @@ const getConcat = () => operator('~')(null, null);
 
 const getParenClose = (pos, index) => operator(')')(pos, index);
 
-const getParenClose2 = (pos, index) => operator(')')(pos, index);
-
 //------------------------------------------------------------------------------
 // Satic tokens
 
@@ -256,4 +254,4 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
 
 //------------------------------------------------------------------------------
 
-export { parse, getConcat, getParenClose, getParenClose2 };
+export { parse, getConcat, getParenClose };

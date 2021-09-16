@@ -157,10 +157,10 @@ const validateQuantifiers = (tokens, warnings) => {
       token.invalid = true;
       prevToken.label = replacement;
       prevToken.type = replacement;
+    } else {
+      prevToken = token;
+      prevIsQuantifier = currentIsQuantifier;
     }
-
-    prevToken = token;
-    prevIsQuantifier = currentIsQuantifier;
   }
 };
 
@@ -170,6 +170,8 @@ const validate = (tokens, warnings) => {
   validateParentheses(tokens, warnings);
   validateEmptyValues(tokens, warnings);
   validateQuantifiers(tokens, warnings);
+
+  return tokens.filter((token) => !token.invalid);
 };
 
 //------------------------------------------------------------------------------

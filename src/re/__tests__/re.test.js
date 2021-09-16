@@ -158,9 +158,9 @@ describe('RE parser: Edge cases', () => {
   runEdgeCase('a(()b)c', 'ab(~c~', 'a(b)c', 1);
   runEdgeCase('a(b())c', 'ab(~c~', 'a(b)c', 1);
 
-  runEdgeCase('a(', 'a', 'a', 2);
-  runEdgeCase('a((', 'a', 'a', 4);
-  runEdgeCase('a(*', 'a', 'a', 3);
+  runEdgeCase('a(', 'a', 'a', 1);
+  runEdgeCase('a((', 'a', 'a', 2);
+  runEdgeCase('a(*', 'a', 'a', 2);
   runEdgeCase('a((*)(|))', 'a', 'a', 5);
 });
 
