@@ -139,16 +139,42 @@ const validateEmptyValues = (tokens, warnings) => {
 
 //------------------------------------------------------------------------------
 
+const validateQuantifiers = (tokens, warnings) => {
+  let prevToken = {};
+  let prevIsQuantifier = false;
+
+  for (const token of tokens) {
+    if (token.invalid) continue;
+
+    const currentIsQuantifier =
+      token.type === '?' || token.type === '*' || token.type === '+';
+
+    if (prevIsQuantifier && currentIsQuantifier) {
+      const label = `${prevToken.type}${token.type}`;
+      const replacement = label === '??' ? '?' : label === '++' ? '+' : '*';
+
+      warn('**', token.pos, token.index, warnings, { label });
+      token.invalid = true;
+      prevToken.label = replacement;
+      prevToken.type = replacement;
+    }
+
+    prevToken = token;
+    prevIsQuantifier = currentIsQuantifier;
+  }
+};
+
+//------------------------------------------------------------------------------
+
 const validate = (tokens, warnings) => {
   validateParentheses(tokens, warnings);
   validateEmptyValues(tokens, warnings);
+  validateQuantifiers(tokens, warnings);
 };
 
 //------------------------------------------------------------------------------
 
 const filterTokens = (tokens) => tokens.filter((token) => !token.invalid);
-
-const isQuantifier = (token) => ['?', '*', '+'].includes(token.type);
 
 const isValue = (token) =>
   token.type && token.type !== '|' && token.type !== '(';
@@ -189,6 +215,9 @@ const ppParentheses = () => {
 };
 
 //------------------------------------------------------------------------------
+
+const isQuantifier = (token) =>
+  token.type === '?' || token.type === '*' || token.type === '?';
 
 const ppQuantifiers = () => {
   if (this.tokens.length === 0) return 0;
