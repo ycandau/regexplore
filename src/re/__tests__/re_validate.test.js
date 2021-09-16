@@ -55,4 +55,21 @@ describe('Regex engine: Validation', () => {
   testValidation(')a', 'a', 1, [warning(')', 0)]);
   testValidation('a)b', 'ab', 1, [warning(')', 1)]);
   testValidation('a)b)c', 'abc', 2, [warning(')', 1), warning(')', 3)]);
+
+  testValidation('|', '', 1, [warning('E|', 0)]);
+  testValidation('a|', 'a', 1, [warning('|E', 1)]);
+  testValidation('|a', 'a', 1, [warning('E|', 0)]);
+  testValidation('a||', 'a', 2, [warning('|E', 1), warning('E|', 2)]);
+  testValidation('||a', 'a', 2, [warning('E|', 0), warning('E|', 1)]);
+  testValidation('a|||b', 'a|b', 2, [warning('E|', 2), warning('E|', 3)]);
+
+  testValidation('?', '', 1, [warning('E*', 0)]);
+  testValidation('*', '', 1, [warning('E*', 0)]);
+  testValidation('+', '', 1, [warning('E*', 0)]);
+
+  testValidation('()', '', 1, [warning('()', 1)]);
+
+  testValidation('(', '', 1, [warning('(E', 0)]);
+  testValidation('a(', 'a', 1, [warning('(E', 1)]);
+  testValidation('(a', '(a)', 1, [warning('(', 0)]);
 });

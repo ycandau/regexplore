@@ -1,3 +1,7 @@
+//------------------------------------------------------------------------------
+// Test the lexer and parser
+//------------------------------------------------------------------------------
+
 import { parse } from '../re_parse';
 
 //------------------------------------------------------------------------------
@@ -107,8 +111,8 @@ const testParser = (regex, lexlength, tokLength, warnLength, args = []) => {
       .filter(({ argType }) => argType === 'warning')
       .forEach(({ type, index }) => {
         const types = warnings
-          .filter((w) => w.index === index)
-          .map((w) => w.type);
+          .filter((warn) => warn.index === index)
+          .map((warn) => warn.type);
         expect(types).toContain(type);
       });
 

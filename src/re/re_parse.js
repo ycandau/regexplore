@@ -47,7 +47,7 @@ const operator = (label) => (pos, index) => ({
 
 const getConcat = () => operator('~')(null, null);
 
-const getParenClose = (pos, index) => operator(')')(pos, index);
+const getParenClose = () => operator(')')(null, null);
 
 //------------------------------------------------------------------------------
 // Satic tokens
