@@ -6,7 +6,7 @@
 // Imports
 
 import { warn } from './re_warnings';
-import { getConcat, getParenClose } from './re_parse';
+import { getParenClose } from './re_parse';
 
 //------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ const validate = (tokens, warnings) => {
           prevAlternation.invalid = true;
         }
 
-        ({ termIsEmpty, exprIsEmpty, prevAlternation } = stack.pop());
+        ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
         break;
       default:
         break;
