@@ -175,7 +175,7 @@ const parentheses = (frag, token) => {
   const height = frag.height;
   const nodes = [open, ...frag.nodes, close];
 
-  return newFragment(open, [close], token.begin, token.end, height, nodes);
+  return newFragment(open, [close], token.index, token.end, height, nodes);
 };
 
 //------------------------------------------------------------------------------
@@ -205,9 +205,9 @@ const binary = (fragments, operation, token, lexemes) => {
 };
 
 //------------------------------------------------------------------------------
-// Compile the RPN list of tokens into a NFA
+// Build a NFA from the RPN list of tokens
 
-const compile = (rpn, lexemes) => {
+const buildNFA = (rpn, lexemes) => {
   const fragments = [];
   pushValue(fragments, { label: '>', type: 'first' });
 
@@ -259,4 +259,4 @@ const compile = (rpn, lexemes) => {
 
 //------------------------------------------------------------------------------
 
-export default compile;
+export default buildNFA;

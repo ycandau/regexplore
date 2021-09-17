@@ -1,11 +1,11 @@
-import Parser, { generateRegexFromRPN } from '../re_parser';
+import { compile, generateRegexFromRPN } from '../re_parser';
 
 //------------------------------------------------------------------------------
 
 const rpnStr = (parser) => parser.rpn.map((token) => token.label).join('');
 
 const descriptionsStr = (parser) =>
-  parser.descriptions.map((descrip) => descrip.label).join('');
+  parser.lexemes.map((descrip) => descrip.label).join('');
 
 const token = (rpnIndex, pos, index, label, type) => ({
   rpnIndex,
@@ -17,7 +17,7 @@ const token = (rpnIndex, pos, index, label, type) => ({
 
 const runParser = (input, rpn, ...tokens) => {
   it(`runs the input /${input}/`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
@@ -35,7 +35,7 @@ const runParser = (input, rpn, ...tokens) => {
 
 const runBracketClass = (input) => {
   it(`runs the bracket class /${input}/`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
     const token = parser.rpn[0];
 
     expect(token.label).toBe(input);
@@ -49,7 +49,7 @@ const runBracketClass = (input) => {
 
 const runEdgeCase = (input, rpn, fixed, count, types = [], positions = []) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);

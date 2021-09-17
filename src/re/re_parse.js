@@ -72,11 +72,37 @@ const staticTokens = {
   ')': operator(')'),
 };
 
+const typeToDisplayType = {
+  charLiteral: 'value',
+  escapedChar: 'value',
+  charClass: 'value-special',
+  bracketChar: 'value',
+  bracketRangeLow: 'value-special',
+  bracketRangeHigh: 'value-special',
+  '.': 'value-special',
+  '?': 'quantifier',
+  '*': 'quantifier',
+  '+': 'quantifier',
+  '|': 'operator',
+  '(': 'delimiter',
+  ')': 'delimiter',
+  '[': 'delimiter',
+  ']': 'delimiter',
+  '-': 'value-special',
+  '^': 'operator',
+};
+
 //------------------------------------------------------------------------------
 // Helper functions for lexemes
 
 const addLexeme = (lexemes, label, type, pos) => {
-  const lexeme = { label, type, pos, index: lexemes.length };
+  const lexeme = {
+    label,
+    type,
+    pos,
+    index: lexemes.length,
+    displayType: typeToDisplayType[type],
+  };
   lexemes.push(lexeme);
 };
 

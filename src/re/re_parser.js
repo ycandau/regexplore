@@ -2,37 +2,25 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import { descriptions } from './re_static_info';
-
 import parse from './re_parse';
 import validate from './re_validate';
 import convertToRPN from './re_rpn';
-import compile from './re_compile';
-import graph from './re_graph';
+import buildNFA from './re_nfa';
+import buildGraph from './re_graph';
 
 //------------------------------------------------------------------------------
 
-const typeToDisplayType = {
-  charLiteral: 'value',
-  escapedChar: 'value',
-  charClass: 'value-special',
-  bracketChar: 'value',
-  bracketRangeLow: 'value-special',
-  bracketRangeHigh: 'value-special',
-  '.': 'value-special',
-  '?': 'quantifier',
-  '*': 'quantifier',
-  '+': 'quantifier',
-  '|': 'operator',
-  '(': 'delimiter',
-  ')': 'delimiter',
-  '[': 'delimiter',
-  ']': 'delimiter',
-  '-': 'value-special',
-  '^': 'operator',
+const compile = (regex) => {
+  const { lexemes, tokens, warnings } = parse(regex);
+  const validTokens = validate(tokens, warnings);
+  const rpn = convertToRPN(validTokens, lexemes);
+  const { nfa, nodes } = buildNFA(rpn, lexemes);
+  const graph = buildGraph(nodes);
+
+  return { lexemes, rpn, nfa, nodes, graph, warnings };
 };
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 const concatLabels = (descriptions, begin, end) => {
   let str = '';
@@ -42,59 +30,30 @@ const concatLabels = (descriptions, begin, end) => {
   return str;
 };
 
-//------------------------------------------------------------------------------
+const getTokenInfo = (index, lexemes, descriptions) => {
+  const token = lexemes[index];
 
-class Parser {
-  constructor(input) {
-    const { lexemes, tokens, warnings } = parse(input);
-    this.tokens = validate(tokens, warnings);
-    this.rpn = convertToRPN(tokens, lexemes);
+  // @bug: Issue when deleting under hover
+  if (token === undefined) return null;
 
-    this.descriptions = lexemes;
-    this.warnings = warnings;
-    this.nfa = null;
+  const type = token.type === 'charClass' ? token.label : token.type;
 
-    const { nfa, nodes } = compile(this.rpn, lexemes);
-    this.nfa = nfa;
-    this.nodes = nodes;
-
-    // Generate editorInfo object
-    this.editorInfo = this.descriptions.map((descrip) => ({
-      ...descrip,
-      displayType: typeToDisplayType[descrip.type],
-    }));
-
-    this.graph = graph(nodes);
+  const operands = [];
+  if (token.begin !== undefined && token.end !== undefined) {
+    operands.push(concatLabels(lexemes, token.begin + 1, token.end - 1));
+  }
+  if (token.beginL !== undefined && token.endL !== undefined) {
+    operands.push(concatLabels(lexemes, token.beginL, token.endL));
+  }
+  if (token.beginR !== undefined && token.endR !== undefined) {
+    operands.push(concatLabels(lexemes, token.beginR, token.endR));
   }
 
-  //----------------------------------------------------------------------------
+  const info = { pos: token.pos, label: token.label, ...descriptions[type] };
+  if (operands.length) info.operands = operands;
+  return info;
+};
 
-  tokenInfo(index) {
-    const token = this.descriptions[index];
-
-    // @bug: Issue when deleting under hover
-    if (token === undefined) return undefined;
-
-    const type = token.type === 'charClass' ? token.label : token.type;
-
-    const operands = [];
-    if (token.begin !== undefined && token.end !== undefined) {
-      operands.push(
-        concatLabels(this.descriptions, token.begin + 1, token.end - 1)
-      );
-    }
-    if (token.beginL !== undefined && token.endL !== undefined) {
-      operands.push(concatLabels(this.descriptions, token.beginL, token.endL));
-    }
-    if (token.beginR !== undefined && token.endR !== undefined) {
-      operands.push(concatLabels(this.descriptions, token.beginR, token.endR));
-    }
-
-    const info = { pos: token.pos, label: token.label, ...descriptions[type] };
-    if (operands.length) info.operands = operands;
-    return info;
-  }
-}
 //----------------------------------------------------------------------------
 
 const generateRegexFromRPN = (rpn) => {
@@ -139,5 +98,4 @@ const generateRegexFromRPN = (rpn) => {
 
 //------------------------------------------------------------------------------
 
-export { generateRegexFromRPN };
-export default Parser;
+export { compile, getTokenInfo, generateRegexFromRPN };

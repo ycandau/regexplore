@@ -67,7 +67,6 @@ const convertToRPN = (tokens, lexemes) => {
 
       case '(':
         if (isValue(prevToken)) concat(rpn, operators);
-        token.begin = token.index;
         operators.push(token);
         break;
 

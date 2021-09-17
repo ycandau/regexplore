@@ -24,7 +24,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import Parser from '../re/re_parser';
+import { descriptions } from '../re/re_static_info';
+import { compile, getTokenInfo, generateRegexFromRPN } from '../re/re_parser';
 import { stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready
@@ -93,7 +94,7 @@ const initHistory = (parser) => ({
 
 const initLogs = () => ({ first: 0, list: [] });
 
-const defaultParser = new Parser('a+(abc)*|abc|def');
+const defaultParser = compile('a+(abc)*|abc|def');
 const defaultHistory = initHistory(defaultParser);
 
 const MAX_LOGS = 8;
@@ -217,7 +218,7 @@ const App = () => {
 
   // To set a new regex
   const setNewRegex = (regex) => {
-    const parser = new Parser(regex);
+    const parser = compile(regex);
     setParser(() => parser);
     setHistory(() => initHistory(parser));
     setLogs(initLogs());
@@ -258,15 +259,8 @@ const App = () => {
       'Hover over any character in the regex to get information on it.',
   };
 
-  // Issue when deleting under hover @bug
-  const getTokenInfo = (index) => {
-    if (index === null || index === undefined) return defaultInfo;
-    const info = parser.tokenInfo(editorIndex);
-    if (info === null || info === undefined) return defaultInfo;
-    return info;
-  };
-
-  const tokenInfo = getTokenInfo(editorIndex);
+  const tokenInfo =
+    getTokenInfo(editorIndex, parser.lexemes, descriptions) || defaultInfo;
 
   //----------------------------------------------------------------------------
   // LogBox
@@ -380,8 +374,8 @@ const App = () => {
   // Callbacks
 
   const doFix = () => {
-    const newRegex = parser.fix();
-    const newParser = new Parser(newRegex);
+    const newRegex = generateRegexFromRPN(parser.rpn);
+    const newParser = compile(newRegex);
     setParser(() => newParser);
     setHistory(() => initHistory(parser));
   };
@@ -500,7 +494,7 @@ const App = () => {
       <div className={classes.editorBox}>
         <Editor
           index={editorIndex}
-          editorInfo={parser.editorInfo}
+          editorInfo={parser.lexemes}
           onRegexChange={onEditorChange}
           onHover={onEditorHover}
         />
