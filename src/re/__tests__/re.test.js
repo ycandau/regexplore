@@ -1,4 +1,4 @@
-import Parser from '../re_parser';
+import Parser, { generateRegexFromRPN } from '../re_parser';
 
 //------------------------------------------------------------------------------
 
@@ -21,8 +21,7 @@ const runParser = (input, rpn, ...tokens) => {
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    // expect(parser.operators.length).toBe(0);
-    expect(parser.fix()).toBe(input);
+    expect(generateRegexFromRPN(parser.rpn)).toBe(input);
 
     tokens.forEach(({ rpnIndex, pos, index, label, type }) => {
       const token = parser.rpn[rpnIndex];
@@ -44,9 +43,7 @@ const runBracketClass = (input) => {
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-
     expect(parser.rpn.length).toBe(1);
-    // expect(parser.operators.length).toBe(0);
   });
 };
 
@@ -56,9 +53,8 @@ const runEdgeCase = (input, rpn, fixed, count, types = [], positions = []) => {
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    // expect(parser.operators.length).toBe(0);
     expect(parser.warnings.length).toBe(count);
-    expect(parser.fix()).toBe(fixed);
+    expect(generateRegexFromRPN(parser.rpn)).toBe(fixed);
 
     types.forEach((type, index) => {
       const pos = positions[index];

@@ -5,9 +5,10 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { describe, getConcat } from './re_parse';
+import { getConcat } from './re_parse';
 
 //------------------------------------------------------------------------------
+// Helper function to decide when to add an implicit concatenation
 
 const isValue = (token) =>
   token.type && token.type !== '|' && token.type !== '(';
@@ -32,6 +33,7 @@ const concat = (rpn, operators) => {
 };
 
 //------------------------------------------------------------------------------
+// Main conversion function
 
 const convertToRPN = (tokens, lexemes) => {
   const rpn = [];
@@ -76,9 +78,10 @@ const convertToRPN = (tokens, lexemes) => {
         open.end = token.index;
         rpn.push(open);
 
-        const info = { begin: open.index, end: token.index };
-        describe(lexemes[open.index], info);
-        describe(lexemes[token.index], info);
+        lexemes[open.index].begin = open.index;
+        lexemes[open.index].end = token.index;
+        lexemes[token.index].begin = open.index;
+        lexemes[token.index].end = token.index;
         break;
 
       default:

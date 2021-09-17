@@ -34,14 +34,6 @@ const typeToDisplayType = {
 
 //------------------------------------------------------------------------------
 
-const isNotIn = (...args) => (s) => !args.includes(s);
-
-const merge = (obj1, obj2, filter = () => true) => {
-  Object.keys(obj2)
-    .filter(filter)
-    .forEach((key) => (obj1[key] = obj2[key]));
-};
-
 const concatLabels = (descriptions, begin, end) => {
   let str = '';
   for (let index = begin; index <= end; index++) {
@@ -62,23 +54,9 @@ class Parser {
     this.warnings = warnings;
     this.nfa = null;
 
-    this.compile();
-  }
-
-  //----------------------------------------------------------------------------
-
-  compile() {
-    const { nfa, nodes } = compile(this.rpn);
+    const { nfa, nodes } = compile(this.rpn, lexemes);
     this.nfa = nfa;
     this.nodes = nodes;
-
-    // Merge compile information from tokens back into descriptions
-    const filter = isNotIn('label', 'type', 'match');
-
-    this.rpn.forEach((token) => {
-      if (token.type === '~') return;
-      merge(this.descriptions[token.index], token, filter);
-    });
 
     // Generate editorInfo object
     this.editorInfo = this.descriptions.map((descrip) => ({
@@ -116,50 +94,50 @@ class Parser {
     if (operands.length) info.operands = operands;
     return info;
   }
-
-  //----------------------------------------------------------------------------
-
-  fix() {
-    let stack = [];
-    this.rpn.forEach((token) => {
-      let str1 = '';
-      let str2 = '';
-      switch (token.type) {
-        case 'charLiteral':
-        case 'escapedChar':
-        case 'charClass':
-        case 'bracketClass':
-        case '.':
-          stack.push(token.label);
-          break;
-        case '?':
-        case '*':
-        case '+':
-          str1 = stack.pop();
-          stack.push(str1 + token.label);
-          break;
-        case '|':
-          str1 = stack.pop();
-          str2 = stack.pop();
-          stack.push(str2 + '|' + str1);
-          break;
-        case '(':
-          str1 = stack.pop();
-          stack.push('(' + str1 + ')');
-          break;
-        case '~':
-          str1 = stack.pop();
-          str2 = stack.pop();
-          stack.push(str2 + str1);
-          break;
-        default:
-          break;
-      }
-    });
-    return stack[0] || '';
-  }
 }
+//----------------------------------------------------------------------------
+
+const generateRegexFromRPN = (rpn) => {
+  let stack = [];
+  rpn.forEach((token) => {
+    let str1 = '';
+    let str2 = '';
+    switch (token.type) {
+      case 'charLiteral':
+      case 'escapedChar':
+      case 'charClass':
+      case 'bracketClass':
+      case '.':
+        stack.push(token.label);
+        break;
+      case '?':
+      case '*':
+      case '+':
+        str1 = stack.pop();
+        stack.push(str1 + token.label);
+        break;
+      case '|':
+        str1 = stack.pop();
+        str2 = stack.pop();
+        stack.push(str2 + '|' + str1);
+        break;
+      case '(':
+        str1 = stack.pop();
+        stack.push('(' + str1 + ')');
+        break;
+      case '~':
+        str1 = stack.pop();
+        str2 = stack.pop();
+        stack.push(str2 + str1);
+        break;
+      default:
+        break;
+    }
+  });
+  return stack[0] || '';
+};
 
 //------------------------------------------------------------------------------
 
+export { generateRegexFromRPN };
 export default Parser;

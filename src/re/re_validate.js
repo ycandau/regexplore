@@ -9,6 +9,7 @@ import { warn } from './re_warnings';
 import { getParenClose } from './re_parse';
 
 //------------------------------------------------------------------------------
+// Validate that opening and closing parentheses match
 
 const validateParentheses = (tokens, warnings) => {
   let parentheses = [];
@@ -43,6 +44,7 @@ const validateParentheses = (tokens, warnings) => {
 };
 
 //------------------------------------------------------------------------------
+// Validate that operators do not apply to empty values
 
 const validateEmptyValues = (tokens, warnings) => {
   const stack = [];
@@ -138,6 +140,7 @@ const validateEmptyValues = (tokens, warnings) => {
 };
 
 //------------------------------------------------------------------------------
+// Validate redundant quantifiers
 
 const validateQuantifiers = (tokens, warnings) => {
   let prevToken = {};
@@ -165,6 +168,7 @@ const validateQuantifiers = (tokens, warnings) => {
 };
 
 //------------------------------------------------------------------------------
+// Main validation function
 
 const validate = (tokens, warnings) => {
   validateParentheses(tokens, warnings);
