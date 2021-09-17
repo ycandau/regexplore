@@ -25,7 +25,7 @@ import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
 import { descriptions } from '../re/re_static_info';
-import { compile, getTokenInfo, generateRegexFromRPN } from '../re/re_parser';
+import { compile, getTokenInfo, generateRegexFromRPN } from '../re/re_compile';
 import { stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready

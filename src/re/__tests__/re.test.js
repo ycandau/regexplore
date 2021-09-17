@@ -1,4 +1,4 @@
-import { compile, generateRegexFromRPN } from '../re_parser';
+import { compile, generateRegexFromRPN } from '../re_compile';
 
 //------------------------------------------------------------------------------
 
