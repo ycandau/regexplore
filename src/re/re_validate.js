@@ -9,16 +9,51 @@ import { warn } from './re_warnings';
 import { getParenClose } from './re_parse';
 
 //------------------------------------------------------------------------------
+// Validate that opening and closing parentheses match
 
-const validate = (tokens, warnings) => {
+const validateParentheses = (tokens, warnings) => {
+  let parentheses = [];
+
+  for (const token of tokens) {
+    switch (token.type) {
+      case '(':
+        parentheses.push(token);
+        break;
+      case ')':
+        // No opening parenthesis
+        if (parentheses.length === 0) {
+          warn(')', token.pos, token.index, warnings);
+          token.invalid = true;
+          break;
+        }
+        parentheses.pop();
+        break;
+      default:
+        break;
+    }
+  }
+
+  // No closing parenthesis
+  // Add warnings during second validation pass
+  while (parentheses.length > 0) {
+    const open = parentheses.pop();
+    const close = getParenClose(open.pos, open.index);
+    close.added = true;
+    tokens.push(close);
+  }
+};
+
+//------------------------------------------------------------------------------
+// Validate that operators do not apply to empty values
+
+const validateEmptyValues = (tokens, warnings) => {
   const stack = [];
   let exprIsEmpty = true;
   let termIsEmpty = true;
   let prevAlternation = null;
-  // let prevToken = {};
 
   for (const token of tokens) {
-    if (token.invalid) break;
+    if (token.invalid) continue;
 
     switch (token.type) {
       case 'charLiteral':
@@ -59,253 +94,90 @@ const validate = (tokens, warnings) => {
         break;
 
       case ')':
-        // No opening parenthesis
-        if (stack.length === 0) {
-          warn(')', token.pos, token.index, warnings);
-          token.invalid = true;
-          break;
-        }
-
         const state = stack.pop();
+        const open = state.open;
 
-        // Empty parentheses
-        if (exprIsEmpty) {
-          warn('()', token.pos, token.index, warnings);
+        // Empty and unclosed parenthesis
+        if (exprIsEmpty && token.added) {
+          warn('(E', open.pos, open.index, warnings);
+          open.invalid = true;
           token.invalid = true;
-          state.open.invalid = true;
         }
 
-        // Empty term: from alternation to closing parenthesis
+        // Empty pair of parentheses
+        else if (exprIsEmpty) {
+          warn('()', token.pos, token.index, warnings);
+          open.invalid = true;
+          token.invalid = true;
+        }
+
+        // Unclosed parenthesis
+        else if (token.added) {
+          warn('(', open.pos, open.index, warnings);
+        }
+
+        // Empty term before closing parenthesis
         if (prevAlternation && termIsEmpty) {
           warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
           prevAlternation.invalid = true;
         }
 
-        ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
+        termIsEmpty = state.termIsEmpty && exprIsEmpty;
+        exprIsEmpty = state.exprIsEmpty && exprIsEmpty;
+        prevAlternation = state.prevAlternation;
         break;
+
       default:
         break;
     }
   }
 
-  // Missing closing parentheses
-  while (stack.length !== 0) {
-    const state = stack.pop();
-    const open = state.open;
-
-    // Empty parentheses
-    if (exprIsEmpty) {
-      warn('(E', open.pos, open.index, warnings);
-      open.invalid = true;
-    } else {
-      warn('(', open.pos, open.index, warnings);
-      tokens.push(getParenClose());
-    }
-
-    // Empty term: from alternation to closing parenthesis
-    if (prevAlternation && termIsEmpty) {
-      warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
-      prevAlternation.invalid = true;
-    }
-
-    ({ termIsEmpty, exprIsEmpty, prevAlternation } = state);
-  }
-
-  // Empty term: from alternation to closing parenthesis
+  // Empty term at end of regex
   if (prevAlternation && termIsEmpty) {
     warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
     prevAlternation.invalid = true;
   }
-
-  return tokens;
 };
 
 //------------------------------------------------------------------------------
+// Validate redundant quantifiers
 
-const filterTokens = (tokens) => tokens.filter((token) => !token.invalid);
-
-const isQuantifier = (token) => ['?', '*', '+'].includes(token.type);
-
-const isValue = (token) =>
-  token.type && token.type !== '|' && token.type !== '(';
-
-//------------------------------------------------------------------------------
-
-const ppParentheses = () => {
-  if (this.tokens.length === 0) return 0;
-  let parens = [];
-  let countErrors = 0;
-
-  for (const token of this.tokens) {
-    if (token.type === '(') {
-      parens.push(token);
-    }
-    if (token.type === ')') {
-      // Syntax error: missing opening parenthesis
-      if (parens.length === 0) {
-        this.addWarning(')', token.pos, token.index);
-        this.describe({ warning: ')' }, token.index);
-        token.invalid = true;
-        countErrors++;
-      }
-      parens.pop();
-    }
-  }
-  // Syntax error: missing closing parenthesis
-  while (parens.length > 0) {
-    const open = parens.pop();
-    const close = getParenClose(open.pos, open.index);
-    this.tokens.push(close);
-    this.addWarning('(', open.pos, open.index);
-    countErrors++;
-  }
-
-  this.tokens = filterTokens(this.tokens);
-  return countErrors;
-};
-
-//------------------------------------------------------------------------------
-
-const ppQuantifiers = () => {
-  if (this.tokens.length === 0) return 0;
+const validateQuantifiers = (tokens, warnings) => {
   let prevToken = {};
-  let countErrors = 0;
+  let prevIsQuantifier = false;
 
-  for (const token of this.tokens) {
-    switch (token.type) {
-      case '?':
-      case '*':
-      case '+':
-        // Syntax error: redundant quantifiers
-        if (isQuantifier(prevToken)) {
-          const label = `${prevToken.type}${token.type}`;
-          const sub = label === '??' ? '?' : label === '++' ? '+' : '*';
-          prevToken.label = sub;
-          prevToken.type = sub;
-          // const msg = `The parser is substituting '${label}' with '${sub}'`;
-          this.addWarning('**', token.pos, token.index, { label });
-          this.describe({ warning: '**' }, token.index);
-          token.invalid = true;
-          countErrors++;
-        }
+  for (const token of tokens) {
+    if (token.invalid) continue;
 
-        // Syntax error: no value before quantifier
-        else if (!isValue(prevToken)) {
-          const label = token.type;
-          this.addWarning('E*', token.pos, token.index, { label });
-          this.describe({ warning: 'E*' }, token.index);
-          token.invalid = true;
-          countErrors++;
-        } else {
-          prevToken = token;
-        }
-        break;
-      default:
-        prevToken = token;
-        break;
-    }
-  }
-  this.tokens = filterTokens(this.tokens);
-  return countErrors;
-};
+    const currentIsQuantifier =
+      token.type === '?' || token.type === '*' || token.type === '+';
 
-//------------------------------------------------------------------------------
+    if (prevIsQuantifier && currentIsQuantifier) {
+      const label = `${prevToken.type}${token.type}`;
+      const replacement = label === '??' ? '?' : label === '++' ? '+' : '*';
 
-const ppAlternationsForward = () => {
-  if (this.tokens.length === 0) return 0;
-  let prevToken = {};
-  let countErrors = 0;
-
-  for (const token of this.tokens) {
-    switch (token.type) {
-      case '|':
-        // Syntax error: no value before alternation
-        if (!isValue(prevToken)) {
-          const label = token.type;
-          this.addWarning('E|', token.pos, token.index, { label });
-          this.describe({ warning: 'E|' }, token.index);
-          token.invalid = true;
-          countErrors++;
-        } else {
-          prevToken = token;
-        }
-        break;
-      default:
-        prevToken = token;
-        break;
-    }
-  }
-  this.tokens = filterTokens(this.tokens);
-  return countErrors;
-};
-
-//------------------------------------------------------------------------------
-
-const ppAlternationsBackward = () => {
-  if (this.tokens.length === 0) return 0;
-  let prevToken = { type: ')' };
-  let countErrors = 0;
-
-  for (let i = this.tokens.length - 1; i >= 0; i--) {
-    const token = this.tokens[i];
-    switch (token.type) {
-      case '|':
-        // Syntax error: no value after alternation
-        if (prevToken.type === ')') {
-          const label = token.type;
-          this.addWarning('|E', token.pos, token.index, { label });
-          this.describe({ warning: '|E' }, token.index);
-          token.invalid = true;
-          countErrors++;
-        }
-        break;
-      default:
-        break;
-    }
-    prevToken = token;
-  }
-  this.tokens = filterTokens(this.tokens);
-  return countErrors;
-};
-
-//------------------------------------------------------------------------------
-
-const ppEmptyParentheses = () => {
-  if (this.tokens.length === 0) return 0;
-  let prevToken = {};
-  let countErrors = 0;
-
-  for (let i = 0; i < this.tokens.length; i++) {
-    const token = this.tokens[i];
-
-    if (prevToken.type === '(' && token.type === ')') {
-      prevToken.invalid = true;
+      warn('**', token.pos, token.index, warnings, { label });
       token.invalid = true;
-      this.addWarning('()', prevToken.pos, prevToken.index);
-      this.describe({ warning: '()' }, prevToken.index);
-      countErrors++;
+      prevToken.label = replacement;
+      prevToken.type = replacement;
+    } else {
+      prevToken = token;
+      prevIsQuantifier = currentIsQuantifier;
     }
-    prevToken = token;
   }
+};
 
-  this.tokens = filterTokens(this.tokens);
-  return countErrors;
+//------------------------------------------------------------------------------
+// Main validation function
+
+const validate = (tokens, warnings) => {
+  validateParentheses(tokens, warnings);
+  validateEmptyValues(tokens, warnings);
+  validateQuantifiers(tokens, warnings);
+
+  return tokens.filter((token) => !token.invalid);
 };
 
 //------------------------------------------------------------------------------
 
-const preProcess = () => {
-  let countErrors = 0;
-  do {
-    countErrors = 0;
-    countErrors += this.ppParentheses();
-    countErrors += this.ppQuantifiers();
-    countErrors += this.ppAlternationsForward();
-    countErrors += this.ppAlternationsBackward();
-    countErrors += this.ppEmptyParentheses();
-  } while (countErrors > 0);
-};
-
-//------------------------------------------------------------------------------
-
-export { validate };
+export default validate;

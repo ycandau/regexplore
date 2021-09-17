@@ -1,11 +1,11 @@
-import Parser from '../re_parser';
+import { compile, generateRegexFromRPN } from '../re_compile';
 
 //------------------------------------------------------------------------------
 
 const rpnStr = (parser) => parser.rpn.map((token) => token.label).join('');
 
 const descriptionsStr = (parser) =>
-  parser.descriptions.map((descrip) => descrip.label).join('');
+  parser.lexemes.map((descrip) => descrip.label).join('');
 
 const token = (rpnIndex, pos, index, label, type) => ({
   rpnIndex,
@@ -17,12 +17,11 @@ const token = (rpnIndex, pos, index, label, type) => ({
 
 const runParser = (input, rpn, ...tokens) => {
   it(`runs the input /${input}/`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    expect(parser.operators.length).toBe(0);
-    expect(parser.fix()).toBe(input);
+    expect(generateRegexFromRPN(parser.rpn)).toBe(input);
 
     tokens.forEach(({ rpnIndex, pos, index, label, type }) => {
       const token = parser.rpn[rpnIndex];
@@ -36,7 +35,7 @@ const runParser = (input, rpn, ...tokens) => {
 
 const runBracketClass = (input) => {
   it(`runs the bracket class /${input}/`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
     const token = parser.rpn[0];
 
     expect(token.label).toBe(input);
@@ -44,21 +43,18 @@ const runBracketClass = (input) => {
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-
     expect(parser.rpn.length).toBe(1);
-    expect(parser.operators.length).toBe(0);
   });
 };
 
 const runEdgeCase = (input, rpn, fixed, count, types = [], positions = []) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
-    const parser = new Parser(input);
+    const parser = compile(input);
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    expect(parser.operators.length).toBe(0);
     expect(parser.warnings.length).toBe(count);
-    expect(parser.fix()).toBe(fixed);
+    expect(generateRegexFromRPN(parser.rpn)).toBe(fixed);
 
     types.forEach((type, index) => {
       const pos = positions[index];
@@ -158,9 +154,9 @@ describe('RE parser: Edge cases', () => {
   runEdgeCase('a(()b)c', 'ab(~c~', 'a(b)c', 1);
   runEdgeCase('a(b())c', 'ab(~c~', 'a(b)c', 1);
 
-  runEdgeCase('a(', 'a', 'a', 2);
-  runEdgeCase('a((', 'a', 'a', 4);
-  runEdgeCase('a(*', 'a', 'a', 3);
+  runEdgeCase('a(', 'a', 'a', 1);
+  runEdgeCase('a((', 'a', 'a', 2);
+  runEdgeCase('a(*', 'a', 'a', 2);
   runEdgeCase('a((*)(|))', 'a', 'a', 5);
 });
 

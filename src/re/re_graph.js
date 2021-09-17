@@ -232,7 +232,7 @@ const calculateLayout = (nodes) => {
 
 //------------------------------------------------------------------------------
 
-const graph = (nodes) => {
+const buildGraph = (nodes) => {
   const displayNodes = createDisplayNodes(nodes);
   const filteredNodes = processQuantifiers(displayNodes);
   const nodesWithPrevious = setPreviousNodes(filteredNodes);
@@ -243,4 +243,4 @@ const graph = (nodes) => {
 
 //------------------------------------------------------------------------------
 
-export default graph;
+export default buildGraph;

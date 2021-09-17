@@ -47,7 +47,7 @@ const operator = (label) => (pos, index) => ({
 
 const getConcat = () => operator('~')(null, null);
 
-const getParenClose = () => operator(')')(null, null);
+const getParenClose = (pos, index) => operator(')')(pos, index);
 
 //------------------------------------------------------------------------------
 // Satic tokens
@@ -72,11 +72,37 @@ const staticTokens = {
   ')': operator(')'),
 };
 
+const typeToDisplayType = {
+  charLiteral: 'value',
+  escapedChar: 'value',
+  charClass: 'value-special',
+  bracketChar: 'value',
+  bracketRangeLow: 'value-special',
+  bracketRangeHigh: 'value-special',
+  '.': 'value-special',
+  '?': 'quantifier',
+  '*': 'quantifier',
+  '+': 'quantifier',
+  '|': 'operator',
+  '(': 'delimiter',
+  ')': 'delimiter',
+  '[': 'delimiter',
+  ']': 'delimiter',
+  '-': 'value-special',
+  '^': 'operator',
+};
+
 //------------------------------------------------------------------------------
 // Helper functions for lexemes
 
 const addLexeme = (lexemes, label, type, pos) => {
-  const lexeme = { label, type, pos, index: lexemes.length };
+  const lexeme = {
+    label,
+    type,
+    pos,
+    index: lexemes.length,
+    displayType: typeToDisplayType[type],
+  };
   lexemes.push(lexeme);
 };
 
@@ -254,4 +280,5 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
 
 //------------------------------------------------------------------------------
 
-export { parse, getConcat, getParenClose };
+export { getConcat, getParenClose };
+export default parse;
