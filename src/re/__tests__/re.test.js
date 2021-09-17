@@ -21,7 +21,7 @@ const runParser = (input, rpn, ...tokens) => {
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    expect(parser.operators.length).toBe(0);
+    // expect(parser.operators.length).toBe(0);
     expect(parser.fix()).toBe(input);
 
     tokens.forEach(({ rpnIndex, pos, index, label, type }) => {
@@ -46,7 +46,7 @@ const runBracketClass = (input) => {
     expect(token.negate).toBe(input[1] === '^');
 
     expect(parser.rpn.length).toBe(1);
-    expect(parser.operators.length).toBe(0);
+    // expect(parser.operators.length).toBe(0);
   });
 };
 
@@ -56,7 +56,7 @@ const runEdgeCase = (input, rpn, fixed, count, types = [], positions = []) => {
 
     expect(rpnStr(parser)).toBe(rpn);
     expect(descriptionsStr(parser)).toBe(input);
-    expect(parser.operators.length).toBe(0);
+    // expect(parser.operators.length).toBe(0);
     expect(parser.warnings.length).toBe(count);
     expect(parser.fix()).toBe(fixed);
 

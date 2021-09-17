@@ -176,4 +176,4 @@ const validate = (tokens, warnings) => {
 
 //------------------------------------------------------------------------------
 
-export { validate };
+export default validate;

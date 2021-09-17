@@ -254,4 +254,5 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
 
 //------------------------------------------------------------------------------
 
-export { parse, getConcat, getParenClose };
+export { describe, getConcat, getParenClose };
+export default parse;

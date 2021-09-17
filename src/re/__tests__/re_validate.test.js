@@ -5,8 +5,8 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { parse } from '../re_parse';
-import { validate } from '../re_validate';
+import parse from '../re_parse';
+import validate from '../re_validate';
 
 //------------------------------------------------------------------------------
 

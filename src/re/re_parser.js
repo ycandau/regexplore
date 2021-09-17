@@ -2,10 +2,11 @@
 // Parser class
 //------------------------------------------------------------------------------
 
-import { descriptions, warnings } from './re_static_info';
-import { parse, getConcat } from './re_parse';
-import { validate } from './re_validate';
+import { descriptions } from './re_static_info';
 
+import parse from './re_parse';
+import validate from './re_validate';
+import convertToRPN from './re_rpn';
 import compile from './re_compile';
 import graph from './re_graph';
 
@@ -33,9 +34,6 @@ const typeToDisplayType = {
 
 //------------------------------------------------------------------------------
 
-const isValue = (token) =>
-  token.type && token.type !== '|' && token.type !== '(';
-
 const isNotIn = (...args) => (s) => !args.includes(s);
 
 const merge = (obj1, obj2, filter = () => true) => {
@@ -58,118 +56,13 @@ class Parser {
   constructor(input) {
     const { lexemes, tokens, warnings } = parse(input);
     this.tokens = validate(tokens, warnings);
+    this.rpn = convertToRPN(tokens, lexemes);
 
     this.descriptions = lexemes;
     this.warnings = warnings;
-
-    this.operators = [];
-    this.rpn = [];
     this.nfa = null;
 
-    this.toRpn();
     this.compile();
-  }
-
-  //----------------------------------------------------------------------------
-
-  topOperatorIs(label) {
-    const operator = this.operators[this.operators.length - 1];
-    return operator !== undefined && operator.label === label;
-  }
-
-  // Transfer the stacked operator to the RPN queue if it is at the top
-  transferOperator(ch) {
-    if (this.topOperatorIs(ch)) {
-      const operator = this.operators.pop();
-      this.rpn.push(operator);
-    }
-  }
-
-  // Add an implicit concat when necessary
-  concat() {
-    this.transferOperator('~');
-    this.operators.push(getConcat());
-  }
-
-  //----------------------------------------------------------------------------
-
-  toRpn() {
-    this.rpn = [];
-    this.operators = [];
-    let prevToken = {};
-
-    for (const token of this.tokens) {
-      switch (token.type) {
-        case 'charLiteral':
-        case 'escapedChar':
-        case 'charClass':
-        case 'bracketClass':
-        case '.':
-          if (isValue(prevToken)) this.concat();
-          this.rpn.push(token);
-          break;
-
-        case '|':
-          this.transferOperator('~');
-          this.transferOperator('|');
-          this.operators.push(token);
-          break;
-
-        case '?':
-        case '*':
-        case '+':
-          this.rpn.push(token);
-          break;
-
-        case '(':
-          if (isValue(prevToken)) this.concat();
-          token.begin = token.index;
-          this.operators.push(token);
-          break;
-
-        case ')':
-          this.transferOperator('~');
-          this.transferOperator('|');
-          const open = this.operators.pop();
-          const begin = open.begin;
-          const end = token.index;
-          open.end = end;
-
-          this.rpn.push(open);
-          this.describe({ begin, end }, begin);
-          this.describe({ begin, end }, end);
-          break;
-
-        default:
-          throw new Error('Invalid token type');
-      }
-      prevToken = token;
-    }
-    this.transferOperator('~');
-    this.transferOperator('|');
-  }
-
-  //----------------------------------------------------------------------------
-
-  currentIndex() {
-    return this.descriptions.length - 1;
-  }
-
-  addDescription(label, type) {
-    const index = this.currentIndex() + 1;
-    const pos = this.pos;
-    this.descriptions.push({ index, pos, label, type });
-  }
-
-  describe(info, index) {
-    const ind = index !== undefined ? index : this.currentIndex();
-    const description = this.descriptions[ind];
-    for (const key in info) description[key] = info[key];
-  }
-
-  addWarning(type, pos, index, config) {
-    const warning = { pos, index, ...warnings[type], ...config };
-    this.warnings.push(warning);
   }
 
   //----------------------------------------------------------------------------
