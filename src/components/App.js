@@ -24,8 +24,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import { descriptions } from '../re/re_static_info';
-import { compile, getTokenInfo, generateRegexFromRPN } from '../re/re_compile';
+import getTokenInfo from '../re/re_token_info';
+import { compile, generateRegexFromRPN } from '../re/re_compile';
 import { stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready
@@ -85,7 +85,7 @@ const initHistory = (parser) => ({
   states: [
     {
       runState: 'running',
-      activeNodes: [parser.nfa],
+      activeNodes: [parser.nfa[0]],
       testRange: [0, 0],
       matchRanges: [],
     },
@@ -252,15 +252,7 @@ const App = () => {
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const defaultInfo = {
-    label: '?',
-    name: 'Questions ...',
-    description:
-      'Hover over any character in the regex to get information on it.',
-  };
-
-  const tokenInfo =
-    getTokenInfo(editorIndex, parser.lexemes, descriptions) || defaultInfo;
+  const tokenInfo = getTokenInfo(editorIndex, parser.lexemes);
 
   //----------------------------------------------------------------------------
   // LogBox
@@ -290,14 +282,14 @@ const App = () => {
     }
 
     if (prevRunState === 'success' || prevRunState === 'failure') {
-      prevActiveNodes = [parser.nfa];
+      prevActiveNodes = [parser.nfa[0]];
     }
 
     // Run the next step
     const ch = testString[prevPos];
     const char = ch === ' ' ? "' '" : ch;
     let { runState, activeNodes } = stepForward(
-      parser.nodes,
+      parser.nfa,
       prevActiveNodes,
       testString,
       prevPos
@@ -508,7 +500,7 @@ const App = () => {
         />
       </div>
       <div className={classes.infoBox}>
-        <InfoBox desc={tokenInfo} />
+        <InfoBox tokenInfo={tokenInfo} />
       </div>
       <div className={classes.logBox}>
         {!!parser.warnings.length ? warningBox : logBox}

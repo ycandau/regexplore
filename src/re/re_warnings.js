@@ -26,7 +26,6 @@ const warnings = {
     // label from parser
     issue: 'Redundant quantifiers',
     msg: 'The parser is simplifying the quantifiers to a single one.',
-    // msg from parser
   },
   'E*': {
     type: 'E*',
@@ -52,6 +51,12 @@ const warnings = {
     issue: 'A pair of parentheses contains no value',
     msg: 'The parser is ignoring the parentheses.',
   },
+  '(E': {
+    type: '(E',
+    label: '(',
+    issue: 'An open parenthesis has not been closed and is empty',
+    msg: 'The parser is ignoring the parenthesis.',
+  },
   '\\E': {
     type: '\\E',
     label: '\\',
@@ -60,9 +65,13 @@ const warnings = {
   },
 };
 
+//------------------------------------------------------------------------------
+
 const warn = (type, pos, index, warnings, info) => {
   const warning = { type, pos, index, ...info };
   warnings.push(warning);
 };
+
+//------------------------------------------------------------------------------
 
 export { warn };

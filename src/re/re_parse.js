@@ -160,7 +160,7 @@ const parse = (regex) => {
       token = value(ch, 'charLiteral', match(ch))(pos, index);
     }
 
-    // If lexemes have not already been added (bracket expressions)
+    // If the lexemes have not already been added (bracket expressions)
     if (!lexemesAdded) addLexeme(lexemes, token.label, token.type, pos);
     tokens.push(token);
     pos += token.label.length;

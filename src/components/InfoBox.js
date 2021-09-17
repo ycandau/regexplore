@@ -38,8 +38,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function InfoBox({ desc }) {
-  const { label, name, description, note, warning } = desc;
+export default function InfoBox({ tokenInfo }) {
+  const { label, info } = tokenInfo;
+  const { name, description, note, warning } = info;
   const classes = useStyles();
   return (
     <Card

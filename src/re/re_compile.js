@@ -14,44 +14,10 @@ const compile = (regex) => {
   const { lexemes, tokens, warnings } = parse(regex);
   const validTokens = validate(tokens, warnings);
   const rpn = convertToRPN(validTokens, lexemes);
-  const { nfa, nodes } = buildNFA(rpn, lexemes);
-  const graph = buildGraph(nodes);
+  const nfa = buildNFA(rpn, lexemes);
+  const graph = buildGraph(nfa);
 
-  return { lexemes, rpn, nfa, nodes, graph, warnings };
-};
-
-//----------------------------------------------------------------------------
-
-const concatLabels = (descriptions, begin, end) => {
-  let str = '';
-  for (let index = begin; index <= end; index++) {
-    str += descriptions[index].label;
-  }
-  return str;
-};
-
-const getTokenInfo = (index, lexemes, descriptions) => {
-  const token = lexemes[index];
-
-  // @bug: Issue when deleting under hover
-  if (token === undefined) return null;
-
-  const type = token.type === 'charClass' ? token.label : token.type;
-
-  const operands = [];
-  if (token.begin !== undefined && token.end !== undefined) {
-    operands.push(concatLabels(lexemes, token.begin + 1, token.end - 1));
-  }
-  if (token.beginL !== undefined && token.endL !== undefined) {
-    operands.push(concatLabels(lexemes, token.beginL, token.endL));
-  }
-  if (token.beginR !== undefined && token.endR !== undefined) {
-    operands.push(concatLabels(lexemes, token.beginR, token.endR));
-  }
-
-  const info = { pos: token.pos, label: token.label, ...descriptions[type] };
-  if (operands.length) info.operands = operands;
-  return info;
+  return { lexemes, rpn, nfa, graph, warnings };
 };
 
 //----------------------------------------------------------------------------
@@ -98,4 +64,4 @@ const generateRegexFromRPN = (rpn) => {
 
 //------------------------------------------------------------------------------
 
-export { compile, getTokenInfo, generateRegexFromRPN };
+export { compile, generateRegexFromRPN };
