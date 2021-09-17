@@ -1,4 +1,8 @@
-const descriptions = {
+//------------------------------------------------------------------------------
+// Generate information on a token for display
+//------------------------------------------------------------------------------
+
+const staticInfo = {
   charLiteral: {
     type: 'Value',
     name: 'Character literal',
@@ -8,9 +12,6 @@ const descriptions = {
     type: 'Value',
     name: 'Escaped character',
     description: 'Match exactly that character',
-  },
-  charClass: {
-    searchByLabel: true,
   },
   '.': {
     type: 'Value',
@@ -51,22 +52,22 @@ const descriptions = {
   '|': {
     type: 'Operator',
     name: 'Alternation operator',
-    description: 'Match either of the items preceding and following.',
+    description: 'Match either of the items preceding and following',
   },
   '?': {
     type: 'Quantifier',
     name: '0 or 1 quantifier',
-    description: 'Match the preceding item 0 or 1 times.',
+    description: 'Match the preceding item 0 or 1 times',
   },
   '*': {
     type: 'Quantifier',
     name: '0 to any quantifier',
-    description: 'Match the preceding item 0 or more times.',
+    description: 'Match the preceding item 0 or more times',
   },
   '+': {
     type: 'Quantifier',
     name: '1 to any quantifier',
-    description: 'Match the preceding item 1 or more times.',
+    description: 'Match the preceding item 1 or more times',
   },
   '(': {
     type: 'Delimiter',
@@ -120,65 +121,47 @@ const descriptions = {
     description: 'Negate a bracket expression to match characters not in it',
     warning: 'Has to be positioned as the first character in the expression',
   },
-  empty: {
-    name: 'Not hovering over anything',
+};
+
+//------------------------------------------------------------------------------
+
+const defaultInfo = {
+  label: '?',
+  info: {
+    name: 'Questions ...',
+    description:
+      'Hover over any character in the regex to get information on it.',
   },
 };
 
 //------------------------------------------------------------------------------
 
-const warnings = {
-  '[': {
-    type: '[',
-    label: '[',
-    issue: 'An open bracket has not been closed',
-    msg: 'The parser is adding an implicit closing bracket.',
-  },
-  '(': {
-    type: '(',
-    label: '(',
-    issue: 'An open parenthesis has not been closed',
-    msg: 'The parser is adding an implicit closing parenthesis.',
-  },
-  ')': {
-    type: ')',
-    label: ')',
-    issue: 'A closing parenthesis has no match',
-    msg: 'The parser is ignoring the closing parenthesis.',
-  },
-  '**': {
-    type: '**',
-    // label from parser
-    issue: 'Redundant quantifiers',
-    msg: 'The parser is simplifying the quantifiers to a single one.',
-    // msg from parser
-  },
-  'E*': {
-    type: 'E*',
-    // label from parser
-    issue: 'A quantifier follows an empty value',
-    msg: 'The parser is ignoring the quantifier.',
-  },
-  'E|': {
-    type: 'E|',
-    label: '|',
-    issue: 'An alternation follows an empty value',
-    msg: 'The parser is ignoring the alternation.',
-  },
-  '|E': {
-    type: '|E',
-    label: '|',
-    issue: 'An alternation precedes an empty value',
-    msg: 'The parser is ignoring the alternation.',
-  },
-  '()': {
-    type: '()',
-    label: '()',
-    issue: 'A pair of parentheses contains no value',
-    msg: 'The parser is ignoring the parentheses.',
-  },
+const setOperand = (lexeme, lexemes, begin, end, name) => {
+  if (begin !== undefined && end !== undefined) {
+    let operand = '';
+    for (let index = begin; index <= end; index++) {
+      operand += lexemes[index].label;
+    }
+    lexeme[name] = operand;
+  }
 };
 
 //------------------------------------------------------------------------------
 
-export { descriptions, warnings };
+const getTokenInfo = (staticInfo) => (index, lexemes) => {
+  const lexeme = lexemes[index];
+
+  if (lexeme === undefined) return defaultInfo;
+  if (lexeme.info) return lexeme; // add lexeme info on use
+
+  lexeme.info = staticInfo[lexeme.type] || staticInfo[lexeme.label];
+  setOperand(lexeme, lexemes, lexeme.begin + 1, lexeme.end - 1, 'range');
+  setOperand(lexeme, lexemes, lexeme.beginL, lexeme.endL, 'left');
+  setOperand(lexeme, lexemes, lexeme.beginR, lexeme.endR, 'right');
+
+  return lexeme;
+};
+
+//------------------------------------------------------------------------------
+
+export default getTokenInfo(staticInfo);
