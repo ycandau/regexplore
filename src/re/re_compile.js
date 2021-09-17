@@ -1,28 +1,26 @@
 //------------------------------------------------------------------------------
-// Compile the NFA
+// Compile the regex into a nondeterministic finite automata
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
 const QUANT_HEIGHT = 0;
 
-const nodeBase = () => ({
-  nextNodes: [],
-});
+//------------------------------------------------------------------------------
+// Create node and fragment objects
 
-const newNode = (token, config) => {
-  return { ...token, ...nodeBase(), ...config };
-};
+const newNode = (token, config) => ({ ...token, nextNodes: [], ...config });
 
 const newFragment = (firstNode, terminalNodes, begin, end, height, nodes) => ({
-  firstNode,
-  terminalNodes,
-  begin,
-  end,
-  height,
-  nodes,
+  firstNode, // first node in the fragment
+  terminalNodes, // array of terminal nodes
+  begin, // index of the first node in the fragment
+  end, // index of the last node in the fragment
+  height, // to calculate the graph layout
+  nodes, // an ordered array of nodes
 });
 
 //------------------------------------------------------------------------------
+// Helper functions to connect nodes and fragments
 
 const connect = (node1, node2, index) => {
   node1.nextNodes.push(node2);
@@ -33,16 +31,20 @@ const connectFragment = (frag, node) => {
   frag.terminalNodes.forEach((n) => connect(n, node));
 };
 
-const setRange = (token, frag1, frag2) => {
-  token.beginL = frag1.begin;
-  token.endL = frag1.end;
+//------------------------------------------------------------------------------
+// Helper function to set the ranges of operator lexemes
+
+const setOperatorRange = (lexeme, frag1, frag2) => {
+  lexeme.beginL = frag1.begin;
+  lexeme.endL = frag1.end;
   if (frag2 !== undefined) {
-    token.beginR = frag2.begin;
-    token.endR = frag2.end;
+    lexeme.beginR = frag2.begin;
+    lexeme.endR = frag2.end;
   }
 };
 
 //------------------------------------------------------------------------------
+// Concatenate two fragments
 
 const concat = (frag1, frag2) => {
   connectFragment(frag1, frag2.firstNode);
@@ -58,8 +60,10 @@ const concat = (frag1, frag2) => {
 };
 
 //------------------------------------------------------------------------------
+// Alternate two fragments
+// Also merges multiple alternations into one
 
-const alternate = (frag1, frag2, token) => {
+const alternate = (frag1, frag2, token, lexemes) => {
   const fork = newNode(token);
   const first1 = frag1.firstNode;
   const first2 = frag2.firstNode;
@@ -83,11 +87,14 @@ const alternate = (frag1, frag2, token) => {
 
     fork.heights = [...first1.heights, frag2.height];
     nodes = [fork, ...frag1.nodes.slice(1), ...frag2.nodes];
-  } else {
+  }
+
+  // Alternative should not happen
+  else {
     throw new Error('NFA: Fork merge should not happen');
   }
 
-  setRange(token, frag1, frag2);
+  setOperatorRange(lexemes[token.index], frag1, frag2);
 
   return newFragment(
     fork,
@@ -100,11 +107,12 @@ const alternate = (frag1, frag2, token) => {
 };
 
 //------------------------------------------------------------------------------
+// Repeat a fragment 0 to 1 times
 
-const repeat01 = (frag, token) => {
+const repeat01 = (frag, token, lexemes) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
-  setRange(token, frag);
+  setOperatorRange(lexemes[token.index], frag);
 
   return newFragment(
     fork,
@@ -117,12 +125,13 @@ const repeat01 = (frag, token) => {
 };
 
 //------------------------------------------------------------------------------
+// Repeat a fragment 0 to N times
 
-const repeat0N = (frag, token) => {
+const repeat0N = (frag, token, lexemes) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
-  setRange(token, frag);
+  setOperatorRange(lexemes[token.index], frag);
 
   return newFragment(
     fork,
@@ -135,12 +144,13 @@ const repeat0N = (frag, token) => {
 };
 
 //------------------------------------------------------------------------------
+// Repeat a fragment 1 to N times
 
-const repeat1N = (frag, token) => {
+const repeat1N = (frag, token, lexemes) => {
   const fork = newNode(token);
   connect(fork, frag.firstNode);
   connectFragment(frag, fork);
-  setRange(token, frag);
+  setOperatorRange(lexemes[token.index], frag);
 
   return newFragment(
     frag.firstNode,
@@ -152,6 +162,7 @@ const repeat1N = (frag, token) => {
   );
 };
 //------------------------------------------------------------------------------
+// Enclose a fragment in parentheses
 
 const parentheses = (frag, token) => {
   const open = newNode(token);
@@ -168,6 +179,7 @@ const parentheses = (frag, token) => {
 };
 
 //------------------------------------------------------------------------------
+// Create a value node and push it on the fragment stack
 
 const pushValue = (fragments, token) => {
   const node = newNode(token);
@@ -179,21 +191,23 @@ const pushValue = (fragments, token) => {
 };
 
 //------------------------------------------------------------------------------
+// Apply unary and binary operations to the fragement stack
 
-const unary = (fragments, operation, token) => {
+const unary = (fragments, operation, token, lexemes) => {
   const frag = fragments.pop();
-  fragments.push(operation(frag, token));
+  fragments.push(operation(frag, token, lexemes));
 };
 
-const binary = (fragments, operation, token) => {
+const binary = (fragments, operation, token, lexemes) => {
   const frag2 = fragments.pop();
   const frag1 = fragments.pop();
-  fragments.push(operation(frag1, frag2, token));
+  fragments.push(operation(frag1, frag2, token, lexemes));
 };
 
 //------------------------------------------------------------------------------
+// Compile the RPN list of tokens into a NFA
 
-const compile = (rpn) => {
+const compile = (rpn, lexemes) => {
   const fragments = [];
   pushValue(fragments, { label: '>', type: 'first' });
 
@@ -207,19 +221,19 @@ const compile = (rpn) => {
         pushValue(fragments, token);
         break;
       case '?':
-        unary(fragments, repeat01, token);
+        unary(fragments, repeat01, token, lexemes);
         break;
       case '*':
-        unary(fragments, repeat0N, token);
+        unary(fragments, repeat0N, token, lexemes);
         break;
       case '+':
-        unary(fragments, repeat1N, token);
+        unary(fragments, repeat1N, token, lexemes);
         break;
       case '|':
-        binary(fragments, alternate, token);
+        binary(fragments, alternate, token, lexemes);
         break;
       case '(':
-        unary(fragments, parentheses, token);
+        unary(fragments, parentheses, token, lexemes);
         break;
       case '~':
         binary(fragments, concat);
@@ -229,6 +243,7 @@ const compile = (rpn) => {
     }
   });
 
+  // In case of empty regex
   if (fragments.length === 2) {
     binary(fragments, concat);
   }
