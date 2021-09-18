@@ -1,11 +1,14 @@
-import { compile, generateRegexFromRPN } from '../re_compile';
+import parse from '../re_parse';
+import validate from '../re_validate';
+import convertToRPN from '../re_rpn';
+import generateRegexFromRPN from '../re_autofix';
 
 //------------------------------------------------------------------------------
 
-const rpnStr = (parser) => parser.rpn.map((token) => token.label).join('');
+const rpnStr = (rpn) => rpn.map((token) => token.label).join('');
 
-const descriptionsStr = (parser) =>
-  parser.lexemes.map((descrip) => descrip.label).join('');
+const descriptionsStr = (lexemes) =>
+  lexemes.map((descrip) => descrip.label).join('');
 
 const token = (rpnIndex, pos, index, label, type) => ({
   rpnIndex,
@@ -15,16 +18,19 @@ const token = (rpnIndex, pos, index, label, type) => ({
   type,
 });
 
-const runParser = (input, rpn, ...tokens) => {
+const runParser = (input, rpnExpected, ...args) => {
   it(`runs the input /${input}/`, () => {
-    const parser = compile(input);
+    const { lexemes, tokens, warnings } = parse(input);
+    const validTokens = validate(tokens, warnings);
+    const rpn = convertToRPN(validTokens, lexemes);
+    const autofix = generateRegexFromRPN(rpn);
 
-    expect(rpnStr(parser)).toBe(rpn);
-    expect(descriptionsStr(parser)).toBe(input);
-    expect(generateRegexFromRPN(parser.rpn)).toBe(input);
+    expect(rpnStr(rpn)).toBe(rpnExpected);
+    expect(descriptionsStr(lexemes)).toBe(input);
+    expect(autofix()).toBe(input);
 
-    tokens.forEach(({ rpnIndex, pos, index, label, type }) => {
-      const token = parser.rpn[rpnIndex];
+    args.forEach(({ rpnIndex, pos, index, label, type }) => {
+      const token = rpn[rpnIndex];
       expect(token.pos).toBe(pos);
       expect(token.index).toBe(index);
       expect(token.label).toBe(label);
@@ -35,31 +41,42 @@ const runParser = (input, rpn, ...tokens) => {
 
 const runBracketClass = (input) => {
   it(`runs the bracket class /${input}/`, () => {
-    const parser = compile(input);
-    const token = parser.rpn[0];
+    const { lexemes, tokens, warnings } = parse(input);
+    const validTokens = validate(tokens, warnings);
+    const rpn = convertToRPN(validTokens, lexemes);
+    const token = rpn[0];
 
     expect(token.label).toBe(input);
     expect(token.type).toBe('bracketClass');
     expect(token.begin).toBe(0);
     expect(token.end).toBe(input.length - 1);
     expect(token.negate).toBe(input[1] === '^');
-    expect(parser.rpn.length).toBe(1);
+    expect(rpn.length).toBe(1);
   });
 };
 
-const runEdgeCase = (input, rpn, fixed, count, types = [], positions = []) => {
+const runEdgeCase = (
+  input,
+  rpnExpected,
+  fixed,
+  count,
+  types = [],
+  positions = []
+) => {
   it(`runs the input /${input}/ and raises a warning`, () => {
-    const parser = compile(input);
+    const { lexemes, tokens, warnings } = parse(input);
+    const validTokens = validate(tokens, warnings);
+    const rpn = convertToRPN(validTokens, lexemes);
+    const autofix = generateRegexFromRPN(rpn);
 
-    expect(rpnStr(parser)).toBe(rpn);
-    expect(descriptionsStr(parser)).toBe(input);
-    expect(parser.warnings.length).toBe(count);
-    expect(generateRegexFromRPN(parser.rpn)).toBe(fixed);
+    expect(rpnStr(rpn)).toBe(rpnExpected);
+    expect(descriptionsStr(lexemes)).toBe(input);
+    expect(warnings.length).toBe(count);
+    expect(autofix()).toBe(fixed);
 
     types.forEach((type, index) => {
       const pos = positions[index];
-      const warnings = parser.warnings.filter((w) => w.pos === pos);
-      const warning = warnings[0];
+      const warning = warnings.filter((w) => w.pos === pos)[0];
       expect(warning.type).toBe(types[index]);
       expect(warning.pos).toBe(positions[index]);
     });
