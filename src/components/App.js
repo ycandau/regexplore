@@ -25,7 +25,7 @@ import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
 import getTokenInfo from '../re/re_token_info';
-import { compile, generateRegexFromRPN } from '../re/re_compile';
+import compile from '../re/re_compile';
 import { stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready
@@ -79,13 +79,13 @@ const useStyles = makeStyles((theme) => ({
 //------------------------------------------------------------------------------
 // Initialization
 
-const initHistory = (parser) => ({
+const initHistory = (regex) => ({
   index: 0,
   end: -1,
   states: [
     {
       runState: 'running',
-      activeNodes: [parser.nfa[0]],
+      activeNodes: [regex.nfa[0]],
       testRange: [0, 0],
       matchRanges: [],
     },
@@ -94,8 +94,8 @@ const initHistory = (parser) => ({
 
 const initLogs = () => ({ first: 0, list: [] });
 
-const defaultParser = compile('a+(abc)*|abc|def');
-const defaultHistory = initHistory(defaultParser);
+const defaultRegex = compile('a+(abc)*|abc|def');
+const defaultHistory = initHistory(defaultRegex);
 
 const MAX_LOGS = 8;
 
@@ -121,7 +121,7 @@ const App = () => {
   const [literal, setLiteral] = useState('');
   const [displayGraph, setDisplayGraph] = useState(true);
 
-  const [parser, setParser] = useState(defaultParser);
+  const [regex, setRegex] = useState(defaultRegex);
   const [history, setHistory] = useState(defaultHistory);
   const [logs, setLogs] = useState(initLogs());
   const [play, setPlay] = useState(false);
@@ -217,13 +217,13 @@ const App = () => {
   //----------------------------------------------------------------------------
 
   // To set a new regex
-  const setNewRegex = (regex) => {
-    const parser = compile(regex);
-    setParser(() => parser);
-    setHistory(() => initHistory(parser));
+  const setNewRegex = (regexString) => {
+    const regex = compile(regexString);
+    setRegex(() => regex);
+    setHistory(() => initHistory(regex));
     setLogs(initLogs());
     setDisplayGraph(true);
-    setLiteral(regex);
+    setLiteral(regexString);
   };
 
   //----------------------------------------------------------------------------
@@ -231,8 +231,8 @@ const App = () => {
 
   const onEditorChange = (event) => {
     if (event.nativeEvent.inputType === 'insertLineBreak') return;
-    const regex = event.target.value;
-    setNewRegex(regex);
+    const regexString = event.target.value;
+    setNewRegex(regexString);
   };
 
   const onEditorHover = (ind) => () => {
@@ -245,14 +245,14 @@ const App = () => {
   const onTestStrChange = (str) => {
     setDisplayGraph(true);
     setTestString(str);
-    setHistory(() => initHistory(parser));
+    setHistory(() => initHistory(regex));
     setLogs(initLogs());
   };
 
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const tokenInfo = getTokenInfo(editorIndex, parser.lexemes);
+  const tokenInfo = getTokenInfo(editorIndex, regex.lexemes);
 
   //----------------------------------------------------------------------------
   // LogBox
@@ -282,14 +282,14 @@ const App = () => {
     }
 
     if (prevRunState === 'success' || prevRunState === 'failure') {
-      prevActiveNodes = [parser.nfa[0]];
+      prevActiveNodes = [regex.nfa[0]];
     }
 
     // Run the next step
     const ch = testString[prevPos];
     const char = ch === ' ' ? "' '" : ch;
     let { runState, activeNodes } = stepForward(
-      parser.nfa,
+      regex.nfa,
       prevActiveNodes,
       testString,
       prevPos
@@ -366,10 +366,9 @@ const App = () => {
   // Callbacks
 
   const doFix = () => {
-    const newRegex = generateRegexFromRPN(parser.rpn);
-    const newParser = compile(newRegex);
-    setParser(() => newParser);
-    setHistory(() => initHistory(parser));
+    const newRegex = compile(regex.autofix());
+    setRegex(() => newRegex);
+    setHistory(() => initHistory(regex));
   };
 
   const toggleTheme = () => toggleLight((light) => !light);
@@ -435,14 +434,14 @@ const App = () => {
 
   const warningBox = (
     <WarningBox
-      warnings={parser.warnings}
+      warnings={regex.warnings}
       onHover={(pos) => console.log('Hovering over the warning at', pos)}
       onFix={doFix}
     />
   );
 
   const graphBox = displayGraph ? (
-    <Graph graph={parser.graph} activeNodes={activeNodes} runState={runState} />
+    <Graph graph={regex.graph} activeNodes={activeNodes} runState={runState} />
   ) : (
     <SaveBox
       {...{
@@ -486,7 +485,7 @@ const App = () => {
       <div className={classes.editorBox}>
         <Editor
           index={editorIndex}
-          editorInfo={parser.lexemes}
+          editorInfo={regex.lexemes}
           onRegexChange={onEditorChange}
           onHover={onEditorHover}
         />
@@ -503,7 +502,7 @@ const App = () => {
         <InfoBox tokenInfo={tokenInfo} />
       </div>
       <div className={classes.logBox}>
-        {!!parser.warnings.length ? warningBox : logBox}
+        {regex.warnings.size ? warningBox : logBox}
       </div>
       <div className={classes.saveBox}>{graphBox}</div>
     </div>
