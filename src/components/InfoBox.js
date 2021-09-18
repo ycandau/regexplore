@@ -39,8 +39,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function InfoBox({ tokenInfo }) {
-  const { label, info } = tokenInfo;
-  const { name, description, note, warning } = info;
+  const { label, name, description, note, warning } = tokenInfo;
   const classes = useStyles();
   return (
     <Card
@@ -74,14 +73,3 @@ export default function InfoBox({ tokenInfo }) {
     </Card>
   );
 }
-
-//------------------------------------------------------------------------------
-
-// const tokenInfoExample = {
-//   label: '|',
-//   pos: 3,
-//   type: 'Operator',
-//   name: 'Alternation operator',
-//   description: 'Match either of the items preceding and following.',
-//   operands: ['ab', 'cd'],
-// };
