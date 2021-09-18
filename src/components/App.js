@@ -94,7 +94,8 @@ const initHistory = (regex) => ({
 
 const initLogs = () => ({ first: 0, list: [] });
 
-const defaultRegex = compile('a+(abc)*|abc|def');
+// const defaultRegex = compile('a+(abc)*|abc|def');
+const defaultRegex = compile('ab*c');
 const defaultHistory = initHistory(defaultRegex);
 
 const MAX_LOGS = 8;
