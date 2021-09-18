@@ -2,7 +2,7 @@
 // Warnings
 //------------------------------------------------------------------------------
 
-const warnings = {
+const staticInformation = {
   '[': {
     label: '[',
     type: '[',
@@ -67,11 +67,34 @@ const warnings = {
 
 //------------------------------------------------------------------------------
 
-const warn = (type, pos, index, warnings, info) => {
-  const warning = { type, pos, index, ...info };
-  warnings.push(warning);
+const warn = (staticInformation) => (
+  type,
+  pos,
+  index,
+  lexemes,
+  warnings,
+  info
+) => {
+  lexemes[index].invalid = true;
+
+  if (warnings.has(type)) {
+    const warning = warnings.get(type);
+    warning.count += 1;
+    warning.positions.push(pos);
+    return;
+  }
+
+  const warning = {
+    ...staticInformation[type],
+    ...info,
+    count: 1,
+    positions: [pos],
+  };
+  warnings.set(type, warning);
 };
 
 //------------------------------------------------------------------------------
 
-export { warn };
+//------------------------------------------------------------------------------
+
+export default warn(staticInformation);

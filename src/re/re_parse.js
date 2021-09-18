@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { warn } from './re_warnings';
+import warn from './re_warnings';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -117,7 +117,7 @@ const parse = (regex) => {
   let pos = 0;
   const lexemes = [];
   const tokens = [];
-  const warnings = [];
+  const warnings = new Map();
 
   while (pos < regex.length) {
     const ch = regex[pos];
@@ -152,7 +152,9 @@ const parse = (regex) => {
     else if (ch === '\\') {
       token = value(ch, 'escapedChar', matchAll)(pos, index);
       token.invalid = true;
-      warn('\\E', pos, index, warnings);
+      addLexeme(lexemes, token.label, token.type, pos);
+      lexemesAdded = true;
+      warn('\\E', pos, index, lexemes, warnings);
     }
 
     // Character literal
@@ -260,7 +262,7 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     describe(lexemes[end], info);
   } else {
     info.end--;
-    warn('[', pos, begin, warnings);
+    warn('[', pos, begin, lexemes, warnings);
   }
 
   describe(lexemes[begin], info);
