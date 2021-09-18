@@ -128,11 +128,9 @@ const staticInformation = {
 
 const defaultInfo = {
   label: '?',
-  info: {
-    name: 'Questions ...',
-    description:
-      'Hover over any character in the regex to get information on it.',
-  },
+  name: 'Questions ...',
+  description:
+    'Hover over any character in the regex to get information on it.',
 };
 
 //------------------------------------------------------------------------------
