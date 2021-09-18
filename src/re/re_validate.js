@@ -5,13 +5,13 @@
 //------------------------------------------------------------------------------
 // Imports
 
-import { warn } from './re_warnings';
+import warn from './re_warnings';
 import { getParenClose } from './re_parse';
 
 //------------------------------------------------------------------------------
 // Validate that opening and closing parentheses match
 
-const validateParentheses = (tokens, warnings) => {
+const validateParentheses = (tokens, lexemes, warnings) => {
   let parentheses = [];
 
   for (const token of tokens) {
@@ -22,7 +22,7 @@ const validateParentheses = (tokens, warnings) => {
       case ')':
         // No opening parenthesis
         if (parentheses.length === 0) {
-          warn(')', token.pos, token.index, warnings);
+          warn(')', token.pos, token.index, lexemes, warnings);
           token.invalid = true;
           break;
         }
@@ -46,7 +46,7 @@ const validateParentheses = (tokens, warnings) => {
 //------------------------------------------------------------------------------
 // Validate that operators do not apply to empty values
 
-const validateEmptyValues = (tokens, warnings) => {
+const validateEmptyValues = (tokens, lexemes, warnings) => {
   const stack = [];
   let exprIsEmpty = true;
   let termIsEmpty = true;
@@ -67,7 +67,7 @@ const validateEmptyValues = (tokens, warnings) => {
 
       case '|':
         if (termIsEmpty) {
-          warn('E|', token.pos, token.index, warnings);
+          warn('E|', token.pos, token.index, lexemes, warnings);
           token.invalid = true;
           break;
         }
@@ -80,7 +80,9 @@ const validateEmptyValues = (tokens, warnings) => {
       case '+':
         // Empty quantifier operand
         if (termIsEmpty) {
-          warn('E*', token.pos, token.index, warnings, { label: token.type });
+          warn('E*', token.pos, token.index, lexemes, warnings, {
+            label: token.type,
+          });
           token.invalid = true;
           break;
         }
@@ -99,26 +101,27 @@ const validateEmptyValues = (tokens, warnings) => {
 
         // Empty and unclosed parenthesis
         if (exprIsEmpty && token.added) {
-          warn('(E', open.pos, open.index, warnings);
+          warn('(E', open.pos, open.index, lexemes, warnings);
           open.invalid = true;
           token.invalid = true;
         }
 
         // Empty pair of parentheses
         else if (exprIsEmpty) {
-          warn('()', token.pos, token.index, warnings);
+          warn('()', token.pos, token.index, lexemes, warnings);
           open.invalid = true;
           token.invalid = true;
         }
 
         // Unclosed parenthesis
         else if (token.added) {
-          warn('(', open.pos, open.index, warnings);
+          warn('(', open.pos, open.index, lexemes, warnings);
         }
 
         // Empty term before closing parenthesis
         if (prevAlternation && termIsEmpty) {
-          warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
+          const { pos, index } = prevAlternation;
+          warn('|E', pos, index, lexemes, warnings);
           prevAlternation.invalid = true;
         }
 
@@ -134,7 +137,8 @@ const validateEmptyValues = (tokens, warnings) => {
 
   // Empty term at end of regex
   if (prevAlternation && termIsEmpty) {
-    warn('|E', prevAlternation.pos, prevAlternation.index, warnings);
+    const { pos, index } = prevAlternation;
+    warn('|E', pos, index, lexemes, warnings);
     prevAlternation.invalid = true;
   }
 };
@@ -142,7 +146,7 @@ const validateEmptyValues = (tokens, warnings) => {
 //------------------------------------------------------------------------------
 // Validate redundant quantifiers
 
-const validateQuantifiers = (tokens, warnings) => {
+const validateQuantifiers = (tokens, lexemes, warnings) => {
   let prevToken = {};
   let prevIsQuantifier = false;
 
@@ -156,7 +160,7 @@ const validateQuantifiers = (tokens, warnings) => {
       const label = `${prevToken.type}${token.type}`;
       const replacement = label === '??' ? '?' : label === '++' ? '+' : '*';
 
-      warn('**', token.pos, token.index, warnings, { label });
+      warn('**', token.pos, token.index, lexemes, warnings, { label });
       token.invalid = true;
       prevToken.label = replacement;
       prevToken.type = replacement;
@@ -170,10 +174,10 @@ const validateQuantifiers = (tokens, warnings) => {
 //------------------------------------------------------------------------------
 // Main validation function
 
-const validate = (tokens, warnings) => {
-  validateParentheses(tokens, warnings);
-  validateEmptyValues(tokens, warnings);
-  validateQuantifiers(tokens, warnings);
+const validate = (tokens, lexemes, warnings) => {
+  validateParentheses(tokens, lexemes, warnings);
+  validateEmptyValues(tokens, lexemes, warnings);
+  validateQuantifiers(tokens, lexemes, warnings);
 
   return tokens.filter((token) => !token.invalid);
 };

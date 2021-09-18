@@ -2,7 +2,7 @@
 // Warnings
 //------------------------------------------------------------------------------
 
-const warnings = {
+const staticInformation = {
   '[': {
     label: '[',
     type: '[',
@@ -26,7 +26,6 @@ const warnings = {
     // label from parser
     issue: 'Redundant quantifiers',
     msg: 'The parser is simplifying the quantifiers to a single one.',
-    // msg from parser
   },
   'E*': {
     type: 'E*',
@@ -52,6 +51,12 @@ const warnings = {
     issue: 'A pair of parentheses contains no value',
     msg: 'The parser is ignoring the parentheses.',
   },
+  '(E': {
+    type: '(E',
+    label: '(',
+    issue: 'An open parenthesis has not been closed and is empty',
+    msg: 'The parser is ignoring the parenthesis.',
+  },
   '\\E': {
     type: '\\E',
     label: '\\',
@@ -60,9 +65,34 @@ const warnings = {
   },
 };
 
-const warn = (type, pos, index, warnings, info) => {
-  const warning = { type, pos, index, ...info };
-  warnings.push(warning);
+//------------------------------------------------------------------------------
+
+const warn = (staticInformation) => (
+  type,
+  pos,
+  index,
+  lexemes,
+  warnings,
+  info
+) => {
+  lexemes[index].invalid = true;
+
+  if (warnings.has(type)) {
+    const warning = warnings.get(type);
+    warning.count += 1;
+    warning.positions.push(pos);
+    return;
+  }
+
+  const warning = {
+    ...staticInformation[type],
+    ...info,
+    count: 1,
+    positions: [pos],
+  };
+  warnings.set(type, warning);
 };
 
-export { warn };
+//------------------------------------------------------------------------------
+
+export default warn(staticInformation);

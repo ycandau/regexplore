@@ -251,10 +251,7 @@ const buildNFA = (rpn, lexemes) => {
   pushValue(fragments, { label: '>', type: 'last' });
   binary(fragments, concat);
 
-  return {
-    nfa: fragments[0].firstNode,
-    nodes: fragments[0].nodes,
-  };
+  return fragments[0].nodes;
 };
 
 //------------------------------------------------------------------------------

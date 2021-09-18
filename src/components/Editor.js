@@ -128,41 +128,41 @@ const addClassTo = (displayInfo) => (cls, ...indexes) => {
 };
 
 const getLabelsAndClasses = (editorInfo, index) => {
-  const displayInfo = editorInfo.map((token) => {
+  const displayInfo = editorInfo.map((lexeme) => {
     const info = {
-      label: token.label,
-      classes: token.displayType,
+      label: lexeme.label,
+      classes: lexeme.displayType,
     };
 
-    if (token.warning) {
+    if (lexeme.invalid) {
       info.classes += ' warning';
     }
     return info;
   });
 
-  const token = editorInfo[index] || {};
+  const lexeme = editorInfo[index] || {};
   const add = addClassTo(displayInfo);
 
-  switch (token.displayType) {
+  switch (lexeme.displayType) {
     case 'value':
-      add('hl-value', token.index);
+      add('hl-value', lexeme.index);
       break;
     case 'value-special':
-      add('hl-value-special', token.index);
+      add('hl-value-special', lexeme.index);
       break;
     case 'operator':
-      add('hl-operator', token.index);
-      add('hl-oper-left-inside', token.beginL, token.endL);
-      add('hl-oper-right-inside', token.beginR, token.endR);
+      add('hl-operator', lexeme.index);
+      add('hl-oper-left-inside', lexeme.beginL, lexeme.endL);
+      add('hl-oper-right-inside', lexeme.beginR, lexeme.endR);
       break;
     case 'quantifier':
-      add('hl-quantifier', token.index);
-      add('hl-oper-left-inside', token.beginL, token.endL);
+      add('hl-quantifier', lexeme.index);
+      add('hl-oper-left-inside', lexeme.beginL, lexeme.endL);
       break;
     case 'delimiter':
-      add('hl-delimiter', token.begin);
-      add('hl-delimiter', token.end);
-      add('hl-delim-inside', token.begin + 1, token.end - 1);
+      add('hl-delimiter', lexeme.begin);
+      add('hl-delimiter', lexeme.end);
+      add('hl-delim-inside', lexeme.begin + 1, lexeme.end - 1);
       break;
     default:
       break;
