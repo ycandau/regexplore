@@ -2,65 +2,6 @@
 // Calculate the graph layout
 //------------------------------------------------------------------------------
 
-const copyProps = (src, dest, props) => {
-  props.forEach((prop) => {
-    if (src[prop] !== undefined) dest[prop] = src[prop];
-  });
-};
-
-//------------------------------------------------------------------------------
-
-const newDisplayNode = (node) => {
-  const label = node.type === 'bracketClass' ? '[]' : node.label;
-  const dnode = { label, type: node.type, ref: node, previous: [] };
-  node.dnode = dnode;
-  if (node.heights !== undefined) dnode.heights = node.heights;
-  if (node.forkIndex !== undefined) dnode.forkIndex = node.forkIndex;
-  if (node.close !== undefined) dnode.close = node.close;
-  if (node.open !== undefined) dnode.open = node.open;
-  return dnode;
-};
-
-//------------------------------------------------------------------------------
-
-const createDisplayNodes = (nodes) => {
-  const dnodes = nodes.map(newDisplayNode);
-
-  // Transfer next node references
-  dnodes.forEach((dnode) => {
-    switch (dnode.type) {
-      case '|':
-        dnode.next = dnode.ref.nextNodes.map((node) => node.dnode);
-        break;
-      case '?':
-        dnode.next = [dnode.ref.nextNodes[0].dnode];
-        break;
-      case '*':
-        dnode.next = [dnode.ref.nextNodes[0].dnode];
-        break;
-      case '+':
-        dnode.next = [dnode.ref.nextNodes[1].dnode];
-        break;
-      case 'last':
-        dnode.next = [];
-        break;
-      default:
-        dnode.next = [dnode.ref.nextNodes[0].dnode];
-        break;
-    }
-
-    // dnode.next = dnode.ref.nextNodes.map((node) => node.dnode);
-
-    if (dnode.close !== undefined) dnode.close = dnode.close.dnode;
-    if (dnode.open !== undefined) dnode.open = dnode.open.dnode;
-
-    dnode.next.forEach((next) => next.previous.push(dnode));
-  });
-  return dnodes;
-};
-
-//------------------------------------------------------------------------------
-
 const forkDeltaY = (heights, index) => {
   let dy = 0;
   let sum = 0;
@@ -88,42 +29,6 @@ const typeToNodeType = {
   last: 'last',
 };
 
-const finalizeDisplayNodes = (nodes) => {
-  const graphNodes = nodes.map((node, ind) => {
-    // Set the index in the NFA
-    node.ref.graphNodeIndex = ind;
-
-    let addClass = '';
-
-    if (node.quantifier) {
-      addClass = ' quantifier';
-    }
-
-    // Transfer quantifier from ( to )
-    if (node.quantifier && node.close && node.label === '(') {
-      node.close.quantifier = node.quantifier;
-      node.quantifier = 'open';
-    }
-
-    // Transfer quantifier from ) to (
-    if (node.close && node.close.quantifier === '+') {
-      addClass = ' quantifier';
-      node.quantifier = 'open';
-    }
-
-    const classes = `${typeToNodeType[node.type]}${addClass}`;
-
-    return {
-      label: node.label,
-      coord: node.coord,
-      classes,
-      active: false,
-      quantifier: node.quantifier,
-    };
-  });
-  return graphNodes;
-};
-
 //------------------------------------------------------------------------------
 
 const calculateLayout = (nodes) => {
@@ -132,8 +37,12 @@ const calculateLayout = (nodes) => {
   const merges = [];
 
   nodes.forEach((node) => {
+    if (node.type === '?' || node.type === '*' || node.type === '+') {
+      return;
+    }
+
     // First
-    if (node.type === 'first') {
+    else if (node.type === 'first') {
       node.coord = [0, 0];
     } else if (node.type === null) {
     }
@@ -191,12 +100,10 @@ const calculateLayout = (nodes) => {
     }
   });
 
-  const fnodes = finalizeDisplayNodes(nodes);
-
   // Parentheses with quantifiers
   let coord = [];
   const parentheses = [];
-  fnodes.forEach((node) => {
+  nodes.forEach((node) => {
     if (node.label === '(' && node.quantifier) {
       coord.push(node.coord);
     }
@@ -205,16 +112,13 @@ const calculateLayout = (nodes) => {
     }
   });
 
-  return { nodes: fnodes, links, forks, merges, parentheses };
+  return { nodes, links, forks, merges, parentheses };
 };
 
 //------------------------------------------------------------------------------
 
 const buildGraph = (nodes) => {
-  const displayNodes = createDisplayNodes(nodes);
-  console.log(displayNodes);
-  const graph = calculateLayout(displayNodes);
-
+  const graph = calculateLayout(nodes);
   return graph;
 };
 
