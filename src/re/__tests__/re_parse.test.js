@@ -62,8 +62,11 @@ const testParser = (regex, lexlength, tokLength, warnLength, args = []) => {
 
     expect(lexemes.length).toBe(lexlength);
     expect(tokens.length).toBe(tokLength);
-    expect(warnings.length).toBe(warnLength);
     expect(labelString(lexemes)).toBe(regex);
+
+    const warningsList = [...warnings.values()];
+    const count = warningsList.reduce((sum, w) => sum + w.positions.length, 0);
+    expect(count).toBe(warnLength);
 
     // Test lexemes
     args
@@ -110,10 +113,8 @@ const testParser = (regex, lexlength, tokLength, warnLength, args = []) => {
     args
       .filter(({ argType }) => argType === 'warning')
       .forEach(({ type, index }) => {
-        const types = warnings
-          .filter((warn) => warn.index === index)
-          .map((warn) => warn.type);
-        expect(types).toContain(type);
+        const warning = warnings.get(type);
+        expect(warning.positions).toContain(index);
       });
 
     // Test invalid tokens
@@ -152,7 +153,7 @@ describe('Regex engine: Parser', () => {
 
   const args2 = [
     lexAndTok('\\', 'escapedChar', 3, 2),
-    warning('\\E', 2),
+    warning('\\E', 3),
     invalid(2),
   ];
   testParser('\\ab\\', 3, 3, 1, args2);
@@ -286,21 +287,21 @@ describe('Regex engine: Parser', () => {
   const args17 = [
     token('[b]', 'bracketClass', 2, 1, ['b'], ['x']),
     bracket(1, 2, false),
-    warning('[', 1),
+    warning('[', 2),
   ];
   testParser('\\a[b', 3, 2, 1, args17);
 
   const args18 = [
     token('[b-]', 'bracketClass', 2, 1, ['b', '-'], ['x']),
     bracket(1, 3, false),
-    warning('[', 1),
+    warning('[', 2),
   ];
   testParser('\\a[b-', 4, 2, 1, args18);
 
   const args19 = [
     token('[b-d]', 'bracketClass', 2, 1, ['b', 'c', 'd'], ['x', 'a', 'e']),
     bracket(1, 4, false),
-    warning('[', 1),
+    warning('[', 2),
   ];
   testParser('\\a[b-d', 5, 2, 1, args19);
 });
