@@ -12,7 +12,7 @@ const Node = ({ coord, label, quantifier, classes, runClasses, diameter }) => {
   };
 
   const allClasses = `node ${classes} ${runClasses}`;
-  const tag = quantifier && label === ')';
+  const tag = quantifier && label !== '(';
 
   return (
     <>
