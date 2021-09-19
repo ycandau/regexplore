@@ -63,9 +63,7 @@ const stepForward = (nfaNodes, prevActiveNodes, testString, pos) => {
 //------------------------------------------------------------------------------
 
 const setActiveGraphNodes = (graphNodes, activeNodes, runState) => {
-  graphNodes.forEach((gnode) => {
-    gnode.runClasses = '';
-  });
+  graphNodes.forEach((node) => (node.runClasses = ''));
 
   activeNodes.forEach((node) => {
     graphNodes[node.graphNodeIndex].runClasses = 'active';
