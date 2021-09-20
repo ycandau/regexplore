@@ -26,7 +26,7 @@ import '@fontsource/fira-mono';
 
 import getTokenInfo from '../re/re_token_info';
 import compile from '../re/re_compile';
-import { stepForward } from '../re/re_run';
+import { initNFA, stepForward } from '../re/re_run';
 
 // replace with the actial server address when ready
 
@@ -79,18 +79,23 @@ const useStyles = makeStyles((theme) => ({
 //------------------------------------------------------------------------------
 // Initialization
 
-const initHistory = (regex) => ({
-  index: 0,
-  end: -1,
-  states: [
-    {
-      runState: 'running',
-      activeNodes: [regex.nfa[0]],
-      testRange: [0, 0],
-      matchRanges: [],
-    },
-  ],
-});
+const initHistory = (regex) => {
+  const { matchingNodes, nextNodesToTest } = initNFA(regex.nfa);
+
+  return {
+    index: 0,
+    end: -1,
+    states: [
+      {
+        runState: 'running',
+        matchingNodes,
+        nextNodesToTest,
+        testRange: [0, 0],
+        matchRanges: [],
+      },
+    ],
+  };
+};
 
 const initLogs = () => ({ first: 0, list: [] });
 
@@ -128,9 +133,13 @@ const App = () => {
   const [play, setPlay] = useState(false);
   const [count, setCount] = useState(0);
 
-  const { runState, activeNodes, testRange, matchRanges } = history.states[
-    history.index
-  ];
+  const {
+    runState,
+    matchingNodes,
+    nextNodesToTest,
+    testRange,
+    matchRanges,
+  } = history.states[history.index];
 
   //----------------------------------------------------------------------------
 
@@ -262,7 +271,8 @@ const App = () => {
     const prevIndex = history.index;
     let end = history.end;
     const prevState = history.states[prevIndex];
-    let prevActiveNodes = prevState.activeNodes;
+    let prevNextNodesToTest = prevState.nextNodesToTest;
+
     const prevTestRange = prevState.testRange;
     const prevRunState = prevState.runState;
 
@@ -283,15 +293,15 @@ const App = () => {
     }
 
     if (prevRunState === 'success' || prevRunState === 'failure') {
-      prevActiveNodes = [regex.nfa[0]];
+      const reset = initNFA(regex.nfa);
+      prevNextNodesToTest = reset.nextNodesToTest;
     }
 
     // Run the next step
     const ch = testString[prevPos];
     const char = ch === ' ' ? "' '" : ch;
-    let { runState, activeNodes } = stepForward(
-      regex.nfa,
-      prevActiveNodes,
+    let { runState, matchingNodes, nextNodesToTest } = stepForward(
+      prevNextNodesToTest,
       testString,
       prevPos
     );
@@ -304,7 +314,7 @@ const App = () => {
     switch (runState) {
       case 'running':
         testRange = [begin, pos];
-        msg = `Char: ${char} - Nodes: ${activeNodes.length}`;
+        msg = `Char: ${char} - Nodes: ${matchingNodes.length}`;
         break;
       case 'success':
         testRange = [pos, pos];
@@ -335,7 +345,8 @@ const App = () => {
     // Set the next history state
     const nextState = {
       runState,
-      activeNodes,
+      matchingNodes,
+      nextNodesToTest,
       testRange,
       matchRanges,
     };
@@ -442,7 +453,11 @@ const App = () => {
   );
 
   const graphBox = displayGraph ? (
-    <Graph graph={regex.graph} activeNodes={activeNodes} runState={runState} />
+    <Graph
+      graph={regex.graph}
+      matchingNodes={matchingNodes}
+      runState={runState}
+    />
   ) : (
     <SaveBox
       {...{

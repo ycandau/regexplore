@@ -70,15 +70,15 @@ const stepForward = (currentNodes, testString, pos) => {
 // Initialize the NFA
 
 const initNFA = (nfa) => {
+  nfa.forEach((node) => (node.gen = -1));
   const nextNodesToTest = [];
   propagate(nfa[0], nextNodesToTest, 0);
-
-  return nextNodesToTest;
+  return { matchingNodes: [nfa[0]], nextNodesToTest };
 };
 
 //------------------------------------------------------------------------------
 
-const setActiveGraphNodes = (graphNodes, matchingNodes, runState) => {
+const setMatchingGraphNodes = (graphNodes, matchingNodes, runState) => {
   graphNodes.forEach((node) => (node.runClasses = ''));
 
   matchingNodes.forEach((node) => {
@@ -90,4 +90,4 @@ const setActiveGraphNodes = (graphNodes, matchingNodes, runState) => {
 
 //------------------------------------------------------------------------------
 
-export { stepForward, setActiveGraphNodes };
+export { initNFA, stepForward, setMatchingGraphNodes };
