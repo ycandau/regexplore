@@ -1,5 +1,10 @@
 //------------------------------------------------------------------------------
 // Warnings
+//
+//   - Warnings are aggregated by type, with arrays of positions.
+//   - They are generated during two phases:
+//     - Two types during parsing ('[' and '\\E').
+//     - All other types during validation.
 //------------------------------------------------------------------------------
 
 const staticInformation = {
@@ -8,6 +13,12 @@ const staticInformation = {
     type: '[',
     issue: 'An open bracket has not been closed',
     msg: 'The parser is adding an implicit closing bracket.',
+  },
+  '\\E': {
+    type: '\\E',
+    label: '\\',
+    issue: 'No character after backslash',
+    msg: 'The parser is ignoring the backslash.',
   },
   '(': {
     type: '(',
@@ -56,12 +67,6 @@ const staticInformation = {
     label: '(',
     issue: 'An open parenthesis has not been closed and is empty',
     msg: 'The parser is ignoring the parenthesis.',
-  },
-  '\\E': {
-    type: '\\E',
-    label: '\\',
-    issue: 'No character after backslash',
-    msg: 'The parser is ignoring the backslash.',
   },
 };
 
