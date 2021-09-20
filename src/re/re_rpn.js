@@ -1,5 +1,9 @@
 //------------------------------------------------------------------------------
 // Convert the regex to reverse polish notation
+//
+//   - The convertToRPN() function returns tokens in reverse polish notation.
+//   - It assumes that the input tokens are already validated.
+//   - It mutates lexemes by adding information on parentheses ranges.
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
