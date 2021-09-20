@@ -1,5 +1,11 @@
 //------------------------------------------------------------------------------
 // Calculate the graph layout
+//
+//   - The buildGraph() function returns an object to draw the graph display.
+//   - It takes in the array of NFA nodes, filters the quantifiers out,
+//     then uses the information from the NFA phase to calculate the layout.
+//   - The graph nodes are created as new objects.
+//   - The NFA nodes are set with an index to refer to the graph nodes.
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
