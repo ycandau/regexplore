@@ -1,71 +1,87 @@
 //------------------------------------------------------------------------------
-// Run the NFA
+// Run the regex using the NFA
 //------------------------------------------------------------------------------
 
-const getNextActiveNodes = (node, nextActiveNodes, ch) => {
-  node.nextNodes.forEach((next) => {
-    if (next.visited) return;
-    next.visited = true;
+//------------------------------------------------------------------------------
+// Propagate forward through non value nodes and gather the list of value nodes
+// to test on the next step.
 
-    if (next.match !== undefined) {
-      if (next.match(ch)) nextActiveNodes.push(next);
-    } else {
-      getNextActiveNodes(next, nextActiveNodes, ch);
+const propagate = (node, nextNodesToTest, gen) => {
+  // Already visited
+  if (node.gen === gen) return false;
+  node.gen = gen;
+
+  // Reached the last node
+  if (node.type === 'last') return true;
+
+  // Non value node
+  if (!node.match) {
+    for (const next of node.nextNodes) {
+      const reachedLast = propagate(next, nextNodesToTest, gen);
+      if (reachedLast) return true;
     }
-  });
-};
-
-const reachesLastNode = (node) => {
-  for (const next of node.nextNodes) {
-    if (next.type === 'last') return true;
-    if (next.visited || next.match) break;
-    next.visited = true;
-    if (reachesLastNode(next)) return true;
+    return false;
   }
+
+  // Value node
+  nextNodesToTest.push(node);
   return false;
 };
 
 //------------------------------------------------------------------------------
+// Step forward, testing the current list of value nodes and propagating
+// through non value nodes
 
-const stepForward = (nfaNodes, prevActiveNodes, testString, pos) => {
+const stepForward = (currentNodes, testString, pos) => {
   const ch = testString[pos];
+  const gen = currentNodes[0].gen + 1;
 
-  // Next active nodes
-  nfaNodes.forEach((node) => (node.visited = false));
-  const activeNodes = [];
-  prevActiveNodes.forEach((node) => {
-    getNextActiveNodes(node, activeNodes, ch);
-  });
+  const nextNodesToTest = [];
+  const matchingNodes = [];
 
-  // Check if match in reach
-  nfaNodes.forEach((node) => (node.visited = false));
-  let matchingNode = null;
-  for (const node of activeNodes) {
-    if (reachesLastNode(node)) {
-      matchingNode = node;
-      break;
+  // Test the current list of value nodes
+  for (const node of currentNodes) {
+    if (node.match(ch)) {
+      matchingNodes.push(node);
+      const reachedLast = propagate(node.nextNodes[0], nextNodesToTest, gen);
+
+      // Successful match
+      if (reachedLast) {
+        return { runState: 'success', matchingNodes: [node], nextNodesToTest };
+      }
     }
   }
 
-  // Returns
-  if (matchingNode) {
-    return { runState: 'success', activeNodes: [matchingNode] };
-  }
+  // End of test string
   if (pos === testString.length - 1) {
-    return { runState: 'end', activeNodes };
+    return { runState: 'end', matchingNodes, nextNodesToTest };
   }
-  if (activeNodes.length === 0) {
-    return { runState: 'failure', activeNodes };
+
+  // Failure to match
+  if (matchingNodes.length === 0) {
+    return { runState: 'failure', matchingNodes, nextNodesToTest };
   }
-  return { runState: 'running', activeNodes };
+
+  // Continue running
+  return { runState: 'running', matchingNodes, nextNodesToTest };
+};
+
+//------------------------------------------------------------------------------
+// Initialize the NFA
+
+const initNFA = (nfa) => {
+  const nextNodesToTest = [];
+  propagate(nfa[0], nextNodesToTest, 0);
+
+  return nextNodesToTest;
 };
 
 //------------------------------------------------------------------------------
 
-const setActiveGraphNodes = (graphNodes, activeNodes, runState) => {
+const setActiveGraphNodes = (graphNodes, matchingNodes, runState) => {
   graphNodes.forEach((node) => (node.runClasses = ''));
 
-  activeNodes.forEach((node) => {
+  matchingNodes.forEach((node) => {
     graphNodes[node.graphNodeIndex].runClasses = 'active';
   });
 
