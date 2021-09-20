@@ -3,42 +3,28 @@
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;
+const QUANT_HEIGHT = 0;
 
 //------------------------------------------------------------------------------
 // Create node and fragment objects
 
 const newNode = (token, config) => ({ ...token, nextNodes: [], ...config });
 
-const newFragment = (
-  // To build the NFA
+const newFragment = (firstNode, terminalNodes, begin, end, height, nodes) => ({
   firstNode, // first node in the fragment
   terminalNodes, // array of terminal nodes
-  nodes, // an ordered array of nodes
-
-  // To track operands
   begin, // index of the first node in the fragment
   end, // index of the last node in the fragment
-
-  // To build the graph display
-  firstGraphNode,
-  terminalGraphNodes,
-  height // to calculate the graph layout
-) => ({
-  firstNode,
-  terminalNodes,
-  nodes,
-  begin,
-  end,
-  firstGraphNode,
-  terminalGraphNodes,
-  height,
+  height, // to calculate the graph layout
+  nodes, // an ordered array of nodes
 });
 
 //------------------------------------------------------------------------------
 // Helper functions to connect nodes and fragments
 
-const connect = (node1, node2) => {
+const connect = (node1, node2, index) => {
   node1.nextNodes.push(node2);
+  if (index !== undefined) node2.forkIndex = index;
 };
 
 const connectFragment = (frag, node) => {
@@ -58,47 +44,18 @@ const setOperatorRange = (lexeme, frag1, frag2) => {
 };
 
 //------------------------------------------------------------------------------
-
-const graphLink = (node1, node2) => {
-  node2.prevGraphNodes = [node1];
-};
-
-const graphFork = (node1, node2, index) => {
-  node1.nextGraphNodes.push(node2);
-  node2.prevGraphNodes = [node1];
-  node2.forkIndex = index;
-};
-
-const graphMerge = (nodes, node2) => {
-  node2.prevGraphNodes = [...nodes];
-};
-
-const setQuantifier = (frag, type) => {
-  frag.firstGraphNode.quantifier = type;
-};
-
-//------------------------------------------------------------------------------
 // Concatenate two fragments
 
 const concat = (frag1, frag2) => {
   connectFragment(frag1, frag2.firstNode);
 
-  graphMerge(frag1.terminalGraphNodes, frag2.firstGraphNode);
-
   return newFragment(
-    // NFA
     frag1.firstNode,
-    frag2.terminalNodes,
-    [...frag1.nodes, ...frag2.nodes],
-
-    // Operands
+    [...frag2.terminalNodes],
     frag1.begin,
     frag2.end,
-
-    // Graph display
-    frag1.firstGraphNode,
-    frag2.terminalGraphNodes,
-    Math.max(frag1.height, frag2.height)
+    Math.max(frag1.height, frag2.height),
+    [...frag1.nodes, ...frag2.nodes]
   );
 };
 
@@ -114,54 +71,38 @@ const alternate = (frag1, frag2, token, lexemes) => {
 
   // No fork merging
   if (first1.type !== '|' && first2.type !== '|') {
-    // NFA
-    connect(fork, first1);
-    connect(fork, first2);
-    nodes = [fork, ...frag1.nodes, ...frag2.nodes];
+    connect(fork, first1, 0);
+    connect(fork, first2, 1);
 
-    // Graph display
-    fork.nextGraphNodes = [];
-    graphFork(fork, frag1.firstGraphNode, 0);
-    graphFork(fork, frag2.firstGraphNode, 1);
     fork.heights = [frag1.height, frag2.height];
+    nodes = [fork, ...frag1.nodes, ...frag2.nodes];
   }
 
   // Merge left hand fork
   else if (first1.type === '|') {
-    // NFA
-    first1.nextNodes.forEach((next) => connect(fork, next));
-    connect(fork, first2);
-    nodes = [fork, ...frag1.nodes.slice(1), ...frag2.nodes];
+    first1.nextNodes.forEach((next, ind) => {
+      connect(fork, next, ind);
+    });
+    connect(fork, first2, first1.nextNodes.length);
 
-    // Graph display
-    fork.nextGraphNodes = [];
-    first1.nextGraphNodes.forEach((next, ind) => graphFork(fork, next, ind));
-    graphFork(fork, frag2.firstGraphNode, first1.nextGraphNodes.length);
     fork.heights = [...first1.heights, frag2.height];
+    nodes = [fork, ...frag1.nodes.slice(1), ...frag2.nodes];
   }
 
-  // The alternative should not happen
+  // Alternative should not happen
   else {
     throw new Error('NFA: Fork merge should not happen');
   }
 
-  // Operands
   setOperatorRange(lexemes[token.index], frag1, frag2);
 
   return newFragment(
-    // NFA
     fork,
     [...frag1.terminalNodes, ...frag2.terminalNodes],
-    nodes,
-
-    // Operand ranges
     frag1.begin,
     frag2.end,
-
-    // Graph display
-    fork,
-    [...frag1.terminalGraphNodes, ...frag2.terminalGraphNodes],
-    frag1.height + frag2.height
+    frag1.height + frag2.height,
+    nodes
   );
 };
 
@@ -173,22 +114,13 @@ const repeat01 = (frag, token, lexemes) => {
   connect(fork, frag.firstNode);
   setOperatorRange(lexemes[token.index], frag);
 
-  setQuantifier(frag, '?');
-
   return newFragment(
-    // NFA
     fork,
     [...frag.terminalNodes, fork],
-    [fork, ...frag.nodes],
-
-    // Operand ranges
     frag.begin,
     token.index,
-
-    // Graph display
-    frag.firstGraphNode,
-    frag.terminalGraphNodes,
-    frag.height
+    frag.height + QUANT_HEIGHT,
+    [fork, ...frag.nodes]
   );
 };
 
@@ -201,22 +133,13 @@ const repeat0N = (frag, token, lexemes) => {
   connectFragment(frag, fork);
   setOperatorRange(lexemes[token.index], frag);
 
-  setQuantifier(frag, '*');
-
   return newFragment(
-    // NFA
     fork,
     [fork],
-    [fork, ...frag.nodes],
-
-    // Operand ranges
     frag.begin,
     token.index,
-
-    // Graph display
-    frag.firstGraphNode,
-    frag.terminalGraphNodes,
-    frag.height
+    frag.height + QUANT_HEIGHT,
+    [fork, ...frag.nodes]
   );
 };
 
@@ -229,22 +152,13 @@ const repeat1N = (frag, token, lexemes) => {
   connectFragment(frag, fork);
   setOperatorRange(lexemes[token.index], frag);
 
-  setQuantifier(frag, '+');
-
   return newFragment(
-    // NFA
     frag.firstNode,
     [fork],
-    [...frag.nodes, fork],
-
-    // Operand ranges
     frag.begin,
     token.index,
-
-    // Graph display
-    frag.firstGraphNode,
-    frag.terminalGraphNodes,
-    frag.height
+    frag.height + QUANT_HEIGHT,
+    [...frag.nodes, fork]
   );
 };
 //------------------------------------------------------------------------------
@@ -255,28 +169,13 @@ const parentheses = (frag, token) => {
   const close = newNode(token, { label: ')', type: ')', index: open.end });
   connect(open, frag.firstNode);
   connectFragment(frag, close);
-
   open.close = close;
   close.open = close;
 
-  graphLink(open, frag.firstGraphNode);
-  graphMerge(frag.terminalGraphNodes, close);
+  const height = frag.height;
+  const nodes = [open, ...frag.nodes, close];
 
-  return newFragment(
-    // NFA
-    open,
-    [close],
-    [open, ...frag.nodes, close],
-
-    // Operand ranges
-    token.index,
-    token.end,
-
-    // Graph display
-    open,
-    [close],
-    frag.height
-  );
+  return newFragment(open, [close], token.index, token.end, height, nodes);
 };
 
 //------------------------------------------------------------------------------
@@ -285,23 +184,9 @@ const parentheses = (frag, token) => {
 const pushValue = (fragments, token) => {
   const node = newNode(token);
   const end = token.end || token.index; // in case of bracket expressions
+  const height = HEIGHT;
 
-  const fragment = newFragment(
-    // NFA
-    node,
-    [node],
-    [node],
-
-    // Operand ranges
-    token.index,
-    end,
-
-    // Graph display
-    node,
-    [node],
-    HEIGHT
-  );
-
+  const fragment = newFragment(node, [node], token.index, end, height, [node]);
   fragments.push(fragment);
 };
 

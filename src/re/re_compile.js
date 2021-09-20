@@ -6,8 +6,7 @@ import parse from './re_parse';
 import validate from './re_validate';
 import convertToRPN from './re_rpn';
 import buildNFA from './re_nfa';
-// import buildGraph from './re_graph';
-import buildGraph from './re_graph2';
+import buildGraph from './re_graph';
 import generateRegexFromRPN from './re_autofix';
 
 //------------------------------------------------------------------------------

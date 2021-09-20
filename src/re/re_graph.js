@@ -1,87 +1,61 @@
 //------------------------------------------------------------------------------
-// Prepare the data to draw the graph
+// Calculate the graph layout
 //------------------------------------------------------------------------------
 
-const newDisplayNode = (node) => {
-  const label = node.type === 'bracketClass' ? '[]' : node.label;
-  const dnode = { label, type: node.type, ref: node };
-  node.dnode = dnode;
-  if (node.heights !== undefined) dnode.heights = node.heights;
-  if (node.forkIndex !== undefined) dnode.forkIndex = node.forkIndex;
-  if (node.close !== undefined) dnode.close = node.close;
-  if (node.open !== undefined) dnode.open = node.open;
-  return dnode;
-};
-
 //------------------------------------------------------------------------------
+// Filter the quantifier nodes out and store the indexes in the NFA nodes
 
-const createDisplayNodes = (nodes) => {
-  const dnodes = nodes.map(newDisplayNode);
+const filterNodes = (nodes) => {
+  const graphNodes = [];
 
-  // Transfer next node references
-  dnodes.forEach((dnode) => {
-    dnode.next = dnode.ref.nextNodes.map((node) => node.dnode);
-    if (dnode.close !== undefined) dnode.close = dnode.close.dnode;
-    if (dnode.open !== undefined) dnode.open = dnode.open.dnode;
-  });
-  return dnodes;
-};
-
-//------------------------------------------------------------------------------
-
-const mergeNextBack = (node1, node2, quantifier) => {
-  node1.quantifier = node1.type;
-  node1.label = node2.label;
-  node1.type = node2.type;
-  node1.ref = node2.ref;
-  node1.ref.dnode = node1;
-  node2.type = null;
-  if (node2.heights !== undefined) node1.heights = node2.heights;
-  if (node2.forkIndex !== undefined) node1.forkIndex = node2.forkIndex;
-  if (node2.close !== undefined) node1.close = node2.close;
-};
-
-//------------------------------------------------------------------------------
-
-const processQuantifiers = (nodes) => {
   nodes.forEach((node) => {
-    const next = node.next[0];
-    if (node.type === '?') {
-      mergeNextBack(node, next);
-      node.next = [...next.next];
-    }
-
-    // Repeat 0N
-    else if (node.type === '*') {
-      const nextType = next.type;
-      mergeNextBack(node, next);
-      if (nextType === '(') {
-        node.close.next = [node.next[1]];
-        node.next = [...next.next];
-      } else {
-        node.next = [node.next[1]];
-      }
-    }
-
-    // Repeat1N
-    else if (next && next.type === '+') {
-      next.type = null;
-      node.next = [next.next[1]];
-      node.quantifier = '+';
+    const type = node.type;
+    if (type !== '?' && type !== '*' && type !== '+') {
+      node.graphNodeIndex = graphNodes.length;
+      graphNodes.push(node);
     }
   });
-  return nodes.filter((node) => node.type !== null);
-};
-
-const setPreviousNodes = (nodes) => {
-  nodes.forEach((node) => (node.previous = []));
-  nodes.forEach((prev) => {
-    prev.next.forEach((node) => node.previous.push(prev));
-  });
-  return nodes;
+  return graphNodes;
 };
 
 //------------------------------------------------------------------------------
+// Convert token types to graph node types to set CSS classes
+
+const typeToGraphNodeType = {
+  charLiteral: 'value',
+  escapedChar: 'value-special',
+  charClass: 'value-special',
+  bracketClass: 'value-special',
+  '.': 'value-special',
+  '|': 'operator',
+  '(': 'delimiter',
+  ')': 'delimiter',
+  first: 'first',
+  last: 'last',
+};
+
+//------------------------------------------------------------------------------
+// Create the array of graph nodes
+
+const createGraphNodes = (nodes) =>
+  nodes.map((node) => {
+    const classes =
+      typeToGraphNodeType[node.type] + (node.quantifier ? ' quantifier' : '');
+
+    const gnode = {
+      label: node.label,
+      coord: node.coord,
+      classes,
+      runClasses: '',
+    };
+
+    if (node.quantifier) gnode.quantifier = node.quantifier;
+
+    return gnode;
+  });
+
+//------------------------------------------------------------------------------
+// Calculate the vertical offset of a graph node following a fork
 
 const forkDeltaY = (heights, index) => {
   let dy = 0;
@@ -96,91 +70,37 @@ const forkDeltaY = (heights, index) => {
 };
 
 //------------------------------------------------------------------------------
-
-const typeToNodeType = {
-  charLiteral: 'value',
-  escapedChar: 'value-special',
-  charClass: 'value-special',
-  bracketClass: 'value-special',
-  '.': 'value-special',
-  '|': 'operator',
-  '(': 'delimiter',
-  ')': 'delimiter',
-  first: 'first',
-  last: 'last',
-};
-
-const finalizeDisplayNodes = (nodes) => {
-  const graphNodes = nodes.map((node, ind) => {
-    // Set the index in the NFA
-    node.ref.graphNodeIndex = ind;
-
-    let addClass = '';
-
-    if (node.quantifier) {
-      addClass = ' quantifier';
-    }
-
-    // Transfer quantifier from ( to )
-    if (node.quantifier && node.close && node.label === '(') {
-      node.close.quantifier = node.quantifier;
-      node.quantifier = 'open';
-    }
-
-    // Transfer quantifier from ) to (
-    if (node.close && node.close.quantifier === '+') {
-      addClass = ' quantifier';
-      node.quantifier = 'open';
-    }
-
-    const classes = `${typeToNodeType[node.type]}${addClass}`;
-
-    return {
-      label: node.label,
-      coord: node.coord,
-      classes,
-      active: false,
-      quantifier: node.quantifier,
-    };
-  });
-  return graphNodes;
-};
-
-//------------------------------------------------------------------------------
+// Calculate the layout of the graph display
 
 const calculateLayout = (nodes) => {
+  // Pass 1: Coordinates, and links
   const links = [];
-  const forks = [];
-  const merges = [];
-
   nodes.forEach((node) => {
     // First
     if (node.type === 'first') {
       node.coord = [0, 0];
-    } else if (node.type === null) {
     }
 
-    // Fork
+    // Fork (no link)
     else if (node.heights) {
-      const [x0, y0] = node.previous[0].coord;
+      const [x0, y0] = node.prevGraphNodes[0].coord;
       node.coord = [x0, y0];
-      links.push([[x0, y0], node.coord]);
     }
 
     // Post fork
     else if (node.forkIndex !== undefined) {
-      const fork = node.previous[0];
+      const fork = node.prevGraphNodes[0];
       const [x0, y0] = fork.coord;
       const dy = forkDeltaY(fork.heights, node.forkIndex);
       node.coord = [x0 + 1, y0 + dy];
     }
 
     // Merge
-    else if (node.previous.length > 1) {
-      const top = node.previous[0];
-      const bottom = node.previous[node.previous.length - 1];
+    else if (node.prevGraphNodes.length > 1) {
+      const top = node.prevGraphNodes[0];
+      const bottom = node.prevGraphNodes[node.prevGraphNodes.length - 1];
       const x =
-        node.previous.reduce((max, prev) => {
+        node.prevGraphNodes.reduce((max, prev) => {
           return Math.max(max, prev.coord[0]);
         }, 0) + 1;
       const y = (top.coord[1] + bottom.coord[1]) / 2;
@@ -188,57 +108,50 @@ const calculateLayout = (nodes) => {
     }
 
     // Link
-    else if (node.previous.length === 1) {
-      const [x0, y0] = node.previous[0].coord;
+    else if (node.prevGraphNodes.length === 1) {
+      const [x0, y0] = node.prevGraphNodes[0].coord;
       node.coord = [x0 + 1, y0];
       links.push([[x0, y0], node.coord]);
     }
   });
 
+  // Pass 2: Forks, merges, and parentheses with quantifiers
+  const forks = [];
+  const merges = [];
+  const parentheses = [];
   nodes.forEach((node) => {
     // Forks
     if (node.heights) {
       const coords = [];
       coords.push(node.coord);
-      node.next.forEach((n) => coords.push(n.coord));
+      node.nextGraphNodes.forEach((n) => coords.push(n.coord));
       forks.push(coords);
     }
 
     // Merges
-    else if (node.previous.length > 1) {
+    else if (node.prevGraphNodes && node.prevGraphNodes.length > 1) {
       const coords = [];
       coords.push(node.coord);
-      node.previous.forEach((n) => coords.push(n.coord));
+      node.prevGraphNodes.forEach((n) => coords.push(n.coord));
       merges.push(coords);
     }
-  });
 
-  const fnodes = finalizeDisplayNodes(nodes);
-
-  // Parentheses with quantifiers
-  let coord = [];
-  const parentheses = [];
-  fnodes.forEach((node) => {
-    if (node.label === '(' && node.quantifier) {
-      coord.push(node.coord);
-    }
-    if (node.label === ')' && node.quantifier) {
-      parentheses.push([coord.pop(), node.coord]);
+    // Parentheses with quantifiers
+    else if (node.type === '(' && node.quantifier) {
+      parentheses.push([node.coord, node.close.coord]);
     }
   });
 
-  return { nodes: fnodes, links, forks, merges, parentheses };
+  const graphNodes = createGraphNodes(nodes);
+
+  return { nodes: graphNodes, links, forks, merges, parentheses };
 };
 
 //------------------------------------------------------------------------------
 
-const buildGraph = (nodes) => {
-  const displayNodes = createDisplayNodes(nodes);
-  const filteredNodes = processQuantifiers(displayNodes);
-  const nodesWithPrevious = setPreviousNodes(filteredNodes);
-  const graph = calculateLayout(nodesWithPrevious);
-
-  return graph;
+const buildGraph = (nfa) => {
+  const filteredNodes = filterNodes(nfa);
+  return calculateLayout(filteredNodes);
 };
 
 //------------------------------------------------------------------------------

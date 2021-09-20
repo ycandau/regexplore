@@ -26,20 +26,21 @@ const warning = (type, index) => ({
 
 const testValidation = (regex, validRegex, warnLength, args = []) => {
   it(`validates the regex ${regex}`, () => {
-    const { tokens, warnings } = parse(regex);
-    validate(tokens, warnings);
+    const { lexemes, tokens, warnings } = parse(regex);
+    validate(tokens, lexemes, warnings);
 
     expect(toString(tokens)).toBe(validRegex);
-    expect(warnings.length).toBe(warnLength);
+
+    const warningsList = [...warnings.values()];
+    const count = warningsList.reduce((sum, w) => sum + w.positions.length, 0);
+    expect(count).toBe(warnLength);
 
     // Test warnings
     args
       .filter(({ argType }) => argType === 'warning')
       .forEach(({ type, index }) => {
-        const indexes = warnings
-          .filter((warn) => warn.type === type)
-          .map((warn) => warn.index);
-        expect(indexes).toContain(index);
+        const warning = warnings.get(type);
+        expect(warning.positions).toContain(index);
       });
   });
 };
