@@ -23,6 +23,22 @@ const node = (label, nextString) => ({
   argType: 'node',
 });
 
+const quant = (index, beginL, endL) => ({
+  index,
+  beginL,
+  endL,
+  argType: 'quantifier',
+});
+
+const altern = (index, beginL, endL, beginR, endR) => ({
+  index,
+  beginL,
+  endL,
+  beginR,
+  endR,
+  argType: 'alternation',
+});
+
 //------------------------------------------------------------------------------
 
 const testNFA = (regex, nfaString, args = []) => {
@@ -39,6 +55,24 @@ const testNFA = (regex, nfaString, args = []) => {
       .forEach(({ label, nextString }) => {
         const node = nfa.filter((node) => node.label === label)[0];
         expect(nextNodesString(node)).toBe(nextString);
+      });
+
+    args
+      .filter(({ argType }) => argType === 'quantifier')
+      .forEach(({ index, beginL, endL }) => {
+        const lexeme = lexemes[index];
+        expect(lexeme.beginL).toBe(beginL);
+        expect(lexeme.endL).toBe(endL);
+      });
+
+    args
+      .filter(({ argType }) => argType === 'alternation')
+      .forEach(({ index, beginL, endL, beginR, endR }) => {
+        const lexeme = lexemes[index];
+        expect(lexeme.beginL).toBe(beginL);
+        expect(lexeme.endL).toBe(endL);
+        expect(lexeme.beginR).toBe(beginR);
+        expect(lexeme.endR).toBe(endR);
       });
   });
 };
