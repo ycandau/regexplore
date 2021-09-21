@@ -1,5 +1,12 @@
 //------------------------------------------------------------------------------
 // Validate the regex
+//
+//   - The validate() function returns a filtered array of valid tokens.
+//   - And it mutates the lexemes and warnings (through the warn() function):
+//     - Invalid lexemes are marked (lexeme.invalid = true).
+//     - Warnings are logged.
+//   - The validation algorithm uses a non-recursive FSM approach to parallel
+//     the grammar of regular expressions.
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------

@@ -1,5 +1,12 @@
 //------------------------------------------------------------------------------
 // Compile the regex into a nondeterministic finite automata
+//
+//   - The buildNFA() function returns an array of connected nodes.
+//   - And it mutates the lexemes by adding information on operand ranges.
+//   - Two graphs are actually built:
+//     - One for the NFA used to run the regex.
+//     - One for the graph display, which bypasses quantifier nodes.
+//     - Building two graphs is less messy than dealing with quantifiers later.
 //------------------------------------------------------------------------------
 
 const HEIGHT = 1;

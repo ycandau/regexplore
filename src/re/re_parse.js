@@ -1,5 +1,14 @@
 //------------------------------------------------------------------------------
 // Parse the regex
+//
+//   - The parse() function returns lexemes, tokens and warnings.
+//   - Lexemes are used for syntax higlighting.
+//   - Tokens are used to build the NFA.
+//   - Lexemes break down bracket expressions whereas each expression
+//     corresponds to only one token.
+//   - The parsing phase generates two types of warnings:
+//       - Unclosed brackets ('[').
+//       - Terminal escape characters ('//E').
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -111,67 +120,6 @@ const describe = (lexeme, info) => {
 };
 
 //------------------------------------------------------------------------------
-// Tokenize
-
-const parse = (regex) => {
-  let pos = 0;
-  const lexemes = [];
-  const tokens = [];
-  const warnings = new Map();
-
-  while (pos < regex.length) {
-    const ch = regex[pos];
-    const ch2 = regex[pos + 1];
-    const label = regex.slice(pos, pos + 2);
-    const index = lexemes.length;
-    let token = null;
-    let lexemesAdded = false;
-
-    // Bracket expression
-    if (ch === '[') {
-      token = readBracketExpression(regex, pos, lexemes, warnings);
-      lexemesAdded = true;
-    }
-
-    // Static tokens (operators and wildcard)
-    else if (ch in staticTokens) {
-      token = staticTokens[ch](pos, index);
-    }
-
-    // Character classes
-    else if (label in staticTokens) {
-      token = staticTokens[label](pos, index);
-    }
-
-    // Escaped chararacter
-    else if (ch === '\\' && ch2 !== undefined) {
-      token = value(label, 'escapedChar', match(ch2))(pos, index);
-    }
-
-    // Syntax error: terminal backslash
-    else if (ch === '\\') {
-      token = value(ch, 'escapedChar', matchAll)(pos, index);
-      token.invalid = true;
-      addLexeme(lexemes, token.label, token.type, pos);
-      lexemesAdded = true;
-      warn('\\E', pos, index, lexemes, warnings);
-    }
-
-    // Character literal
-    else {
-      token = value(ch, 'charLiteral', match(ch))(pos, index);
-    }
-
-    // If the lexemes have not already been added (bracket expressions)
-    if (!lexemesAdded) addLexeme(lexemes, token.label, token.type, pos);
-    tokens.push(token);
-    pos += token.label.length;
-  }
-
-  return { lexemes, tokens, warnings };
-};
-
-//------------------------------------------------------------------------------
 // Bracket expressions: Helpers
 
 const eat = (type, state) => {
@@ -278,6 +226,67 @@ const readBracketExpression = (regex, pos, lexemes, warnings) => {
     end: info.end,
     negate,
   };
+};
+
+//------------------------------------------------------------------------------
+// Main parsing function
+
+const parse = (regex) => {
+  let pos = 0;
+  const lexemes = [];
+  const tokens = [];
+  const warnings = new Map();
+
+  while (pos < regex.length) {
+    const ch = regex[pos];
+    const ch2 = regex[pos + 1];
+    const label = regex.slice(pos, pos + 2);
+    const index = lexemes.length;
+    let token = null;
+    let lexemesAdded = false;
+
+    // Bracket expression
+    if (ch === '[') {
+      token = readBracketExpression(regex, pos, lexemes, warnings);
+      lexemesAdded = true;
+    }
+
+    // Static tokens (operators and wildcard)
+    else if (ch in staticTokens) {
+      token = staticTokens[ch](pos, index);
+    }
+
+    // Character classes
+    else if (label in staticTokens) {
+      token = staticTokens[label](pos, index);
+    }
+
+    // Escaped chararacter
+    else if (ch === '\\' && ch2 !== undefined) {
+      token = value(label, 'escapedChar', match(ch2))(pos, index);
+    }
+
+    // Syntax error: terminal backslash
+    else if (ch === '\\') {
+      token = value(ch, 'escapedChar', matchAll)(pos, index);
+      token.invalid = true;
+      addLexeme(lexemes, token.label, token.type, pos);
+      lexemesAdded = true;
+      warn('\\E', pos, index, lexemes, warnings);
+    }
+
+    // Character literal
+    else {
+      token = value(ch, 'charLiteral', match(ch))(pos, index);
+    }
+
+    // If the lexemes have not already been added (bracket expressions)
+    if (!lexemesAdded) addLexeme(lexemes, token.label, token.type, pos);
+    tokens.push(token);
+    pos += token.label.length;
+  }
+
+  return { lexemes, tokens, warnings };
 };
 
 //------------------------------------------------------------------------------

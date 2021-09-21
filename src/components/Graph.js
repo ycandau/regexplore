@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 
-import { setActiveGraphNodes } from '../re/re_run';
+import { setMatchingGraphNodes } from '../re/re_run';
 
 import Node from './Node';
 
@@ -25,7 +25,7 @@ const scale = scaleCoord(X_MIN, 375, X_STEP, Y_STEP);
 
 //------------------------------------------------------------------------------
 
-const Graph = ({ graph, activeNodes, runState }) => {
+const Graph = ({ graph, matchingNodes, runState }) => {
   const canvasRef = useRef(null);
   const classes = useStyles();
 
@@ -59,7 +59,7 @@ const Graph = ({ graph, activeNodes, runState }) => {
 
   //----------------------------------------------------------------------------
 
-  setActiveGraphNodes(graph.nodes, activeNodes, runState);
+  setMatchingGraphNodes(graph.nodes, matchingNodes, runState);
 
   //----------------------------------------------------------------------------
 
