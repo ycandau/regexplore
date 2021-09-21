@@ -68,4 +68,20 @@ describe('Regex engine: Graph display build', () => {
     node('e', 7, 0),
   ];
   testGraph('(a?|b*|(cd)+)?e', '>(|ab(cd))e>', args4);
+
+  const args5 = [
+    node('a', 2, -1.75),
+    node('b', 2, -0.75),
+    node('c', 5, -2.25),
+    node('d', 5, -1.25),
+    node('e', 5, -0.25),
+    node('f', 1, 1.25),
+    node('g', 3, 1.25),
+    node('h', 5, 0.75),
+    node('i', 5, 1.75),
+    node('j', 7, 1.25),
+    node('k', 9, 1.25),
+  ];
+
+  testGraph('(a|b)(c|d|e)|f(g(h|i)j)k', '>|(|ab)(|cde)f(g(|hi)j)k>', args5);
 });
