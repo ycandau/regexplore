@@ -45,8 +45,8 @@ import generateRegexFromRPN from './re_autofix';
 
 //------------------------------------------------------------------------------
 
-const compile = (regexString) => {
-  const { lexemes, tokens, warnings } = parse(regexString);
+const compile = (regex) => {
+  const { lexemes, tokens, warnings } = parse(regex);
   const validTokens = validate(tokens, lexemes, warnings);
   const rpn = convertToRPN(validTokens, lexemes);
   const nfa = buildNFA(rpn, lexemes);
