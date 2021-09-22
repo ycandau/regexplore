@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core';
 
-import { setMatchingGraphNodes } from '../re/re_run';
+import { setMatchingGraphNodes } from '../regex/re_run';
 
 import Node from './Node';
 

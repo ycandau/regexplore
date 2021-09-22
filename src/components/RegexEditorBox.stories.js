@@ -8,7 +8,7 @@ import {
   hlHoverValue,
   hlHoverParen,
   hlHoverOperator,
-} from '../re/re_stubs';
+} from '../regex/re_stubs';
 
 export default {
   title: 'App/Regex Editor',

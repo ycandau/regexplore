@@ -24,9 +24,9 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import getTokenInfo from '../re/re_token_info';
-import compile from '../re/re_compile';
-import { initNFA, stepForward } from '../re/re_run';
+import getTokenInfo from '../regex/re_token_info';
+import compile from '../regex/re_compile';
+import { initNFA, stepForward } from '../regex/re_run';
 
 // replace with the actial server address when ready
 
