@@ -9,15 +9,6 @@
 - unique keys for lists
 - could put back quantifier nodes and just not display
 
-'a?bc?|a?bc?|a?bc?'
-'a*bc*|a*bc*|a*bc*'
-'a+bc+|a+bc+|a+bc+'
-'(a)?|b?|(c)?|d?'
-'(a)_|b_|(c)_|d_'
-'\\?.?(a)?|\\_\\w_(\\d)*|\\+[a-z]+([0-9])+'
-'(aaaaa|a*b|ab|a?aaa)c'
-'(bffff|ca(a|a|a|a)a)d'
-
 Colors:
 
 - red

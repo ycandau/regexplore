@@ -3,7 +3,7 @@ import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
 import InfoBox from './InfoBox';
-import { description1, description2, description3 } from '../re/re_stubs';
+import { description1, description2, description3 } from '../regex/re_stubs';
 
 export default {
   title: 'App/Infobox',

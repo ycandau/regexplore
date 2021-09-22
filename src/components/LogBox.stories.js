@@ -3,7 +3,7 @@ import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
 import LogBox from './LogBox';
-import { logs } from '../re/re_stubs';
+import { logs } from '../regex/re_stubs';
 
 export default {
   title: 'App/Log Box',

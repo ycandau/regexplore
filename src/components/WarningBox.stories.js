@@ -3,7 +3,7 @@ import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import GridWrapper from './GridWrapper';
 import WarningBox from './WarningBox';
-import { warnings } from '../re/re_stubs';
+import { warnings } from '../regex/re_stubs';
 
 export default {
   title: 'App/Warning Box',
