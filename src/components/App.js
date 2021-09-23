@@ -24,7 +24,6 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import getTokenInfo from '../regex/re_token_info';
 import compile from '../regex/re_compile';
 import { initNFA, stepForward } from '../regex/re_run';
 
@@ -262,7 +261,7 @@ const App = () => {
   //----------------------------------------------------------------------------
   // InfoBox
 
-  const tokenInfo = getTokenInfo(editorIndex, regex.lexemes);
+  const tokenInfo = regex.getTokenInfo(editorIndex);
 
   //----------------------------------------------------------------------------
   // LogBox
