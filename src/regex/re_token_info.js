@@ -147,7 +147,7 @@ const setOperand = (info, lexemes, begin, end, name) => {
 
 //------------------------------------------------------------------------------
 
-const getTokenInfo = (staticInfo) => (index, lexemes) => {
+const getTokenInfo = (staticInfo) => (lexemes) => (index) => {
   const lexeme = lexemes[index];
   if (lexeme === undefined) return defaultInfo;
 
