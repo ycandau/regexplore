@@ -40,8 +40,13 @@ const initHistory = {
 };
 
 const initLogs = {
-  logFirst: 0,
-  firstLogIndex: [],
+  firstLogIndex: 0,
+  logs: [],
+};
+
+const initPlay = {
+  play: false,
+  count: 0,
 };
 
 //------------------------------------------------------------------------------
@@ -53,9 +58,10 @@ const setRegex = (state, action) => {
 
   return {
     ...state,
-    regex,
     ...initHistory,
     ...initLogs,
+    ...initPlay,
+    regex,
   };
 };
 
@@ -64,14 +70,71 @@ const setTestString = (state, action) => {
 
   return {
     ...state,
-    testString,
     ...initHistory,
     ...initLogs,
+    ...initPlay,
+    testString,
   };
 };
 
+const newHistState = (histState) => {
+  const {
+    runState,
+    matchingNodes,
+    nextNodesToTest,
+    testRange,
+    matchRanges,
+  } = histState;
+
+  return {
+    runState,
+    matchingNodes,
+    nextNodesToTest,
+    testRange,
+    matchRanges,
+  };
+};
+
+const getLogMessage = (histState, char, match) => {
+  switch (histState.runState) {
+    case 'running':
+      const count = histState.matchingNodes.length;
+      return `Matching: ${char} - Nodes: ${count}`;
+    case 'success':
+      return `Match: ${match}`;
+    case 'failure':
+      return 'No match';
+    case 'end':
+      return 'End of test string';
+    default:
+      break;
+  }
+};
+
+const newLog = (begin, pos, key, histState) => {
+  const prompt = `[${begin}:${pos}]`;
+  let msg = getLogMessage(histState);
+  return { prompt, msg, key };
+};
+
 const stepForward = (state) => {
-  return state;
+  const { histIndex, histEnd, histStates, logs } = state;
+  const histState = histStates[histIndex];
+  const [begin, pos] = histState.testRange;
+
+  const nextHistState = newHistState(histState);
+  const nextLog = newLog(begin, pos + 1, histEnd + 1, histState);
+  const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
+
+  return {
+    ...state,
+    ...initPlay,
+    histIndex: histIndex + 1,
+    histEnd: histEnd + 1,
+    histStates: [...histStates, nextHistState],
+    firstLogIndex,
+    logs: [...logs, nextLog],
+  };
 };
 
 const stepForwardRetrace = (state) => {
@@ -79,6 +142,7 @@ const stepForwardRetrace = (state) => {
   const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
   return {
     ...state,
+    ...initPlay,
     histIndex: histIndex + 1,
     firstLogIndex,
   };
@@ -92,6 +156,7 @@ const stepBackward = (state) => {
   );
   return {
     ...state,
+    ...initPlay,
     histIndex: histIndex - 1,
     firstLogIndex,
   };
@@ -100,6 +165,7 @@ const stepBackward = (state) => {
 const backToBeginning = (state) => {
   return {
     ...state,
+    ...initPlay,
     histIndex: 0,
     firstLogIndex: 0,
   };
@@ -155,8 +221,7 @@ const useApplicationData = () => {
     regex: initRegex,
     ...initHistory,
     ...initLogs,
-    play: false,
-    count: 0,
+    ...initPlay,
   });
 
   const setRegex = useCallback(
