@@ -6,7 +6,9 @@
 // Imports
 
 import { useReducer, useCallback } from 'react';
+
 import compile from '../regex/re_compile';
+import { initNFA, stepForward as step } from '../regex/re_run';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -95,17 +97,40 @@ const newHistState = (histState) => {
   };
 };
 
-const getLogMessage = (histState, char, match) => {
-  switch (histState.runState) {
+const doNextStep = (regex, testString, histState) => {
+  const [begin, pos] = histState.testRange;
+  const ch = testString[pos];
+
+  let { runState, matchingNodes, nextNodesToTest } = step(
+    histState.nextNodesToTest,
+    testString,
+    pos
+  );
+
+  let msg = null;
+  let testRange = null;
+  let matchRange = null;
+
+  switch (runState) {
     case 'running':
-      const count = histState.matchingNodes.length;
-      return `Matching: ${char} - Nodes: ${count}`;
+      testRange = [begin, pos];
+      msg = `Char: ${ch} - Nodes: ${matchingNodes.length}`;
+      break;
     case 'success':
-      return `Match: ${match}`;
+      testRange = [pos, pos];
+      matchRange = [begin, pos];
+      msg = `Match: ${testString.slice(begin, pos)}`;
+      break;
     case 'failure':
-      return 'No match';
+      testRange = [begin + 1, begin + 1];
+      msg = 'No match';
+      break;
     case 'end':
-      return 'End of test string';
+      testRange = [pos, pos];
+      msg = 'End of test string';
+      // end = index;
+      // setPlay(false);
+      break;
     default:
       break;
   }
@@ -113,7 +138,7 @@ const getLogMessage = (histState, char, match) => {
 
 const newLog = (begin, pos, key, histState) => {
   const prompt = `[${begin}:${pos}]`;
-  let msg = getLogMessage(histState);
+  let msg = '';
   return { prompt, msg, key };
 };
 
@@ -219,6 +244,7 @@ const appStateReducer = (state, action) => {
 const useApplicationData = () => {
   const [state, dispatch] = useReducer({
     regex: initRegex,
+    testString: '',
     ...initHistory,
     ...initLogs,
     ...initPlay,
