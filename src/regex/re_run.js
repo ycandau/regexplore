@@ -49,7 +49,11 @@ const stepForward = (currentNodes, ch) => {
 
       // Successful match
       if (reachedLast) {
-        return { runState: 'success', matchingNodes: [node], nextNodesToTest };
+        return {
+          runState: 'success',
+          matchingNodes: [node],
+          nextNodesToTest: [],
+        };
       }
     }
   }
@@ -70,7 +74,7 @@ const initNFA = (nfa) => () => {
   const nextNodesToTest = [];
   const visited = [];
   propagate(nfa[0], nextNodesToTest, visited);
-  return { matchingNodes: [nfa[0]], nextNodesToTest };
+  return { runState: 'starting', matchingNodes: [nfa[0]], nextNodesToTest };
 };
 
 //------------------------------------------------------------------------------
