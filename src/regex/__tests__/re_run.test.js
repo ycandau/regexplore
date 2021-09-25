@@ -62,123 +62,123 @@ describe('Regex engine: NFA run algorithm', () => {
 
   // Alternation
 
-  const args3 = [
+  const args10 = [
     step('running', 'aaa', 'bbb'),
     step('running', 'bbb', 'cxc'),
     step('running', 'cc', 'xd'),
     step('success', 'd', ''),
   ];
-  testRun('abcx|abx|abcd', 'abcd', 'aaa', args3);
+  testRun('abcx|abx|abcd', 'abcd', 'aaa', args10);
 
-  const args4 = [
+  const args11 = [
     step('running', 'aa', 'bx'),
     step('running', 'b', 'cc'),
     step('running', 'cc', 'xd'),
     step('running', 'd', 'e'),
     step('success', 'e', ''),
   ];
-  testRun('(ab|ax)(cx|cd)e', 'abcde', 'aa', args4);
+  testRun('(ab|ax)(cx|cd)e', 'abcde', 'aa', args11);
 
-  const args5 = [
+  const args12 = [
     step('running', 'aa', 'bx'),
     step('running', 'b', 'cc'),
     step('running', 'cc', 'xd'),
     step('running', 'd', 'x'),
     step('failure', '', ''),
   ];
-  testRun('(ab|ax)(cx|cd)x', 'abcde', 'aa', args5);
+  testRun('(ab|ax)(cx|cd)x', 'abcde', 'aa', args12);
 
-  const args6 = [
+  const args13 = [
     step('running', 'aa', 'bb'),
     step('running', 'bb', 'cx'),
     step('success', 'c', ''),
   ];
-  testRun('((a(b(c)))|(a(b(x))))', 'abc', 'aa', args6);
+  testRun('((a(b(c)))|(a(b(x))))', 'abc', 'aa', args13);
 
-  const args7 = [
+  const args14 = [
     step('running', 'aa', 'bb'),
     step('running', 'bb', 'cx'),
     step('running', 'c', 'y'),
     step('failure', '', ''),
   ];
-  testRun('((a(b(c)))|(a(b(x))))y', 'abcd', 'aa', args7);
+  testRun('((a(b(c)))|(a(b(x))))y', 'abcd', 'aa', args14);
 
   // 0 to 1 quantifier
 
-  const args8 = [step('running', 'a', 'bc'), step('success', 'c', '')];
-  testRun('ab?c', 'ac', 'a', args8);
+  const args20 = [step('running', 'a', 'bc'), step('success', 'c', '')];
+  testRun('ab?c', 'ac', 'a', args20);
 
-  const args9 = [
+  const args21 = [
     step('running', 'a', 'bc'),
     step('running', 'b', 'c'),
     step('success', 'c', ''),
   ];
-  testRun('ab?c', 'abc', 'a', args9);
+  testRun('ab?c', 'abc', 'a', args21);
 
-  const args10 = [step('running', 'a', 'bc'), step('failure', '', '')];
-  testRun('ab?c', 'axc', 'a', args10);
+  const args22 = [step('running', 'a', 'bc'), step('failure', '', '')];
+  testRun('ab?c', 'axc', 'a', args22);
 
-  const args11 = [step('running', 'a', 'bd'), step('success', 'd', '')];
-  testRun('a(bc)?d', 'ad', 'a', args11);
+  const args23 = [step('running', 'a', 'bd'), step('success', 'd', '')];
+  testRun('a(bc)?d', 'ad', 'a', args23);
 
-  const args12 = [
+  const args24 = [
     step('running', 'a', 'bd'),
     step('running', 'b', 'c'),
     step('running', 'c', 'd'),
     step('success', 'd', ''),
   ];
-  testRun('a(bc)?d', 'abcd', 'a', args12);
+  testRun('a(bc)?d', 'abcd', 'a', args24);
 
-  const args13 = [
+  const args25 = [
     step('running', 'a', 'bd'),
     step('running', 'b', 'x'),
     step('failure', '', ''),
   ];
-  testRun('a(bx)?d', 'abcd', 'a', args13);
+  testRun('a(bx)?d', 'abcd', 'a', args25);
 
   // 0 to N quantifier
 
-  const args20 = [step('running', 'a', 'bc'), step('success', 'c', '')];
-  testRun('ab*c', 'ac', 'a', args20);
+  const args26 = [step('running', 'a', 'bc'), step('success', 'c', '')];
+  testRun('ab*c', 'ac', 'a', args26);
 
-  const args21 = [
+  const args27 = [
     step('running', 'a', 'bc'),
     step('running', 'b', 'bc'),
     step('success', 'c', ''),
   ];
-  testRun('ab*c', 'abc', 'a', args21);
+  testRun('ab*c', 'abc', 'a', args27);
 
-  const args22 = [
+  const args28 = [
     step('running', 'a', 'bc'),
     step('running', 'b', 'bc'),
     step('running', 'b', 'bc'),
     step('success', 'c', ''),
   ];
-  testRun('ab*c', 'abbc', 'a', args22);
+  testRun('ab*c', 'abbc', 'a', args28);
 
-  const args23 = [
+  const args29 = [
     step('running', 'a', 'bc'),
     step('running', 'b', 'bc'),
     step('running', 'b', 'bc'),
     step('running', 'b', 'bc'),
     step('failure', '', ''),
   ];
-  testRun('ab*c', 'abbbx', 'a', args23);
+  testRun('ab*c', 'abbbx', 'a', args29);
 
   // 1 to N quantifier
 
-  const args30 = [step('running', 'a', 'bc'), step('failure', 'c', '')];
+  const args30 = [step('running', 'a', 'b'), step('failure', '', '')];
   testRun('ab+c', 'ac', 'a', args30);
 
   const args31 = [
-    step('running', 'a', 'bc'),
+    step('running', 'a', 'b'),
     step('running', 'b', 'bc'),
     step('success', 'c', ''),
   ];
   testRun('ab+c', 'abc', 'a', args31);
 
   const args32 = [
-    step('running', 'a', 'bc'),
+    step('running', 'a', 'b'),
     step('running', 'b', 'bc'),
     step('running', 'b', 'bc'),
     step('success', 'c', ''),
@@ -193,4 +193,42 @@ describe('Regex engine: NFA run algorithm', () => {
     step('failure', '', ''),
   ];
   testRun('ab+c', 'abbbx', 'a', args33);
+
+  const args34 = [step('running', 'a', 'b'), step('failure', '', '')];
+  testRun('a(bc)+d', 'ad', 'a', args34);
+
+  const args35 = [
+    step('running', 'a', 'b'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'bd'),
+    step('success', 'd', ''),
+  ];
+  testRun('a(bc)+d', 'abcd', 'a', args35);
+
+  const args36 = [
+    step('running', 'a', 'b'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'bd'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'bd'),
+    step('success', 'd', ''),
+  ];
+  testRun('a(bc)+d', 'abcbcd', 'a', args36);
+
+  const args37 = [
+    step('running', 'a', 'b'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'bd'),
+    step('failure', '', ''),
+  ];
+  testRun('a(bc)+d', 'abcx', 'a', args37);
+
+  const args38 = [
+    step('running', 'a', 'b'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'bd'),
+    step('running', 'b', 'c'),
+    step('failure', '', ''),
+  ];
+  testRun('a(bc)+d', 'abcbx', 'a', args38);
 });
