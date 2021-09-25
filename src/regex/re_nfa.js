@@ -375,7 +375,11 @@ const buildNFA = (rpn, lexemes) => {
   pushValue(fragments, { label: '>', type: 'last' });
   binary(fragments, concat);
 
-  return fragments[0].nodes;
+  const nfa = fragments[0].nodes;
+
+  nfa.forEach((node, index) => (node.nodeIndex = index));
+
+  return nfa;
 };
 
 //------------------------------------------------------------------------------

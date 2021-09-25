@@ -41,9 +41,10 @@ import validate from './re_validate';
 import convertToRPN from './re_rpn';
 import buildNFA from './re_nfa';
 import buildGraph from './re_graph';
+import { initNFA, stepForward } from './re_run';
 
 import generateRegexFromRPN from './re_autofix';
-import tokenInfo from './re_token_info';
+import getTokenInfo from './re_token_info';
 
 //------------------------------------------------------------------------------
 
@@ -54,10 +55,16 @@ const compile = (regex) => {
   const nfa = buildNFA(rpn, lexemes);
   const graph = buildGraph(nfa);
 
-  const getTokenInfo = tokenInfo(lexemes);
-  const autofix = generateRegexFromRPN(rpn);
-
-  return { lexemes, nfa, graph, warnings, getTokenInfo, autofix };
+  return {
+    lexemes,
+    nfa,
+    graph,
+    warnings,
+    getTokenInfo: getTokenInfo(lexemes),
+    autofix: generateRegexFromRPN(rpn),
+    init: initNFA(nfa),
+    step: stepForward,
+  };
 };
 
 //------------------------------------------------------------------------------
