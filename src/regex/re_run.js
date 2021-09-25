@@ -6,10 +6,10 @@
 // Propagate forward through non value nodes and gather the list of value nodes
 // to test on the next step.
 
-const propagate = (node, nextNodesToTest, gen) => {
+const propagate = (node, nextNodesToTest, visited) => {
   // Already visited
-  if (node.gen === gen) return false;
-  node.gen = gen;
+  if (visited[node.nodeIndex]) return false;
+  visited[node.nodeIndex] = true;
 
   // Reached the last node
   if (node.type === 'last') return true;
@@ -17,7 +17,7 @@ const propagate = (node, nextNodesToTest, gen) => {
   // Non value node
   if (!node.match) {
     for (const next of node.nextNodes) {
-      const reachedLast = propagate(next, nextNodesToTest, gen);
+      const reachedLast = propagate(next, nextNodesToTest, visited);
       if (reachedLast) return true;
     }
     return false;
@@ -34,16 +34,20 @@ const propagate = (node, nextNodesToTest, gen) => {
 
 const stepForward = (currentNodes, testString, pos) => {
   const ch = testString[pos];
-  const gen = currentNodes[0].gen + 1;
 
   const nextNodesToTest = [];
   const matchingNodes = [];
+  const visited = [];
 
   // Test the current list of value nodes
   for (const node of currentNodes) {
     if (node.match(ch)) {
       matchingNodes.push(node);
-      const reachedLast = propagate(node.nextNodes[0], nextNodesToTest, gen);
+      const reachedLast = propagate(
+        node.nextNodes[0],
+        nextNodesToTest,
+        visited
+      );
 
       // Successful match
       if (reachedLast) {
@@ -70,9 +74,9 @@ const stepForward = (currentNodes, testString, pos) => {
 // Initialize the NFA
 
 const initNFA = (nfa) => {
-  nfa.forEach((node) => (node.gen = -1));
   const nextNodesToTest = [];
-  propagate(nfa[0], nextNodesToTest, 0);
+  const visited = [];
+  propagate(nfa[0], nextNodesToTest, visited);
   return { matchingNodes: [nfa[0]], nextNodesToTest };
 };
 
