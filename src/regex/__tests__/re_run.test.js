@@ -85,4 +85,19 @@ describe('Regex engine: NFA run algorithm', () => {
     step('failure', '', ''),
   ];
   testRun('(ab|ax)(cx|cd)x', 'abcde', 'aa', args5);
+
+  const args6 = [
+    step('running', 'aa', 'bb'),
+    step('running', 'bb', 'cx'),
+    step('success', 'c', ''),
+  ];
+  testRun('((a(b(c)))|(a(b(x))))', 'abc', 'aa', args6);
+
+  const args7 = [
+    step('running', 'aa', 'bb'),
+    step('running', 'bb', 'cx'),
+    step('running', 'c', 'y'),
+    step('failure', '', ''),
+  ];
+  testRun('((a(b(c)))|(a(b(x))))y', 'abcd', 'aa', args7);
 });
