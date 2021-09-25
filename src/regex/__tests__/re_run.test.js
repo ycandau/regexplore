@@ -60,8 +60,30 @@ describe('Regex engine: NFA run algorithm', () => {
   ];
   testRun('abc', 'abd', 'a', args2);
 
-  // Alternation
+  const args3 = [
+    step('running', 'aaaaa', 'bbbabab'),
+    step('running', 'bbbbb', 'ccccc'),
+    step('success', 'c', ''),
+  ];
+  testRun('abc|(abc)|a?bc|a*bc|a+bc', 'abc', 'aaababa', args3);
 
+  const args4 = [
+    step('running', 'aaaaa', 'bbbabab'),
+    step('running', 'aa', 'abab'),
+    step('running', 'bb', 'cc'),
+    step('success', 'c', ''),
+  ];
+  testRun('abc|(abc)|a?bc|a*bc|a+bc', 'aabc', 'aaababa', args4);
+
+  const args5 = [
+    step('running', 'aaaaa', 'bbbabab'),
+    step('running', 'aa', 'abab'),
+    step('failure', '', ''),
+  ];
+  testRun('abc|(abc)|a?bc|a*bc|a+bc', 'aax', 'aaababa', args5);
+});
+
+describe('Regex engine: NFA run algorithm: Alternation', () => {
   const args10 = [
     step('running', 'aaa', 'bbb'),
     step('running', 'bbb', 'cxc'),
@@ -102,9 +124,9 @@ describe('Regex engine: NFA run algorithm', () => {
     step('failure', '', ''),
   ];
   testRun('((a(b(c)))|(a(b(x))))y', 'abcd', 'aa', args14);
+});
 
-  // 0 to 1 quantifier
-
+describe('Regex engine: NFA run algorithm: 0 to 1 quantifier', () => {
   const args20 = [step('running', 'a', 'bc'), step('success', 'c', '')];
   testRun('ab?c', 'ac', 'a', args20);
 
@@ -129,15 +151,18 @@ describe('Regex engine: NFA run algorithm', () => {
   ];
   testRun('a(bc)?d', 'abcd', 'a', args24);
 
-  const args25 = [
+  const args25 = [step('running', 'a', 'xd'), step('failure', '', '')];
+  testRun('a(xc)?d', 'abcd', 'a', args25);
+
+  const args26 = [
     step('running', 'a', 'bd'),
     step('running', 'b', 'x'),
     step('failure', '', ''),
   ];
-  testRun('a(bx)?d', 'abcd', 'a', args25);
+  testRun('a(bx)?d', 'abcd', 'a', args26);
+});
 
-  // 0 to N quantifier
-
+describe('Regex engine: NFA run algorithm: 0 to N quantifier', () => {
   const args30 = [step('running', 'a', 'bc'), step('success', 'c', '')];
   testRun('ab*c', 'ac', 'a', args30);
 
@@ -202,9 +227,9 @@ describe('Regex engine: NFA run algorithm', () => {
     step('failure', '', ''),
   ];
   testRun('a(bc)*d', 'abcbx', 'a', args38);
+});
 
-  // 1 to N quantifier
-
+describe('Regex engine: NFA run algorithm: 1 to N quantifier', () => {
   const args40 = [step('running', 'a', 'b'), step('failure', '', '')];
   testRun('ab+c', 'ac', 'a', args40);
 
