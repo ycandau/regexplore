@@ -25,7 +25,6 @@ import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
 import compile from '../regex/re_compile';
-import { initNFA, stepForward } from '../regex/re_run';
 
 // replace with the actial server address when ready
 
@@ -79,7 +78,7 @@ const useStyles = makeStyles((theme) => ({
 // Initialization
 
 const initHistory = (regex) => {
-  const { matchingNodes, nextNodesToTest } = initNFA(regex.nfa);
+  const { matchingNodes, nextNodesToTest } = regex.init();
 
   return {
     index: 0,
@@ -292,17 +291,16 @@ const App = () => {
     }
 
     if (prevRunState === 'success' || prevRunState === 'failure') {
-      const reset = initNFA(regex.nfa);
+      const reset = regex.init();
       prevNextNodesToTest = reset.nextNodesToTest;
     }
 
     // Run the next step
     const ch = testString[prevPos];
     const char = ch === ' ' ? "' '" : ch;
-    let { runState, matchingNodes, nextNodesToTest } = stepForward(
+    let { runState, matchingNodes, nextNodesToTest } = regex.step(
       prevNextNodesToTest,
-      testString,
-      prevPos
+      ch
     );
 
     const pos = prevPos + 1;
