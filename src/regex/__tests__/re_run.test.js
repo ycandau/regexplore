@@ -100,4 +100,37 @@ describe('Regex engine: NFA run algorithm', () => {
     step('failure', '', ''),
   ];
   testRun('((a(b(c)))|(a(b(x))))y', 'abcd', 'aa', args7);
+
+  // Repeat 0 to 1
+
+  const args8 = [step('running', 'a', 'bc'), step('success', 'c', '')];
+  testRun('ab?c', 'ac', 'a', args8);
+
+  const args9 = [
+    step('running', 'a', 'bc'),
+    step('running', 'b', 'c'),
+    step('success', 'c', ''),
+  ];
+  testRun('ab?c', 'abc', 'a', args9);
+
+  const args10 = [step('running', 'a', 'bc'), step('failure', '', '')];
+  testRun('ab?c', 'axc', 'a', args10);
+
+  const args11 = [step('running', 'a', 'bd'), step('success', 'd', '')];
+  testRun('a(bc)?d', 'ad', 'a', args11);
+
+  const args12 = [
+    step('running', 'a', 'bd'),
+    step('running', 'b', 'c'),
+    step('running', 'c', 'd'),
+    step('success', 'd', ''),
+  ];
+  testRun('a(bc)?d', 'abcd', 'a', args12);
+
+  const args13 = [
+    step('running', 'a', 'bd'),
+    step('running', 'b', 'x'),
+    step('failure', '', ''),
+  ];
+  testRun('a(bx)?d', 'abcd', 'a', args13);
 });
