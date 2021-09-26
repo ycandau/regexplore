@@ -76,34 +76,6 @@ const setTestString = (state, action) => {
   };
 };
 
-const newLog = (histState, testString, ch) => {
-  const [begin, pos] = histState.testRange;
-  const prompt = `[${begin}:${pos}]`;
-
-  let msg = null;
-  switch (histState.runState) {
-    case 'starting':
-      msg = 'New search';
-      break;
-    case 'success':
-      msg = `Match: ${testString.slice(begin, pos)}`;
-      break;
-    case 'failure':
-      msg = 'No match';
-      break;
-    case 'running':
-      const char = ch === ' ' ? "' '" : ch;
-      msg = `Char: ${char} - Nodes: ${histState.matchingNodes.length}`;
-      break;
-    default:
-      break;
-  }
-
-  const key = `${begin}-${pos}-${histState.runState}`;
-
-  return { prompt, msg, key };
-};
-
 const stepForward = (state) => {
   const { histIndex, histEnd, histStates, logs } = state;
   const histState = histStates[histIndex];
