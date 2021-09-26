@@ -80,8 +80,8 @@ const TestStrField = ({
     ...matches
   );
 
-  const spans = tokens.map(({ ch, key, classes }) => (
-    <span key={key} className={classes}>
+  const spans = tokens.map(({ ch, key, type }) => (
+    <span key={key} className={classes[type]}>
       {ch}
     </span>
   ));
@@ -120,7 +120,7 @@ const highlight = (begin, end, type) => ({ begin, end, type });
 const addClass = (tokens, ...highlights) => {
   highlights.forEach(({ begin, end, type }) => {
     for (let index = begin; index <= end; index++) {
-      tokens[index].classes = type;
+      tokens[index].type = type;
     }
   });
 };
