@@ -8,7 +8,6 @@
 import { useReducer, useCallback } from 'react';
 
 import compile from '../regex/re_compile';
-import { initNFA, stepForward as step } from '../regex/re_run';
 
 //------------------------------------------------------------------------------
 // Constants
@@ -79,76 +78,84 @@ const setTestString = (state, action) => {
   };
 };
 
-const newHistState = (histState) => {
-  const {
-    runState,
-    matchingNodes,
-    nextNodesToTest,
-    testRange,
-    matchRanges,
-  } = histState;
-
-  return {
-    runState,
-    matchingNodes,
-    nextNodesToTest,
-    testRange,
-    matchRanges,
-  };
-};
-
-const doNextStep = (regex, testString, histState) => {
+const newLog = (histState, testString, ch) => {
   const [begin, pos] = histState.testRange;
-  const ch = testString[pos];
-
-  let { runState, matchingNodes, nextNodesToTest } = step(
-    histState.nextNodesToTest,
-    testString,
-    pos
-  );
+  const prompt = `[${begin}:${pos}]`;
 
   let msg = null;
-  let testRange = null;
-  let matchRange = null;
-
-  switch (runState) {
-    case 'running':
-      testRange = [begin, pos];
-      msg = `Char: ${ch} - Nodes: ${matchingNodes.length}`;
+  switch (histState.runState) {
+    case 'starting':
+      msg = 'New search';
       break;
     case 'success':
-      testRange = [pos, pos];
-      matchRange = [begin, pos];
       msg = `Match: ${testString.slice(begin, pos)}`;
       break;
     case 'failure':
-      testRange = [begin + 1, begin + 1];
       msg = 'No match';
       break;
-    case 'end':
-      testRange = [pos, pos];
-      msg = 'End of test string';
-      // end = index;
-      // setPlay(false);
+    case 'running':
+      const char = ch === ' ' ? "' '" : ch;
+      msg = `Char: ${char} - Nodes: ${histState.matchingNodes.length}`;
       break;
     default:
       break;
   }
-};
 
-const newLog = (begin, pos, key, histState) => {
-  const prompt = `[${begin}:${pos}]`;
-  let msg = '';
+  const key = `${begin}-${pos}-${histState.runState}`;
+
   return { prompt, msg, key };
 };
 
 const stepForward = (state) => {
   const { histIndex, histEnd, histStates, logs } = state;
   const histState = histStates[histIndex];
+  const ch = state.testString[pos];
   const [begin, pos] = histState.testRange;
 
-  const nextHistState = newHistState(histState);
-  const nextLog = newLog(begin, pos + 1, histEnd + 1, histState);
+  let nextHistState = null;
+  let msg = null;
+
+  switch (histState.runState) {
+    case 'success':
+      nextHistState = state.regex.init();
+      nextHistState.testRange = [pos + 1, pos + 1];
+      nextHistState.matchRanges = histState.matchRanges;
+      break;
+
+    case 'failure':
+      nextHistState = state.regex.init();
+      nextHistState.testRange = [begin + 1, begin + 1];
+      nextHistState.matchRanges = histState.matchRanges;
+      break;
+
+    case 'starting':
+    case 'running':
+      nextHistState = state.regex.step(histState.nextNodesToTest, ch);
+
+      switch (nextHistState.runState) {
+        case 'success':
+          nextHistState.testRange = [begin, pos];
+          nextHistState.matchRanges = [...histState.matchRanges, [begin, pos]];
+          break;
+
+        case 'failure':
+          nextHistState.testRange = [begin, pos];
+          nextHistState.matchRanges = histState.matchRanges;
+          break;
+
+        case 'running':
+          nextHistState.testRange = [begin, pos + 1];
+          nextHistState.matchRanges = histState.matchRanges;
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+
+  const nextLog = newLog(nextHistState, state.testString, ch);
   const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
 
   return {
