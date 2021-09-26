@@ -55,20 +55,43 @@ const useStyles = makeStyles((theme) => ({
 
 //------------------------------------------------------------------------------
 
-const TestStrField = ({ numRows, string, setString, highlights }) => {
-  const handleChange = (e) => setString(e.target.value);
+const TestStrField = ({
+  testString,
+  testRange,
+  matchRanges,
+  setTestString,
+  numRows,
+}) => {
+  const handleChange = (e) => setTestString(e.target.value);
   const classes = useStyles();
+
+  const current = {
+    startInd: testRange[1],
+    endInd: testRange[1] + 1,
+    type: 'current',
+  };
+  const test = {
+    startInd: testRange[0],
+    endInd: testRange[1],
+    type: 'test',
+  };
+  const testStringHighlights = [test, current];
+
+  matchRanges.forEach(([startInd, endInd]) => {
+    const match = { startInd, endInd, type: 'match' };
+    testStringHighlights.push(match);
+  });
 
   /**
    * experimental highlighting module, potentially reusable
    */
   // go over the array of highlights with the string as a starting value
-  const highlightedStr = highlights.reduce(
-    (a, { startInd, endInd, token }) =>
+  const highlightedStr = testStringHighlights.reduce(
+    (a, { startInd, endInd, type }) =>
       a.map((c, i) => {
         let clName;
         // if the character matches the highlight..
-        if (i >= startInd && i < endInd) clName = token;
+        if (i >= startInd && i < endInd) clName = type;
         return (
           // ..wrap it in a span with the appropriate class name
           <span key={i} className={classes[clName]}>
@@ -77,7 +100,7 @@ const TestStrField = ({ numRows, string, setString, highlights }) => {
         );
       }),
     // take the string as a starting value, split for processing
-    string ? string.split('') : []
+    testString ? testString.split('') : []
   );
 
   return (
@@ -95,7 +118,7 @@ const TestStrField = ({ numRows, string, setString, highlights }) => {
         variant="outlined"
         onChange={handleChange}
         fullWidth
-        value={string}
+        value={testString}
         minRows={numRows}
         spellCheck="false"
       />

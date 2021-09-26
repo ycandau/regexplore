@@ -197,18 +197,6 @@ const App = () => {
     setRegex(regexString);
   };
 
-  const onEditorHover = (ind) => () => {
-    setEditorIndex(ind);
-  };
-
-  //--------------------------------------------------------------------------
-  // TestStrField
-
-  const onTestStrChange = (str) => {
-    setDisplayGraph(true);
-    setTestString(str);
-  };
-
   //----------------------------------------------------------------------------
   // InfoBox
 
@@ -233,7 +221,7 @@ const App = () => {
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
-    onTestStrChange('fetching the test string..');
+    setTestString('');
     setRegex(literal);
     setTitle(title);
     setDesc(desc);
@@ -321,23 +309,6 @@ const App = () => {
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
 
-  const current = {
-    startInd: histState.testRange[1],
-    endInd: histState.testRange[1] + 1,
-    token: 'current',
-  };
-  const test = {
-    startInd: histState.testRange[0],
-    endInd: histState.testRange[1],
-    token: 'test',
-  };
-  const testStringHighlights = [test, current];
-
-  histState.matchRanges.forEach(([startInd, endInd]) => {
-    const match = { startInd, endInd, token: 'match' };
-    testStringHighlights.push(match);
-  });
-
   const mainScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.editorBox}>
@@ -345,15 +316,16 @@ const App = () => {
           index={editorIndex}
           editorInfo={regex.lexemes}
           onRegexChange={onEditorChange}
-          onHover={onEditorHover}
+          onHover={(ind) => () => setEditorIndex(ind)}
         />
       </div>
       <div className={classes.testStrBox}>
         <TestStrField
+          testString={state.testString}
+          testRange={histState.testRange}
+          matchRanges={histState.matchRanges}
+          setTestString={setTestString}
           numRows={6}
-          string={state.testString}
-          setString={onTestStrChange}
-          highlights={testStringHighlights}
         />
       </div>
       <div className={classes.infoBox}>
