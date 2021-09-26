@@ -112,7 +112,7 @@ export default TestStrField;
 // Helpers
 
 const addClass = (tokens, begin, end, type) => {
-  for (let i = begin; i <= end; i++) {
+  for (let i = begin; i <= end && i < tokens.length; i++) {
     tokens[i].type = type;
   }
 };
