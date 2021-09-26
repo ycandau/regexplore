@@ -1,3 +1,8 @@
+//------------------------------------------------------------------------------
+// Imports
+
+/*eslint no-unused-vars: "off" */
+
 import { useEffect, useState } from 'react';
 
 import Header from './Header';
@@ -11,24 +16,23 @@ import Page from './Page';
 import TagSelector from './TagSelector';
 import TestStrField from './TestStrField';
 
+import darkTheme from '../mui-themes/base-dark';
+import lightTheme from '../mui-themes/base-light';
+import CssBaseline from '@material-ui/core/CssBaseline';
+
 import {
   ThemeProvider,
   createTheme,
   makeStyles,
 } from '@material-ui/core/styles';
 
-import darkTheme from '../mui-themes/base-dark';
-import lightTheme from '../mui-themes/base-light';
-import CssBaseline from '@material-ui/core/CssBaseline';
-
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
-import compile from '../regex/re_compile';
-
 import useApplicationData from '../hooks/useApplicationData';
 
-// replace with the actial server address when ready
+//------------------------------------------------------------------------------
+// Styles
 
 const serverAddr = 'http://localhost:8080/';
 
@@ -76,8 +80,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-/*eslint no-unused-vars: "off" */
-
 //------------------------------------------------------------------------------
 // App and state
 
@@ -104,6 +106,7 @@ const App = () => {
   ] = useApplicationData();
 
   const regex = state.regex;
+  const histState = state.histStates[state.histIndex];
 
   //----------------------------------------------------------------------------
 
@@ -198,16 +201,7 @@ const App = () => {
   };
 
   //----------------------------------------------------------------------------
-  // InfoBox
-
-  const tokenInfo = regex.getTokenInfo(editorIndex);
-
-  const doFix = () => {
-    const newRegex = compile(regex.autofix());
-    setRegex(newRegex);
-  };
-
-  //----------------------------------------------------------------------------
+  // Callbacks
 
   const toggleTheme = () => toggleLight((light) => !light);
   const toggleExplore = () =>
@@ -254,6 +248,13 @@ const App = () => {
       ? 'atEnd'
       : '';
 
+  const classes = useStyles();
+  const muiTheme = light ? lightTheme : darkTheme;
+  const isExploring = screen === 'explore';
+
+  //----------------------------------------------------------------------------
+  // Components
+
   const logBox = (
     <LogBox
       logs={clippedLogs}
@@ -276,11 +277,9 @@ const App = () => {
     <WarningBox
       warnings={regex.warnings}
       onHover={(pos) => console.log('Hovering over the warning at', pos)}
-      onFix={doFix}
+      onFix={() => setRegex(regex.autofix())}
     />
   );
-
-  const histState = state.histStates[state.histIndex];
 
   const graphBox = displayGraph ? (
     <Graph
@@ -303,12 +302,6 @@ const App = () => {
     />
   );
 
-  //----------------------------------------------------------------------------
-
-  const classes = useStyles();
-  const muiTheme = light ? lightTheme : darkTheme;
-  const isExploring = screen === 'explore';
-
   const mainScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.editorBox}>
@@ -322,6 +315,7 @@ const App = () => {
       <div className={classes.testStrBox}>
         <TestStrField
           testString={state.testString}
+          runState={histState.runState}
           testRange={histState.testRange}
           matchRanges={histState.matchRanges}
           setTestString={setTestString}
@@ -329,7 +323,7 @@ const App = () => {
         />
       </div>
       <div className={classes.infoBox}>
-        <InfoBox tokenInfo={tokenInfo} />
+        <InfoBox tokenInfo={regex.getTokenInfo(editorIndex)} />
       </div>
       <div className={classes.logBox}>
         {regex.warnings.size ? warningBox : logBox}

@@ -2,7 +2,6 @@ import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 import { Paper, Typography } from '@material-ui/core';
 
-// ghost input magic happens here
 const useStyles = makeStyles((theme) => ({
   contextWrapper: {
     display: 'block',
@@ -32,13 +31,13 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.secondary,
     fontSize: 20,
   },
-  match: {
+  matched: {
     color: theme.palette.custom.green,
     borderBottomColor: theme.palette.custom.green,
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
   },
-  test: {
+  tested: {
     color: theme.palette.custom.orange,
     borderBottomColor: theme.palette.custom.orange,
     borderBottomWidth: '1px',
@@ -51,34 +50,34 @@ const useStyles = makeStyles((theme) => ({
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
   },
+  success: {
+    color: theme.palette.custom.green,
+    backgroundColor: theme.palette.action.selected,
+    borderBottomColor: theme.palette.custom.green,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+  },
+  failure: {
+    color: theme.palette.custom.red,
+    backgroundColor: theme.palette.action.selected,
+    borderBottomColor: theme.palette.custom.red,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+  },
 }));
 
 //------------------------------------------------------------------------------
 
 const TestStrField = ({
   testString,
+  runState,
   testRange,
   matchRanges,
   setTestString,
   numRows,
 }) => {
-  const handleChange = (event) => setTestString(event.target.value);
   const classes = useStyles();
-
-  //----------------------------------------------------------------------------
-
-  const tokens = testString.split('').map((ch, key) => ({ ch, key }));
-
-  const matches = matchRanges.map(([begin, end]) =>
-    highlight(begin, end, 'match')
-  );
-
-  addClass(
-    tokens,
-    highlight(testRange[0], testRange[1], 'test'),
-    highlight(testRange[1], testRange[1] + 1, 'current'),
-    ...matches
-  );
+  const tokens = testStringTokens(testString, runState, testRange, matchRanges);
 
   const spans = tokens.map(({ ch, key, type }) => (
     <span key={key} className={classes[type]}>
@@ -86,26 +85,22 @@ const TestStrField = ({
     </span>
   ));
 
-  //----------------------------------------------------------------------------
-
   return (
     <div className={classes.contextWrapper}>
       <Paper className={classes.pap} elevation={0}>
         <Typography className={classes.ghostText}>{spans}</Typography>
       </Paper>
       <TextField
-        classes={{
-          root: classes.textBox,
-        }}
+        classes={{ root: classes.textBox }}
         id="testStringField"
         label="Test String"
-        multiline
-        variant="outlined"
-        onChange={handleChange}
-        fullWidth
         value={testString}
+        onChange={(event) => setTestString(event.target.value)}
         minRows={numRows}
+        variant="outlined"
         spellCheck="false"
+        fullWidth
+        multiline
       />
     </div>
   );
@@ -114,13 +109,28 @@ const TestStrField = ({
 export default TestStrField;
 
 //------------------------------------------------------------------------------
+// Helpers
 
-const highlight = (begin, end, type) => ({ begin, end, type });
+const addClass = (tokens, begin, end, type) => {
+  for (let i = begin; i <= end; i++) {
+    tokens[i].type = type;
+  }
+};
 
-const addClass = (tokens, ...highlights) => {
-  highlights.forEach(({ begin, end, type }) => {
-    for (let index = begin; index <= end; index++) {
-      tokens[index].type = type;
-    }
-  });
+const testStringTokens = (testString, runState, testRange, matchRanges) => {
+  const tokens = testString.split('').map((ch, key) => ({ ch, key, type: '' }));
+
+  matchRanges.forEach(([begin, end]) =>
+    addClass(tokens, begin, end, 'matched')
+  );
+
+  const [begin, end] = testRange;
+  const tailType = runState === 'success' ? 'success' : 'tested';
+  const headType =
+    runState === 'success' || runState === 'failure' ? runState : 'current';
+
+  addClass(tokens, begin, end - 1, tailType);
+  addClass(tokens, end, end, headType);
+
+  return tokens;
 };
