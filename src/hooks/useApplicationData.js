@@ -148,8 +148,6 @@ const stepForward = (state) => {
   const key = `${begin}-${pos}-${histState.runState}`;
   const log = { prompt, msg, key };
 
-  console.log(nextHistState);
-
   return {
     ...state,
     ...initPlay,
