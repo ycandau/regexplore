@@ -55,35 +55,43 @@ const useStyles = makeStyles((theme) => ({
 
 //------------------------------------------------------------------------------
 
-const TestStrField = ({ numRows, string, setString, highlights }) => {
-  const handleChange = (e) => setString(e.target.value);
+const TestStrField = ({
+  testString,
+  testRange,
+  matchRanges,
+  setTestString,
+  numRows,
+}) => {
+  const handleChange = (event) => setTestString(event.target.value);
   const classes = useStyles();
 
-  /**
-   * experimental highlighting module, potentially reusable
-   */
-  // go over the array of highlights with the string as a starting value
-  const highlightedStr = highlights.reduce(
-    (a, { startInd, endInd, token }) =>
-      a.map((c, i) => {
-        let clName;
-        // if the character matches the highlight..
-        if (i >= startInd && i < endInd) clName = token;
-        return (
-          // ..wrap it in a span with the appropriate class name
-          <span key={i} className={classes[clName]}>
-            {c}
-          </span>
-        );
-      }),
-    // take the string as a starting value, split for processing
-    string ? string.split('') : []
+  //----------------------------------------------------------------------------
+
+  const tokens = testString.split('').map((ch, key) => ({ ch, key }));
+
+  const matches = matchRanges.map(([begin, end]) =>
+    highlight(begin, end, 'match')
   );
+
+  addClass(
+    tokens,
+    highlight(testRange[0], testRange[1], 'test'),
+    highlight(testRange[1], testRange[1] + 1, 'current'),
+    ...matches
+  );
+
+  const spans = tokens.map(({ ch, key, classes }) => (
+    <span key={key} className={classes}>
+      {ch}
+    </span>
+  ));
+
+  //----------------------------------------------------------------------------
 
   return (
     <div className={classes.contextWrapper}>
       <Paper className={classes.pap} elevation={0}>
-        <Typography className={classes.ghostText}>{highlightedStr}</Typography>
+        <Typography className={classes.ghostText}>{spans}</Typography>
       </Paper>
       <TextField
         classes={{
@@ -95,7 +103,7 @@ const TestStrField = ({ numRows, string, setString, highlights }) => {
         variant="outlined"
         onChange={handleChange}
         fullWidth
-        value={string}
+        value={testString}
         minRows={numRows}
         spellCheck="false"
       />
@@ -104,3 +112,15 @@ const TestStrField = ({ numRows, string, setString, highlights }) => {
 };
 
 export default TestStrField;
+
+//------------------------------------------------------------------------------
+
+const highlight = (begin, end, type) => ({ begin, end, type });
+
+const addClass = (tokens, ...highlights) => {
+  highlights.forEach(({ begin, end, type }) => {
+    for (let index = begin; index <= end; index++) {
+      tokens[index].classes = type;
+    }
+  });
+};

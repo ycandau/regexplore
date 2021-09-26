@@ -24,16 +24,14 @@ const PLAY = 'play';
 //------------------------------------------------------------------------------
 // Initial state
 
-const initRegex = compile('');
+const initRegex = compile('abc');
 
 const initHistory = {
   histIndex: 0,
   histEnd: -1,
   histStates: [
     {
-      runState: 'running',
-      matchingNodes: [],
-      nextNodesToTest: [],
+      ...initRegex.init(),
       testRange: [0, 0],
       matchRanges: [],
     },
@@ -78,54 +76,33 @@ const setTestString = (state, action) => {
   };
 };
 
-const newLog = (histState, testString, ch) => {
-  const [begin, pos] = histState.testRange;
-  const prompt = `[${begin}:${pos}]`;
-
-  let msg = null;
-  switch (histState.runState) {
-    case 'starting':
-      msg = 'New search';
-      break;
-    case 'success':
-      msg = `Match: ${testString.slice(begin, pos)}`;
-      break;
-    case 'failure':
-      msg = 'No match';
-      break;
-    case 'running':
-      const char = ch === ' ' ? "' '" : ch;
-      msg = `Char: ${char} - Nodes: ${histState.matchingNodes.length}`;
-      break;
-    default:
-      break;
-  }
-
-  const key = `${begin}-${pos}-${histState.runState}`;
-
-  return { prompt, msg, key };
-};
-
 const stepForward = (state) => {
   const { histIndex, histEnd, histStates, logs } = state;
   const histState = histStates[histIndex];
-  const ch = state.testString[pos];
   const [begin, pos] = histState.testRange;
+  const ch = state.testString[pos];
 
   let nextHistState = null;
+  let prompt = null;
   let msg = null;
 
   switch (histState.runState) {
     case 'success':
       nextHistState = state.regex.init();
-      nextHistState.testRange = [pos + 1, pos + 1];
+      nextHistState.testRange = [pos, pos];
       nextHistState.matchRanges = histState.matchRanges;
+
+      prompt = `[${pos}:${pos}]`;
+      msg = 'New search';
       break;
 
     case 'failure':
       nextHistState = state.regex.init();
       nextHistState.testRange = [begin + 1, begin + 1];
       nextHistState.matchRanges = histState.matchRanges;
+
+      prompt = `[${begin + 1}:${begin + 1}]`;
+      msg = 'New search';
       break;
 
     case 'starting':
@@ -134,18 +111,28 @@ const stepForward = (state) => {
 
       switch (nextHistState.runState) {
         case 'success':
-          nextHistState.testRange = [begin, pos];
+          nextHistState.testRange = [begin, pos + 1];
           nextHistState.matchRanges = [...histState.matchRanges, [begin, pos]];
+
+          prompt = `[${begin}:${pos}]`;
+          msg = `Match: ${state.testString.slice(begin, pos + 1)}`;
           break;
 
         case 'failure':
           nextHistState.testRange = [begin, pos];
           nextHistState.matchRanges = histState.matchRanges;
+
+          prompt = `[${begin}:${pos}]`;
+          msg = 'No match';
           break;
 
         case 'running':
           nextHistState.testRange = [begin, pos + 1];
           nextHistState.matchRanges = histState.matchRanges;
+
+          prompt = `[${begin}:${pos}]`;
+          const char = ch === ' ' ? "' '" : ch;
+          msg = `Char: ${char} - Nodes: ${nextHistState.matchingNodes.length}`;
           break;
         default:
           break;
@@ -155,8 +142,13 @@ const stepForward = (state) => {
       break;
   }
 
-  const nextLog = newLog(nextHistState, state.testString, ch);
+  // const nextLog = newLog(nextHistState, state.testString, ch);
   const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
+
+  const key = `${begin}-${pos}-${histState.runState}`;
+  const log = { prompt, msg, key };
+
+  console.log(nextHistState);
 
   return {
     ...state,
@@ -165,7 +157,7 @@ const stepForward = (state) => {
     histEnd: histEnd + 1,
     histStates: [...histStates, nextHistState],
     firstLogIndex,
-    logs: [...logs, nextLog],
+    logs: [...logs, log],
   };
 };
 
@@ -216,7 +208,7 @@ const play = (state) => {
 const appStateReducer = (state, action) => {
   const { histIndex, histStates, testString } = state;
   const histState = histStates[histIndex];
-  const [begin, pos] = histState.testRange;
+  const pos = histState.testRange[1];
 
   switch (action.type) {
     case REGEX:
@@ -249,9 +241,9 @@ const appStateReducer = (state, action) => {
 // Hook
 
 const useApplicationData = () => {
-  const [state, dispatch] = useReducer({
+  const [state, dispatch] = useReducer(appStateReducer, {
     regex: initRegex,
-    testString: '',
+    testString: 'abc d aabc',
     ...initHistory,
     ...initLogs,
     ...initPlay,

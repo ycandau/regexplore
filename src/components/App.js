@@ -26,6 +26,8 @@ import '@fontsource/fira-mono';
 
 import compile from '../regex/re_compile';
 
+import useApplicationData from '../hooks/useApplicationData';
+
 // replace with the actial server address when ready
 
 const serverAddr = 'http://localhost:8080/';
@@ -74,34 +76,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-//------------------------------------------------------------------------------
-// Initialization
-
-const initHistory = (regex) => {
-  const { matchingNodes, nextNodesToTest } = regex.init();
-
-  return {
-    index: 0,
-    end: -1,
-    states: [
-      {
-        runState: 'running',
-        matchingNodes,
-        nextNodesToTest,
-        testRange: [0, 0],
-        matchRanges: [],
-      },
-    ],
-  };
-};
-
-const initLogs = () => ({ first: 0, list: [] });
-
-// const defaultRegex = compile('a+(abc)*|abc|def');
-const defaultRegex = compile('abc');
-const defaultHistory = initHistory(defaultRegex);
-
-const MAX_LOGS = 8;
+/*eslint no-unused-vars: "off" */
 
 //------------------------------------------------------------------------------
 // App and state
@@ -110,7 +85,6 @@ const App = () => {
   const [light, toggleLight] = useState(false);
   const [screen, setScreen] = useState('main');
   const [tsq, setTSQ] = useState('');
-  const [testString, setTestString] = useState('abc def aaabc aaab 123');
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [saveBoxTags, setSaveBoxTags] = useState([]);
@@ -119,64 +93,56 @@ const App = () => {
   const [page, setPage] = useState(null);
   const [editorIndex, setEditorIndex] = useState(null);
   const [fetchStr, setFetchStr] = useState(false);
-
   const [user, setUser] = useState({});
   const [regexID, setRegexID] = useState(null);
   const [literal, setLiteral] = useState('');
   const [displayGraph, setDisplayGraph] = useState(true);
 
-  const [regex, setRegex] = useState(defaultRegex);
-  const [history, setHistory] = useState(defaultHistory);
-  const [logs, setLogs] = useState(initLogs());
-  const [play, setPlay] = useState(false);
-  const [count, setCount] = useState(0);
+  const [
+    state,
+    { setRegex, setTestString, stepForward, stepBackward, toBeginning, play },
+  ] = useApplicationData();
 
-  const {
-    runState,
-    matchingNodes,
-    nextNodesToTest,
-    testRange,
-    matchRanges,
-  } = history.states[history.index];
+  const regex = state.regex;
 
   //----------------------------------------------------------------------------
 
-  useEffect(() => {
-    let timeout = null;
-    if (play) {
-      timeout = setTimeout(() => {
-        onStepForward();
-        console.log('Playing');
-        setCount((count) => count + 1);
-      }, 500);
-    }
-    return () => clearInterval(timeout);
-  }, [play, count]);
+  // useEffect(() => {
+  //   let timeout = null;
+  //   if (play) {
+  //     timeout = setTimeout(() => {
+  //       onStepForward();
+  //       console.log('Playing');
+  //       setCount((count) => count + 1);
+  //     }, 500);
+  //   }
+  //   return () => clearInterval(timeout);
+  // }, [play, count]);
 
   //----------------------------------------------------------------------------
   // Hooks
 
-  useEffect(() => {
-    if (!!fetchStr)
-      (async () => {
-        try {
-          const res = await fetch(serverAddr + 'test-strings/search', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: fetchStr }),
-          });
-          const {
-            rows: [{ test_string = '' }],
-          } = await res.json();
-          setTestString(test_string);
-        } catch (e) {
-          console.error(e);
-        }
-        setFetchStr(false);
-      })();
-  }, [fetchStr, setFetchStr, setTestString]);
+  // useEffect(() => {
+  //   if (!!fetchStr)
+  //     (async () => {
+  //       try {
+  //         const res = await fetch(serverAddr + 'test-strings/search', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({ id: fetchStr }),
+  //         });
+  //         const {
+  //           rows: [{ test_string = '' }],
+  //         } = await res.json();
+  //         setTestString(test_string);
+  //       } catch (e) {
+  //         console.error(e);
+  //       }
+  //       setFetchStr(false);
+  //     })();
+  // }, [fetchStr, setFetchStr, setTestString]);
 
   const writeRegex = async (mode) => {
     try {
@@ -187,7 +153,7 @@ const App = () => {
         newBody.title = title;
         newBody.notes = desc;
         newBody.regex = literal;
-        newBody.testStr = testString;
+        newBody.testStr = state.testString;
         newBody.tags = saveBoxTags.map(({ id, tag_name }) => ({
           id,
           tagName: tag_name,
@@ -208,31 +174,19 @@ const App = () => {
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(serverAddr + 'auth/userinfo', {
-          credentials: 'include',
-        });
-        const usr = await res.json();
-        setUser(usr);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, []);
-
-  //----------------------------------------------------------------------------
-
-  // To set a new regex
-  const setNewRegex = (regexString) => {
-    const regex = compile(regexString);
-    setRegex(() => regex);
-    setHistory(() => initHistory(regex));
-    setLogs(initLogs());
-    setDisplayGraph(true);
-    setLiteral(regexString);
-  };
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const res = await fetch(serverAddr + 'auth/userinfo', {
+  //         credentials: 'include',
+  //       });
+  //       const usr = await res.json();
+  //       setUser(usr);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   })();
+  // }, []);
 
   //----------------------------------------------------------------------------
   // Editor
@@ -240,21 +194,7 @@ const App = () => {
   const onEditorChange = (event) => {
     if (event.nativeEvent.inputType === 'insertLineBreak') return;
     const regexString = event.target.value;
-    setNewRegex(regexString);
-  };
-
-  const onEditorHover = (ind) => () => {
-    setEditorIndex(ind);
-  };
-
-  //--------------------------------------------------------------------------
-  // TestStrField
-
-  const onTestStrChange = (str) => {
-    setDisplayGraph(true);
-    setTestString(str);
-    setHistory(() => initHistory(regex));
-    setLogs(initLogs());
+    setRegex(regexString);
   };
 
   //----------------------------------------------------------------------------
@@ -262,123 +202,12 @@ const App = () => {
 
   const tokenInfo = regex.getTokenInfo(editorIndex);
 
-  //----------------------------------------------------------------------------
-  // LogBox
-
-  const onStepForward = () => {
-    const prevIndex = history.index;
-    let end = history.end;
-    const prevState = history.states[prevIndex];
-    let prevNextNodesToTest = prevState.nextNodesToTest;
-
-    const prevTestRange = prevState.testRange;
-    const prevRunState = prevState.runState;
-
-    // Return if at end of test string
-    const [begin, prevPos] = prevTestRange;
-    if (prevPos === testString.length) {
-      setPlay(false);
-      return;
-    }
-
-    // Retrace a forward step already taken
-    const index = prevIndex + 1;
-    if (prevIndex < history.states.length - 1) {
-      setHistory({ ...history, index });
-      const first = Math.max(history.index - MAX_LOGS + 1, 0);
-      setLogs({ ...logs, first });
-      return;
-    }
-
-    if (prevRunState === 'success' || prevRunState === 'failure') {
-      const reset = regex.init();
-      prevNextNodesToTest = reset.nextNodesToTest;
-    }
-
-    // Run the next step
-    const ch = testString[prevPos];
-    const char = ch === ' ' ? "' '" : ch;
-    let { runState, matchingNodes, nextNodesToTest } = regex.step(
-      prevNextNodesToTest,
-      ch
-    );
-
-    const pos = prevPos + 1;
-    let testRange = [];
-    const matchRanges = [...prevState.matchRanges];
-    let msg = '';
-
-    switch (runState) {
-      case 'running':
-        testRange = [begin, pos];
-        msg = `Char: ${char} - Nodes: ${matchingNodes.length}`;
-        break;
-      case 'success':
-        testRange = [pos, pos];
-        matchRanges.push([begin, pos]);
-        msg = `Match: ${testString.slice(begin, pos)}`;
-        break;
-      case 'failure':
-        testRange = [begin + 1, begin + 1];
-        msg = 'No match';
-        break;
-      case 'end':
-        testRange = [pos, pos];
-        msg = 'End of test string';
-        end = index;
-        setPlay(false);
-        break;
-      default:
-        break;
-    }
-
-    // Create a new log entry
-    const first = Math.max(history.index - MAX_LOGS + 1, 0);
-    const prompt = `[${begin}:${pos}]`;
-    const log = { prompt, msg, key: history.index + 1 };
-    const list = [...logs.list, log];
-    setLogs({ first, list });
-
-    // Set the next history state
-    const nextState = {
-      runState,
-      matchingNodes,
-      nextNodesToTest,
-      testRange,
-      matchRanges,
-    };
-    setHistory({
-      ...history,
-      index,
-      end,
-      states: [...history.states, nextState],
-    });
-  };
-
-  const onStepBack = () => {
-    if (history.index === 0) return;
-    setHistory({ ...history, index: history.index - 1 });
-    const first = Math.max(Math.min(history.index - 2, logs.first), 0);
-    setLogs({ ...logs, first });
-  };
-
-  const onToBeginning = () => {
-    setHistory({ ...history, index: 0 });
-    setLogs({ ...logs, first: 0 });
-  };
-
-  const onPlay = () => {
-    setPlay((play) => !play);
-  };
-
-  //----------------------------------------------------------------------------
-  // Callbacks
-
   const doFix = () => {
     const newRegex = compile(regex.autofix());
-    setRegex(() => newRegex);
-    setHistory(() => initHistory(regex));
+    setRegex(newRegex);
   };
+
+  //----------------------------------------------------------------------------
 
   const toggleTheme = () => toggleLight((light) => !light);
   const toggleExplore = () =>
@@ -392,8 +221,8 @@ const App = () => {
 
   const onExploreRegex = ({ id, title, desc, literal, tags }) => {
     setScreen('main');
-    onTestStrChange('fetching the test string..');
-    setNewRegex(literal);
+    setTestString('');
+    setRegex(literal);
     setTitle(title);
     setDesc(desc);
     setFetchStr(id);
@@ -414,24 +243,26 @@ const App = () => {
   //----------------------------------------------------------------------------
   // Components
 
-  const logEnd = Math.min(logs.first + MAX_LOGS, logs.list.length);
-  const clippedLogs = logs.list.slice(logs.first, logEnd);
+  const MAX_LOGS = 8;
+
+  const logEnd = Math.min(state.firstLogIndex + MAX_LOGS, state.logs.length);
+  const clippedLogs = state.logs.slice(state.firstLogIndex, logEnd);
   const situation =
-    history.index === 0
+    state.histIndex === 0
       ? 'atBeginning'
-      : history.index === history.end
+      : state.histIndex === state.histEnd
       ? 'atEnd'
       : '';
 
   const logBox = (
     <LogBox
       logs={clippedLogs}
-      currentIndex={history.index}
+      currentIndex={state.histIndex}
       onHover={(pos) => console.log('hovered over', pos)}
-      onPlay={onPlay}
-      onStepBack={onStepBack}
-      onStepForward={onStepForward}
-      onToBegining={onToBeginning}
+      onPlay={play}
+      onStepBack={stepBackward}
+      onStepForward={stepForward}
+      onToBegining={toBeginning}
       play={play}
       situation={situation}
       displayGraph={displayGraph}
@@ -449,11 +280,13 @@ const App = () => {
     />
   );
 
+  const histState = state.histStates[state.histIndex];
+
   const graphBox = displayGraph ? (
     <Graph
       graph={regex.graph}
-      matchingNodes={matchingNodes}
-      runState={runState}
+      matchingNodes={histState.matchingNodes}
+      runState={histState.runState}
     />
   ) : (
     <SaveBox
@@ -476,23 +309,6 @@ const App = () => {
   const muiTheme = light ? lightTheme : darkTheme;
   const isExploring = screen === 'explore';
 
-  const current = {
-    startInd: testRange[1],
-    endInd: testRange[1] + 1,
-    token: 'current',
-  };
-  const test = {
-    startInd: testRange[0],
-    endInd: testRange[1],
-    token: 'test',
-  };
-  const testStringHighlights = [test, current];
-
-  matchRanges.forEach(([startInd, endInd]) => {
-    const match = { startInd, endInd, token: 'match' };
-    testStringHighlights.push(match);
-  });
-
   const mainScreen = (
     <div className={classes.gridContainer}>
       <div className={classes.editorBox}>
@@ -500,15 +316,16 @@ const App = () => {
           index={editorIndex}
           editorInfo={regex.lexemes}
           onRegexChange={onEditorChange}
-          onHover={onEditorHover}
+          onHover={(ind) => () => setEditorIndex(ind)}
         />
       </div>
       <div className={classes.testStrBox}>
         <TestStrField
+          testString={state.testString}
+          testRange={histState.testRange}
+          matchRanges={histState.matchRanges}
+          setTestString={setTestString}
           numRows={6}
-          string={testString}
-          setString={onTestStrChange}
-          highlights={testStringHighlights}
         />
       </div>
       <div className={classes.infoBox}>
