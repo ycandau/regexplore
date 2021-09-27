@@ -7,6 +7,7 @@ export default createTheme({
       green: '#4ad14a',
       orange: '#ffa500',
       darkGreen: '#006020',
+      red: '#ff0000',
       background: '#212121',
     },
   },
