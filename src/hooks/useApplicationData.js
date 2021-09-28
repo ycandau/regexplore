@@ -84,6 +84,24 @@ const stepForward = (state) => {
   const histState = histStates[histIndex];
   const [begin, end] = histState.testRange;
 
+  console.log(begin, testString.length);
+
+  if (begin === testString.length) {
+    const log = { prompt: `[${begin}:${end}]`, msg: 'End', key: 'end' };
+    const logsTopIndex = Math.max(histIndex - state.logsDisplayCount + 2, 0);
+    const nextHistState = histStates[histStates.length - 1];
+
+    return {
+      ...state,
+      ...initPlay,
+      histIndex: histIndex + 1,
+      histEnd: histEnd + 1,
+      histStates: [...histStates, nextHistState],
+      logsTopIndex,
+      logs: [...logs, log],
+    };
+  }
+
   let nextHistState = null;
   let prompt = null;
   let msg = null;
@@ -166,8 +184,6 @@ const stepForward = (state) => {
   // Logs
   const key = `${begin}-${end}-${histState.runState}`;
   const log = { prompt, msg, key };
-  const newLogs = [...logs, log];
-
   const logsTopIndex = Math.max(histIndex - state.logsDisplayCount + 2, 0);
 
   // Finalize
@@ -178,7 +194,7 @@ const stepForward = (state) => {
     histEnd: histEnd + 1,
     histStates: [...histStates, nextHistState],
     logsTopIndex,
-    logs: newLogs,
+    logs: [...logs, log],
   };
 };
 
