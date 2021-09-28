@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
 // Component
 
 export default function LogBox({
-  logsCurrentIndex,
+  histIndex,
   logsTopIndex,
   logsDisplayCount,
   logs,
@@ -83,7 +83,7 @@ export default function LogBox({
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
 
-  const atBeginning = logsCurrentIndex === 0;
+  const atBeginning = histIndex === 0;
   const atEnd = false;
 
   const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
@@ -93,11 +93,7 @@ export default function LogBox({
   // Children
 
   const logList = clippedLogs.map(({ prompt, msg, key }, index) => (
-    <ListItem
-      key={key}
-      selected={logsCurrentIndex - logsTopIndex === index}
-      button
-    >
+    <ListItem key={key} selected={histIndex - logsTopIndex === index} button>
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}

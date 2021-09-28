@@ -243,7 +243,7 @@ const App = () => {
 
   const logBox = (
     <LogBox
-      logsCurrentIndex={histState.logsCurrentIndex}
+      histIndex={state.histIndex}
       logsTopIndex={state.logsTopIndex}
       logsDisplayCount={state.logsDisplayCount}
       logs={state.logs}

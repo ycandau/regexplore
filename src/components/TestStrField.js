@@ -85,6 +85,15 @@ const TestStrField = ({
     </span>
   ));
 
+  // Indicate end of string failure
+  if (runState === 'endOfString') {
+    spans.push(
+      <span key={spans.length} className={classes.failure}>
+        &nbsp;
+      </span>
+    );
+  }
+
   return (
     <div className={classes.contextWrapper}>
       <Paper className={classes.pap} elevation={0}>
@@ -117,6 +126,21 @@ const addClass = (tokens, begin, end, type) => {
   }
 };
 
+const getType = (runState) => {
+  switch (runState) {
+    case 'success':
+      return ['success', 'success'];
+    case 'failure':
+      return ['tested', 'failure'];
+    case 'endOfString':
+      return ['tested', 'tested'];
+    case 'starting':
+    case 'running':
+    default:
+      return ['tested', 'current'];
+  }
+};
+
 const testStringTokens = (testString, runState, testRange, matchRanges) => {
   const tokens = testString.split('').map((ch, key) => ({ ch, key, type: '' }));
 
@@ -125,9 +149,7 @@ const testStringTokens = (testString, runState, testRange, matchRanges) => {
   );
 
   const [begin, end] = testRange;
-  const tailType = runState === 'success' ? 'success' : 'tested';
-  const headType =
-    runState === 'success' || runState === 'failure' ? runState : 'current';
+  const [tailType, headType] = getType(runState);
 
   addClass(tokens, begin, end - 1, tailType);
   addClass(tokens, end, end, headType);
