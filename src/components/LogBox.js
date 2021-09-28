@@ -1,6 +1,10 @@
+//------------------------------------------------------------------------------
+// Imports
+
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
+
 import {
   IconButton,
   List,
@@ -9,6 +13,7 @@ import {
   ListItemText,
   makeStyles,
 } from '@material-ui/core';
+
 import {
   PlayArrow,
   SkipNextRounded,
@@ -17,6 +22,9 @@ import {
   DeleteForever,
   Save,
 } from '@material-ui/icons';
+
+//------------------------------------------------------------------------------
+// Styles
 
 const useStyles = makeStyles((theme) => ({
   logList: {
@@ -50,28 +58,42 @@ const useStyles = makeStyles((theme) => ({
   playOff: {},
 }));
 
+//------------------------------------------------------------------------------
+// Component
+
 export default function LogBox({
+  histIndex,
+  logsTopIndex,
+  logsDisplayCount,
   logs,
-  currentIndex,
-  onHover,
-  onStepBack,
-  onPlay,
-  onStepForward,
-
-  onToBegining,
   play,
-  situation,
-  onToEnd,
-
+  onPlay,
+  onStepBackward,
+  onStepForward,
+  onToBegining,
+  onHover,
+  displayGraph,
   setDisplayGraph,
   onDeleteRegex,
-  displayGraph,
   isLoggedIn,
 }) {
+  //----------------------------------------------------------------------------
+  // Local variables
+
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
-  const logList = logs.map(({ prompt, msg, key }) => (
-    <ListItem key={key} selected={currentIndex === key} button>
+
+  const atBeginning = histIndex === 0;
+  const atEnd = false;
+
+  const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
+  const clippedLogs = logs.slice(logsTopIndex, logEnd);
+
+  //----------------------------------------------------------------------------
+  // Children
+
+  const logList = clippedLogs.map(({ prompt, msg, key }, index) => (
+    <ListItem key={key} selected={histIndex - logsTopIndex === index} button>
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}
@@ -79,6 +101,9 @@ export default function LogBox({
       />
     </ListItem>
   ));
+
+  //----------------------------------------------------------------------------
+  // Return components
 
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
@@ -113,17 +138,17 @@ export default function LogBox({
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atBeginning'}
+              disabled={atBeginning}
               onClick={() => {
                 showGraph();
-                onStepBack();
+                onStepBackward();
               }}
             >
               <SkipPreviousRounded />
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atEnd'}
+              disabled={atEnd}
               onClick={() => {
                 showGraph();
                 onStepForward();
@@ -133,7 +158,7 @@ export default function LogBox({
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atBeginning'}
+              disabled={atBeginning}
               onClick={() => {
                 showGraph();
                 onToBegining();

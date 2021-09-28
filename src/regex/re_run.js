@@ -32,7 +32,8 @@ const propagate = (node, nextNodesToTest, visited) => {
 // Step forward, testing the current list of value nodes and propagating
 // through non value nodes
 
-const stepForward = (currentNodes, ch) => {
+const stepForward = (currentNodes, testString, pos) => {
+  const ch = testString[pos];
   const nextNodesToTest = [];
   const matchingNodes = [];
   const visited = [];
@@ -61,6 +62,11 @@ const stepForward = (currentNodes, ch) => {
   // Failure to match
   if (matchingNodes.length === 0) {
     return { runState: 'failure', matchingNodes, nextNodesToTest };
+  }
+
+  // End of test string
+  if (pos === testString.length - 1) {
+    return { runState: 'endOfString', matchingNodes, nextNodesToTest };
   }
 
   // Continue running

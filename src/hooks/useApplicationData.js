@@ -12,8 +12,6 @@ import compile from '../regex/re_compile';
 //------------------------------------------------------------------------------
 // Constants
 
-const MAX_LOGS = 8;
-
 const REGEX = 'setRegex';
 const TEST_STR = 'testString';
 const FORWARD = 'stepForward';
@@ -28,7 +26,7 @@ const initRegex = compile('abc');
 
 const initHistory = (regex) => ({
   histIndex: 0,
-  histEnd: -1,
+  histEnd: 0,
   histStates: [
     {
       ...regex.init(),
@@ -39,8 +37,9 @@ const initHistory = (regex) => ({
 });
 
 const initLogs = {
-  firstLogIndex: 0,
-  logs: [],
+  logsTopIndex: 0,
+  logsDisplayCount: 5,
+  logs: [{ prompt: '[0:0]', msg: 'New search', key: 'begin' }],
 };
 
 const initPlay = {
@@ -64,6 +63,8 @@ const setRegex = (state, action) => {
   };
 };
 
+//------------------------------------------------------------------------------
+
 const setTestString = (state, action) => {
   const testString = action.testString || '';
 
@@ -76,15 +77,34 @@ const setTestString = (state, action) => {
   };
 };
 
+//------------------------------------------------------------------------------
+
 const stepForward = (state) => {
   const { regex, testString, histIndex, histEnd, histStates, logs } = state;
   const histState = histStates[histIndex];
   const [begin, end] = histState.testRange;
 
+  console.log(begin, testString.length);
+
+  if (begin === testString.length) {
+    const log = { prompt: `[${begin}:${end}]`, msg: 'End', key: 'end' };
+    const logsTopIndex = Math.max(histIndex - state.logsDisplayCount + 2, 0);
+    const nextHistState = histStates[histStates.length - 1];
+
+    return {
+      ...state,
+      ...initPlay,
+      histIndex: histIndex + 1,
+      histEnd: histEnd + 1,
+      histStates: [...histStates, nextHistState],
+      logsTopIndex,
+      logs: [...logs, log],
+    };
+  }
+
   let nextHistState = null;
   let prompt = null;
   let msg = null;
-  let endOfTestString = false;
 
   switch (histState.runState) {
     case 'success':
@@ -105,10 +125,19 @@ const stepForward = (state) => {
       msg = 'New search';
       break;
 
+    case 'endOfString':
+      nextHistState = regex.init(); // starting
+      nextHistState.testRange = [begin + 1, begin + 1];
+      nextHistState.matchRanges = histState.matchRanges;
+
+      prompt = `[${begin + 1}:${begin + 1}]`;
+      msg = 'New search';
+      break;
+
     case 'starting':
     case 'running':
       const ch = testString[end];
-      nextHistState = regex.step(histState.nextNodesToTest, ch);
+      nextHistState = regex.step(histState.nextNodesToTest, testString, end);
 
       switch (nextHistState.runState) {
         case 'success':
@@ -117,7 +146,6 @@ const stepForward = (state) => {
 
           prompt = `[${begin}:${end}]`;
           msg = `Match: ${testString.slice(begin, end + 1)}`;
-          endOfTestString = end + 1 === testString.length;
           break;
 
         case 'failure':
@@ -126,7 +154,14 @@ const stepForward = (state) => {
 
           prompt = `[${begin}:${end}]`;
           msg = 'No match';
-          endOfTestString = begin + 1 === testString.length;
+          break;
+
+        case 'endOfString':
+          nextHistState.testRange = [begin, end];
+          nextHistState.matchRanges = histState.matchRanges;
+
+          prompt = `[${begin}:${end}]`;
+          msg = 'End of test string';
           break;
 
         case 'running':
@@ -136,8 +171,8 @@ const stepForward = (state) => {
           prompt = `[${begin}:${end}]`;
           const char = ch === ' ' ? "' '" : ch;
           msg = `Char: ${char} - Nodes: ${nextHistState.matchingNodes.length}`;
-          endOfTestString = end + 1 === testString.length;
           break;
+
         default:
           break;
       }
@@ -146,49 +181,51 @@ const stepForward = (state) => {
       break;
   }
 
-  const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
-
+  // Logs
   const key = `${begin}-${end}-${histState.runState}`;
   const log = { prompt, msg, key };
-  const newLogs = [...logs, log];
+  const logsTopIndex = Math.max(histIndex - state.logsDisplayCount + 2, 0);
 
-  if (endOfTestString) {
-    newLogs.push({ prompt, msg: 'End of test string', key: 'end' });
-  }
-
+  // Finalize
   return {
     ...state,
     ...initPlay,
     histIndex: histIndex + 1,
     histEnd: histEnd + 1,
     histStates: [...histStates, nextHistState],
-    firstLogIndex,
-    logs: newLogs,
+    logsTopIndex,
+    logs: [...logs, log],
   };
 };
+
+//------------------------------------------------------------------------------
 
 const stepForwardRetrace = (state) => {
-  const { histIndex } = state;
-  const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
+  const histIndex = state.histIndex + 1;
+  const logsTopIndex = Math.max(
+    histIndex - state.logsDisplayCount + 1,
+    state.logsTopIndex
+  );
+
   return {
     ...state,
     ...initPlay,
-    histIndex: histIndex + 1,
-    firstLogIndex,
+    histIndex,
+    logsTopIndex,
   };
 };
 
+//------------------------------------------------------------------------------
+
 const stepBackward = (state) => {
-  const { histIndex } = state;
-  const firstLogIndex = Math.max(
-    Math.min(histIndex - 2, state.firstLogIndex),
-    0
-  );
+  const histIndex = state.histIndex - 1;
+  const logsTopIndex = Math.min(histIndex, state.logsTopIndex);
+
   return {
     ...state,
     ...initPlay,
-    histIndex: histIndex - 1,
-    firstLogIndex,
+    histIndex,
+    logsTopIndex,
   };
 };
 
@@ -197,7 +234,7 @@ const backToBeginning = (state) => {
     ...state,
     ...initPlay,
     histIndex: 0,
-    firstLogIndex: 0,
+    logsTopIndex: 0,
   };
 };
 
