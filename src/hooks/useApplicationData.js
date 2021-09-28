@@ -183,7 +183,6 @@ const stepForward = (state) => {
 const stepForwardRetrace = (state) => {
   const histIndex = state.histIndex + 1;
   const logsCurrentIndex = state.histStates[histIndex].logsCurrentIndex;
-
   const logsTopIndex = Math.max(
     logsCurrentIndex - state.logsDisplayCount + 1,
     state.logsTopIndex

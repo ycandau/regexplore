@@ -71,7 +71,7 @@ export default function LogBox({
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
 
-  const atBeginning = false;
+  const atBeginning = logsCurrentIndex === 0;
   const atEnd = false;
 
   const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
