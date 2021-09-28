@@ -1,3 +1,6 @@
+//------------------------------------------------------------------------------
+// Imports
+
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -19,6 +22,9 @@ import {
   DeleteForever,
   Save,
 } from '@material-ui/icons';
+
+//------------------------------------------------------------------------------
+// Styles
 
 const useStyles = makeStyles((theme) => ({
   logList: {
@@ -52,6 +58,9 @@ const useStyles = makeStyles((theme) => ({
   playOff: {},
 }));
 
+//------------------------------------------------------------------------------
+// Component
+
 export default function LogBox({
   logsCurrentIndex,
   logsTopIndex,
@@ -68,6 +77,9 @@ export default function LogBox({
   onDeleteRegex,
   isLoggedIn,
 }) {
+  //----------------------------------------------------------------------------
+  // Local variables
+
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
 
@@ -76,6 +88,9 @@ export default function LogBox({
 
   const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
   const clippedLogs = logs.slice(logsTopIndex, logEnd);
+
+  //----------------------------------------------------------------------------
+  // Children
 
   const logList = clippedLogs.map(({ prompt, msg, key }, index) => (
     <ListItem
@@ -90,6 +105,9 @@ export default function LogBox({
       />
     </ListItem>
   ));
+
+  //----------------------------------------------------------------------------
+  // Return components
 
   return (
     <Card className={classes.logList} classes={{ root: classes.cardHeight }}>
