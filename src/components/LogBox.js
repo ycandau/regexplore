@@ -1,6 +1,7 @@
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
+
 import {
   IconButton,
   List,
@@ -9,6 +10,7 @@ import {
   ListItemText,
   makeStyles,
 } from '@material-ui/core';
+
 import {
   PlayArrow,
   SkipNextRounded,
@@ -51,27 +53,36 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function LogBox({
+  logsCurrentIndex,
+  logsTopIndex,
+  logsDisplayCount,
   logs,
-  currentIndex,
-  onHover,
-  onStepBack,
-  onPlay,
-  onStepForward,
-
-  onToBegining,
   play,
-  situation,
-  onToEnd,
-
+  onPlay,
+  onStepBackward,
+  onStepForward,
+  onToBegining,
+  onHover,
+  displayGraph,
   setDisplayGraph,
   onDeleteRegex,
-  displayGraph,
   isLoggedIn,
 }) {
   const classes = useStyles();
   const showGraph = () => setDisplayGraph(true);
-  const logList = logs.map(({ prompt, msg, key }) => (
-    <ListItem key={key} selected={currentIndex === key} button>
+
+  const atBeginning = false;
+  const atEnd = false;
+
+  const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
+  const clippedLogs = logs.slice(logsTopIndex, logEnd);
+
+  const logList = clippedLogs.map(({ prompt, msg, key }, index) => (
+    <ListItem
+      key={key}
+      selected={logsCurrentIndex - logsTopIndex === index}
+      button
+    >
       <ListItemIcon className={classes.avatar}>{prompt}</ListItemIcon>
       <ListItemText
         primary={msg}
@@ -113,17 +124,17 @@ export default function LogBox({
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atBeginning'}
+              disabled={atBeginning}
               onClick={() => {
                 showGraph();
-                onStepBack();
+                onStepBackward();
               }}
             >
               <SkipPreviousRounded />
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atEnd'}
+              disabled={atEnd}
               onClick={() => {
                 showGraph();
                 onStepForward();
@@ -133,7 +144,7 @@ export default function LogBox({
             </IconButton>
 
             <IconButton
-              disabled={situation === 'atBeginning'}
+              disabled={atBeginning}
               onClick={() => {
                 showGraph();
                 onToBegining();

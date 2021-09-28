@@ -12,8 +12,6 @@ import compile from '../regex/re_compile';
 //------------------------------------------------------------------------------
 // Constants
 
-const MAX_LOGS = 8;
-
 const REGEX = 'setRegex';
 const TEST_STR = 'testString';
 const FORWARD = 'stepForward';
@@ -28,19 +26,21 @@ const initRegex = compile('abc');
 
 const initHistory = (regex) => ({
   histIndex: 0,
-  histEnd: -1,
+  histEnd: 0,
   histStates: [
     {
       ...regex.init(),
       testRange: [0, 0],
       matchRanges: [],
+      logsCurrentIndex: 0,
     },
   ],
 });
 
 const initLogs = {
-  firstLogIndex: 0,
-  logs: [],
+  logsTopIndex: 0,
+  logsDisplayCount: 5,
+  logs: [{ prompt: '[0:0]', msg: 'New search', key: 'begin' }],
 };
 
 const initPlay = {
@@ -64,6 +64,8 @@ const setRegex = (state, action) => {
   };
 };
 
+//------------------------------------------------------------------------------
+
 const setTestString = (state, action) => {
   const testString = action.testString || '';
 
@@ -75,6 +77,8 @@ const setTestString = (state, action) => {
     testString,
   };
 };
+
+//------------------------------------------------------------------------------
 
 const stepForward = (state) => {
   const { regex, testString, histIndex, histEnd, histStates, logs } = state;
@@ -146,8 +150,7 @@ const stepForward = (state) => {
       break;
   }
 
-  const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
-
+  // Logs
   const key = `${begin}-${end}-${histState.runState}`;
   const log = { prompt, msg, key };
   const newLogs = [...logs, log];
@@ -156,39 +159,55 @@ const stepForward = (state) => {
     newLogs.push({ prompt, msg: 'End of test string', key: 'end' });
   }
 
+  const logsCurrentIndex = newLogs.length - 1;
+  const logsTopIndex = Math.max(
+    logsCurrentIndex - state.logsDisplayCount + 1,
+    0
+  );
+  nextHistState.logsCurrentIndex = logsCurrentIndex;
+
+  // Finalize
   return {
     ...state,
     ...initPlay,
     histIndex: histIndex + 1,
     histEnd: histEnd + 1,
     histStates: [...histStates, nextHistState],
-    firstLogIndex,
+    logsTopIndex,
     logs: newLogs,
   };
 };
 
+//------------------------------------------------------------------------------
+
 const stepForwardRetrace = (state) => {
-  const { histIndex } = state;
-  const firstLogIndex = Math.max(histIndex - MAX_LOGS + 1, 0);
+  const histIndex = state.histIndex + 1;
+  const logsCurrentIndex = state.histStates[histIndex].logsCurrentIndex;
+  const logsTopIndex = Math.max(
+    logsCurrentIndex - state.logsDisplayCount + 1,
+    0
+  );
+
   return {
     ...state,
     ...initPlay,
-    histIndex: histIndex + 1,
-    firstLogIndex,
+    histIndex,
+    logsTopIndex,
   };
 };
 
+//------------------------------------------------------------------------------
+
 const stepBackward = (state) => {
-  const { histIndex } = state;
-  const firstLogIndex = Math.max(
-    Math.min(histIndex - 2, state.firstLogIndex),
-    0
-  );
+  const histIndex = state.histIndex - 1;
+  const logsCurrentIndex = state.histStates[histIndex].logsCurrentIndex;
+  const logsTopIndex = Math.min(logsCurrentIndex, state.logsTopIndex);
+
   return {
     ...state,
     ...initPlay,
-    histIndex: histIndex - 1,
-    firstLogIndex,
+    histIndex,
+    logsTopIndex,
   };
 };
 
@@ -197,7 +216,7 @@ const backToBeginning = (state) => {
     ...state,
     ...initPlay,
     histIndex: 0,
-    firstLogIndex: 0,
+    logsTopIndex: 0,
   };
 };
 

@@ -108,6 +108,10 @@ const App = () => {
   const regex = state.regex;
   const histState = state.histStates[state.histIndex];
 
+  const classes = useStyles();
+  const muiTheme = light ? lightTheme : darkTheme;
+  const isExploring = screen === 'explore';
+
   //----------------------------------------------------------------------------
 
   // useEffect(() => {
@@ -237,35 +241,18 @@ const App = () => {
   //----------------------------------------------------------------------------
   // Components
 
-  const MAX_LOGS = 8;
-
-  const logEnd = Math.min(state.firstLogIndex + MAX_LOGS, state.logs.length);
-  const clippedLogs = state.logs.slice(state.firstLogIndex, logEnd);
-  const situation =
-    state.histIndex === 0
-      ? 'atBeginning'
-      : state.histIndex === state.histEnd
-      ? 'atEnd'
-      : '';
-
-  const classes = useStyles();
-  const muiTheme = light ? lightTheme : darkTheme;
-  const isExploring = screen === 'explore';
-
-  //----------------------------------------------------------------------------
-  // Components
-
   const logBox = (
     <LogBox
-      logs={clippedLogs}
-      currentIndex={state.histIndex}
-      onHover={(pos) => console.log('hovered over', pos)}
+      logsCurrentIndex={histState.logsCurrentIndex}
+      logsTopIndex={state.logsTopIndex}
+      logsDisplayCount={state.logsDisplayCount}
+      logs={state.logs}
+      play={state.play}
       onPlay={play}
-      onStepBack={stepBackward}
+      onStepBackward={stepBackward}
       onStepForward={stepForward}
       onToBegining={toBeginning}
-      play={play}
-      situation={situation}
+      onHover={(pos) => console.log('hovered over', pos)}
       displayGraph={displayGraph}
       setDisplayGraph={setDisplayGraph}
       onDeleteRegex={onDeleteRegex}
