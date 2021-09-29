@@ -148,6 +148,9 @@ const stepForward = (state, keepPlaying) => {
   const histState = histStates[histIndex];
   const [begin, end] = histState.nextTestRange;
 
+  // Block when in play mode
+  if (histState.endOfSearch) return { ...state, ...initPlay };
+
   // Next history state and log message
   const [nextHistState, msg] =
     begin !== testString.length
@@ -177,9 +180,9 @@ const stepForward = (state, keepPlaying) => {
 //------------------------------------------------------------------------------
 
 const stepForwardRetrace = (state, keepPlaying) => {
-  const histIndex = state.histIndex + 1;
+  const { histIndex, logsDisplayCount } = state;
   const logsTopIndex = Math.max(
-    histIndex - state.logsDisplayCount + 1,
+    histIndex - logsDisplayCount + 1,
     state.logsTopIndex
   );
 
@@ -189,7 +192,7 @@ const stepForwardRetrace = (state, keepPlaying) => {
   return {
     ...state,
     ...playMode,
-    histIndex,
+    histIndex: histIndex + 1,
     logsTopIndex,
   };
 };
