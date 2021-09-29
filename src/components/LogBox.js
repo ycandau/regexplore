@@ -68,6 +68,7 @@ export default function LogBox({
   logs,
   play,
   onPlay,
+  endOfSearch,
   onStepBackward,
   onStepForward,
   onToBegining,
@@ -84,8 +85,6 @@ export default function LogBox({
   const showGraph = () => setDisplayGraph(true);
 
   const atBeginning = histIndex === 0;
-  const atEnd = false;
-
   const logEnd = Math.min(logsTopIndex + logsDisplayCount, logs.length);
   const clippedLogs = logs.slice(logsTopIndex, logEnd);
 
@@ -148,7 +147,7 @@ export default function LogBox({
             </IconButton>
 
             <IconButton
-              disabled={atEnd}
+              disabled={endOfSearch}
               onClick={() => {
                 showGraph();
                 onStepForward();

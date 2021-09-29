@@ -31,7 +31,7 @@ const testRun = (regexString, testString, initNodes, steps = []) => {
     let nextNodes = nextNodesToTest;
 
     for (let step = 0; step < steps.length; step++) {
-      const next = regex.step(nextNodes, testString[step]);
+      const next = regex.step(nextNodes, testString, step);
       const { expState, expMatching, expNext } = steps[step];
 
       expect(next.runState).toBe(expState);

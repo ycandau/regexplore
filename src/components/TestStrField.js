@@ -31,6 +31,12 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.secondary,
     fontSize: 20,
   },
+  starting: {
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.action.selected,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+  },
   matched: {
     color: theme.palette.custom.green,
     borderBottomColor: theme.palette.custom.green,
@@ -44,9 +50,9 @@ const useStyles = makeStyles((theme) => ({
     borderBottomStyle: 'solid',
   },
   current: {
-    color: theme.palette.text.primary,
+    color: theme.palette.custom.orange,
     backgroundColor: theme.palette.action.selected,
-    borderBottomColor: theme.palette.text.primary,
+    borderBottomColor: theme.palette.custom.orange,
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
   },
@@ -135,9 +141,11 @@ const getType = (runState) => {
     case 'endOfString':
       return ['tested', 'tested'];
     case 'starting':
+      return ['starting', 'starting'];
     case 'running':
-    default:
       return ['tested', 'current'];
+    default:
+      return ['', ''];
   }
 };
 
