@@ -143,8 +143,9 @@ const getType = (runState) => {
     case 'starting':
       return ['starting', 'starting'];
     case 'running':
-    default:
       return ['tested', 'current'];
+    default:
+      return ['', ''];
   }
 };
 

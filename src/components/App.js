@@ -249,6 +249,7 @@ const App = () => {
       logs={state.logs}
       play={state.play}
       onPlay={play}
+      endOfSearch={histState.endOfSearch}
       onStepBackward={stepBackward}
       onStepForward={stepForward}
       onToBegining={toBeginning}

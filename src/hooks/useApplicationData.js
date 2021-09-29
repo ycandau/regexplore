@@ -26,7 +26,6 @@ const initRegex = compile('abc');
 
 const initHistory = (regex) => ({
   histIndex: 0,
-  histEnd: 0,
   histStates: [
     {
       ...regex.init(),
@@ -39,8 +38,8 @@ const initHistory = (regex) => ({
 
 const initLogs = {
   logsTopIndex: 0,
-  logsDisplayCount: 5,
-  logs: [{ prompt: '[0:0]', msg: 'New search', key: 'begin' }],
+  logsDisplayCount: 10,
+  logs: [{ prompt: '[0:0]', key: 0, msg: 'New search' }],
 };
 
 const initPlay = {
@@ -80,25 +79,42 @@ const setTestString = (state, action) => {
 
 //------------------------------------------------------------------------------
 
-const stepForward = (state) => {
-  const { regex, testString, histIndex, histEnd, histStates, logs } = state;
-  const histState = histStates[histIndex];
-  const [begin, end] = histState.nextTestRange;
+const getEnd = (histState) => {
+  const msg = 'End of search';
+  const nextHistState = {
+    ...histState,
+    endOfSearch: true,
+  };
+  return [nextHistState, msg];
+};
 
+//------------------------------------------------------------------------------
+
+const getNextHistState = (histState, regex, testString) => {
+  const [begin, end] = histState.nextTestRange;
+  let msg = null;
+
+  // Initialize or step forward
   const nextHistState =
     histState.runState === 'starting' || histState.runState === 'running'
       ? regex.step(histState.nextNodesToTest, testString, end)
       : regex.init();
 
+  // Defaults
   nextHistState.testRange = histState.nextTestRange;
   nextHistState.matchRanges = histState.matchRanges;
 
-  let msg = null;
-
+  // Set next range and message
   switch (nextHistState.runState) {
     case 'starting':
       nextHistState.nextTestRange = [begin, end];
       msg = 'New search';
+      break;
+
+    case 'running':
+      nextHistState.nextTestRange = [begin, end + 1];
+      const ch = testString[end] === ' ' ? "' '" : testString[end];
+      msg = `Char: ${ch} - Nodes: ${nextHistState.matchingNodes.length}`;
       break;
 
     case 'success':
@@ -117,28 +133,37 @@ const stepForward = (state) => {
       msg = 'End of test string';
       break;
 
-    case 'running':
-      nextHistState.nextTestRange = [begin, end + 1];
-      const ch = testString[end] === ' ' ? "' '" : testString[end];
-      msg = `Char: ${ch} - Nodes: ${nextHistState.matchingNodes.length}`;
-      break;
-
     default:
       break;
   }
 
-  // Logs
-  const prompt = `[${begin}:${end}]`;
-  const key = `${logs.length}`;
-  const log = { prompt, key, msg };
+  return [nextHistState, msg];
+};
+
+//------------------------------------------------------------------------------
+
+const stepForward = (state) => {
+  const { regex, testString, histIndex, histStates, logs } = state;
+  const histState = histStates[histIndex];
+  const [begin, end] = histState.nextTestRange;
+
+  // Next history state and log message
+  const [nextHistState, msg] =
+    begin !== testString.length
+      ? getNextHistState(histState, regex, testString)
+      : getEnd(histState);
+
+  // Set log
   const logsTopIndex = Math.max(histIndex - state.logsDisplayCount + 2, 0);
+  const prompt = `[${begin}:${end}]`;
+  const key = logs.length;
+  const log = { prompt, key, msg };
 
   // Finalize
   return {
     ...state,
     ...initPlay,
     histIndex: histIndex + 1,
-    histEnd: histEnd + 1,
     histStates: [...histStates, nextHistState],
     logsTopIndex,
     logs: [...logs, log],
@@ -176,6 +201,8 @@ const stepBackward = (state) => {
   };
 };
 
+//------------------------------------------------------------------------------
+
 const backToBeginning = (state) => {
   return {
     ...state,
@@ -184,6 +211,8 @@ const backToBeginning = (state) => {
     logsTopIndex: 0,
   };
 };
+
+//------------------------------------------------------------------------------
 
 const play = (state) => {
   return {
@@ -196,9 +225,7 @@ const play = (state) => {
 // Reducer
 
 const appStateReducer = (state, action) => {
-  const { histIndex, histStates, testString } = state;
-  const histState = histStates[histIndex];
-  const pos = histState.nextTestRange[1];
+  const { histIndex, histStates } = state;
 
   switch (action.type) {
     case REGEX:
@@ -208,12 +235,10 @@ const appStateReducer = (state, action) => {
       return setTestString(state, action);
 
     case FORWARD:
-      if (pos === testString.length) return state;
       if (histIndex < histStates.length - 1) return stepForwardRetrace(state);
       return stepForward(state);
 
     case BACKWARD:
-      if (histIndex === 0) return state;
       return stepBackward(state);
 
     case BEGINNING:
