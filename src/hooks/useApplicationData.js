@@ -161,18 +161,16 @@ const stepForward = (state, keepPlaying) => {
   const log = { prompt, key, msg };
 
   // Control play mode
-  const conditionalInitPlay = keepPlaying ? {} : initPlay;
-  const newCount = keepPlaying ? state.count : state.count + 1;
+  const playMode = keepPlaying ? { count: state.count + 1 } : initPlay;
 
   // Finalize
   return {
     ...state,
-    ...conditionalInitPlay,
+    ...playMode,
     histIndex: histIndex + 1,
     histStates: [...histStates, nextHistState],
     logsTopIndex,
     logs: [...logs, log],
-    count: newCount,
   };
 };
 
@@ -186,15 +184,13 @@ const stepForwardRetrace = (state, keepPlaying) => {
   );
 
   // Control play mode
-  const conditionalInitPlay = keepPlaying ? {} : initPlay;
-  const newCount = keepPlaying ? state.count : state.count + 1;
+  const playMode = keepPlaying ? { count: state.count + 1 } : initPlay;
 
   return {
     ...state,
-    ...conditionalInitPlay,
+    ...playMode,
     histIndex,
     logsTopIndex,
-    count: newCount,
   };
 };
 
