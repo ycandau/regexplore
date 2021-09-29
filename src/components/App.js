@@ -102,7 +102,15 @@ const App = () => {
 
   const [
     state,
-    { setRegex, setTestString, stepForward, stepBackward, toBeginning, play },
+    {
+      setRegex,
+      setTestString,
+      stepForward,
+      stepBackward,
+      toBeginning,
+      keepPlaying,
+      play,
+    },
   ] = useApplicationData();
 
   const regex = state.regex;
@@ -114,42 +122,38 @@ const App = () => {
 
   //----------------------------------------------------------------------------
 
-  // useEffect(() => {
-  //   let timeout = null;
-  //   if (play) {
-  //     timeout = setTimeout(() => {
-  //       onStepForward();
-  //       console.log('Playing');
-  //       setCount((count) => count + 1);
-  //     }, 500);
-  //   }
-  //   return () => clearInterval(timeout);
-  // }, [play, count]);
+  useEffect(() => {
+    let timeout = null;
+    if (state.play) {
+      timeout = setTimeout(() => keepPlaying(), 500);
+    }
+    return () => clearInterval(timeout);
+  }, [state.play, keepPlaying, state.count]);
 
   //----------------------------------------------------------------------------
   // Hooks
 
-  // useEffect(() => {
-  //   if (!!fetchStr)
-  //     (async () => {
-  //       try {
-  //         const res = await fetch(serverAddr + 'test-strings/search', {
-  //           method: 'POST',
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           },
-  //           body: JSON.stringify({ id: fetchStr }),
-  //         });
-  //         const {
-  //           rows: [{ test_string = '' }],
-  //         } = await res.json();
-  //         setTestString(test_string);
-  //       } catch (e) {
-  //         console.error(e);
-  //       }
-  //       setFetchStr(false);
-  //     })();
-  // }, [fetchStr, setFetchStr, setTestString]);
+  useEffect(() => {
+    if (!!fetchStr)
+      (async () => {
+        try {
+          const res = await fetch(serverAddr + 'test-strings/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: fetchStr }),
+          });
+          const {
+            rows: [{ test_string = '' }],
+          } = await res.json();
+          setTestString(test_string);
+        } catch (e) {
+          console.error(e);
+        }
+        setFetchStr(false);
+      })();
+  }, [fetchStr, setFetchStr, setTestString]);
 
   const writeRegex = async (mode) => {
     try {
@@ -181,19 +185,19 @@ const App = () => {
     }
   };
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const res = await fetch(serverAddr + 'auth/userinfo', {
-  //         credentials: 'include',
-  //       });
-  //       const usr = await res.json();
-  //       setUser(usr);
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
-  //   })();
-  // }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(serverAddr + 'auth/userinfo', {
+          credentials: 'include',
+        });
+        const usr = await res.json();
+        setUser(usr);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
   //----------------------------------------------------------------------------
   // Editor

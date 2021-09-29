@@ -18,6 +18,7 @@ const FORWARD = 'stepForward';
 const BACKWARD = 'stepBackward';
 const BEGINNING = 'backToBeginning';
 const PLAY = 'play';
+const KEEP_PLAYING = 'keepPlaying';
 
 //------------------------------------------------------------------------------
 // Initial state
@@ -142,7 +143,7 @@ const getNextHistState = (histState, regex, testString) => {
 
 //------------------------------------------------------------------------------
 
-const stepForward = (state) => {
+const stepForward = (state, keepPlaying) => {
   const { regex, testString, histIndex, histStates, logs } = state;
   const histState = histStates[histIndex];
   const [begin, end] = histState.nextTestRange;
@@ -159,31 +160,41 @@ const stepForward = (state) => {
   const key = logs.length;
   const log = { prompt, key, msg };
 
+  // Control play mode
+  const conditionalInitPlay = keepPlaying ? {} : initPlay;
+  const newCount = keepPlaying ? state.count : state.count + 1;
+
   // Finalize
   return {
     ...state,
-    ...initPlay,
+    ...conditionalInitPlay,
     histIndex: histIndex + 1,
     histStates: [...histStates, nextHistState],
     logsTopIndex,
     logs: [...logs, log],
+    count: newCount,
   };
 };
 
 //------------------------------------------------------------------------------
 
-const stepForwardRetrace = (state) => {
+const stepForwardRetrace = (state, keepPlaying) => {
   const histIndex = state.histIndex + 1;
   const logsTopIndex = Math.max(
     histIndex - state.logsDisplayCount + 1,
     state.logsTopIndex
   );
 
+  // Control play mode
+  const conditionalInitPlay = keepPlaying ? {} : initPlay;
+  const newCount = keepPlaying ? state.count : state.count + 1;
+
   return {
     ...state,
-    ...initPlay,
+    ...conditionalInitPlay,
     histIndex,
     logsTopIndex,
+    count: newCount,
   };
 };
 
@@ -235,7 +246,9 @@ const appStateReducer = (state, action) => {
       return setTestString(state, action);
 
     case FORWARD:
-      if (histIndex < histStates.length - 1) return stepForwardRetrace(state);
+      if (histIndex < histStates.length - 1) {
+        return stepForwardRetrace(state);
+      }
       return stepForward(state);
 
     case BACKWARD:
@@ -246,6 +259,12 @@ const appStateReducer = (state, action) => {
 
     case PLAY:
       return play(state);
+
+    case KEEP_PLAYING:
+      if (histIndex < histStates.length - 1) {
+        return stepForwardRetrace(state, true);
+      }
+      return stepForward(state, true);
 
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
@@ -277,11 +296,20 @@ const useApplicationData = () => {
   const stepForward = useCallback(() => dispatch({ type: FORWARD }), []);
   const stepBackward = useCallback(() => dispatch({ type: BACKWARD }), []);
   const toBeginning = useCallback(() => dispatch({ type: BEGINNING }), []);
+  const keepPlaying = useCallback(() => dispatch({ type: KEEP_PLAYING }), []);
   const play = useCallback(() => dispatch({ type: PLAY }), []);
 
   return [
     state,
-    { setRegex, setTestString, stepForward, stepBackward, toBeginning, play },
+    {
+      setRegex,
+      setTestString,
+      stepForward,
+      stepBackward,
+      toBeginning,
+      keepPlaying,
+      play,
+    },
   ];
 };
 
