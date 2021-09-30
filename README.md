@@ -79,3 +79,17 @@ Then to run it:
 ```shell
 npx serve -s build
 ```
+
+---
+
+## Dependencies
+
+- [React](https://reactjs.org/)
+- [Material UI](https://mui.com/)
+
+---
+
+## Development dependencies
+
+- [Storybook](https://storybook.js.org/)
+- [Testing library](https://testing-library.com/)
