@@ -54,8 +54,28 @@ The App includes the following features:
 
 ## Installation
 
-- (Optional) Clone and start the [server](https://github.com/milesAwayAlex/regexplore-server) - `git clone https://github.com/milesAwayAlex/regexplore-server.git`
-- Clone the repository - `git clone https://github.com/ycandau/regexplore.git`
-- Open the app directory - `cd regexplore`
-- Install the dependencies - `yarn install`
-- Start the app - `yarn start`
+Clone the repository with [git](https://git-scm.com/):
+
+```shell
+git clone git@github.com:ycandau/regexplore.git
+```
+
+Install all the dependencies with [yarn](https://classic.yarnpkg.com/en/):
+
+```shell
+yarn install
+```
+
+The App also requires the [RegExpLore Server](https://github.com/milesAwayAlex/regexplore-server) to be installed separately.
+
+For better user experience, we recommend the production build. First generate a new build:
+
+```shell
+yarn build
+```
+
+Then to run it:
+
+```shell
+npx serve -s build
+```
