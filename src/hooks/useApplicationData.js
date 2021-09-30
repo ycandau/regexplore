@@ -39,7 +39,7 @@ const initHistory = (regex) => ({
 
 const initLogs = {
   logsTopIndex: 0,
-  logsDisplayCount: 10,
+  logsDisplayCount: 6,
   logs: [{ prompt: '[0:0]', key: 0, msg: 'New search' }],
 };
 
