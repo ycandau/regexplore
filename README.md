@@ -8,7 +8,15 @@
 
 ## About
 
-**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The App includes syntax highlighting, a graph visualization, and a step-by-step execution mode, all of which are designed to help users learn about regular expressions and work with them.
+**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The App includes among other things:
+
+- syntax highlighting,
+- a graph visualization, and
+- a step-by-step execution mode.
+
+All of these features are designed to help users learn about regular expressions and work with them.
+
+The App leverages a **custom regex engine**. All the components, including the syntax highlighted editor and the graph visualization, are also coded from scratch.
 
 ![Application](./docs/all.png)
 
@@ -37,6 +45,8 @@ The App includes the following features:
 ![Syntax errors](./docs/warnings.png)
 
 - A graph based on the nondeterministic finite automaton (NFA) for the regex is built and updated as the user types the regex.
+- Quantifiers are indicated through colors and tags to keep the graph simpler and more readable.
+- Technically the nodes of this graph are the edges of the NFA and vice-versa. This transformation also aims for more readability.
 
 ![Graph](./docs/graph.png)
 
@@ -74,7 +84,7 @@ For better user experience, we recommend the production build. First generate a 
 yarn build
 ```
 
-Then to run it:
+Then run it:
 
 ```shell
 npx serve -s build
