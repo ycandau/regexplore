@@ -39,7 +39,7 @@ const initHistory = (regex) => ({
 
 const initLogs = {
   logsTopIndex: 0,
-  logsDisplayCount: 10,
+  logsDisplayCount: 6,
   logs: [{ prompt: '[0:0]', key: 0, msg: 'New search' }],
 };
 
@@ -148,6 +148,9 @@ const stepForward = (state, keepPlaying) => {
   const histState = histStates[histIndex];
   const [begin, end] = histState.nextTestRange;
 
+  // Block when in play mode
+  if (histState.endOfSearch) return { ...state, ...initPlay };
+
   // Next history state and log message
   const [nextHistState, msg] =
     begin !== testString.length
@@ -161,40 +164,36 @@ const stepForward = (state, keepPlaying) => {
   const log = { prompt, key, msg };
 
   // Control play mode
-  const conditionalInitPlay = keepPlaying ? {} : initPlay;
-  const newCount = keepPlaying ? state.count : state.count + 1;
+  const playMode = keepPlaying ? { count: state.count + 1 } : initPlay;
 
   // Finalize
   return {
     ...state,
-    ...conditionalInitPlay,
+    ...playMode,
     histIndex: histIndex + 1,
     histStates: [...histStates, nextHistState],
     logsTopIndex,
     logs: [...logs, log],
-    count: newCount,
   };
 };
 
 //------------------------------------------------------------------------------
 
 const stepForwardRetrace = (state, keepPlaying) => {
-  const histIndex = state.histIndex + 1;
+  const { histIndex, logsDisplayCount } = state;
   const logsTopIndex = Math.max(
-    histIndex - state.logsDisplayCount + 1,
+    histIndex - logsDisplayCount + 1,
     state.logsTopIndex
   );
 
   // Control play mode
-  const conditionalInitPlay = keepPlaying ? {} : initPlay;
-  const newCount = keepPlaying ? state.count : state.count + 1;
+  const playMode = keepPlaying ? { count: state.count + 1 } : initPlay;
 
   return {
     ...state,
-    ...conditionalInitPlay,
-    histIndex,
+    ...playMode,
+    histIndex: histIndex + 1,
     logsTopIndex,
-    count: newCount,
   };
 };
 

@@ -39,7 +39,7 @@ const serverAddr = 'http://localhost:8080/';
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
     display: 'grid',
-    gridTemplateColumns: '3fr 1fr',
+    gridTemplateColumns: '3fr 1.4fr',
     gridTemplateRows: 'auto auto 1fr',
     gap: theme.spacing(3),
     padding: theme.spacing(3),

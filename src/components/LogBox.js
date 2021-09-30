@@ -111,7 +111,8 @@ export default function LogBox({
         title={'Run'}
         action={
           <>
-            {isLoggedIn &&
+            {false &&
+              isLoggedIn &&
               (displayGraph ? (
                 <IconButton onClick={() => setDisplayGraph(false)}>
                   <Save />
