@@ -1,22 +1,27 @@
 # RegExpLore
 
+**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The app includes a custom regex engine, syntax highlighting, graph visualization, step-by-step execution mode, and more!
+
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
+- [Dependencies](#dependencies)
+- [Development dependencies](#development-dependencies)
 
 ---
 
 ## About
 
-**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The App includes among other things:
+**RegExpLore** is designed to help users better understand how regular expressions operate. Various types of information is provided and updated as the user types a regex or interacts with it. Features include:
 
-- syntax highlighting,
+- syntax highlighting for both the regex and the test string,
+- specific information on each token,
+- warnings for syntax errors,
+- an auto-fix function,
 - a graph visualization, and
-- a step-by-step execution mode.
+- a step-by-step execution mode for debugging.
 
-All of these features are designed to help users learn about regular expressions and work with them.
-
-The App leverages a **custom regex engine**. All the components, including the syntax highlighted editor and the graph visualization, are also coded from scratch.
+Under the hood, RegExpLore leverages a **custom regex engine** to compile the regex and generate extra information about it. All the React components, including the syntax highlighted editor and the graph visualization, are coded from scratch.
 
 ![Application](./docs/all.png)
 
@@ -24,14 +29,14 @@ The App leverages a **custom regex engine**. All the components, including the s
 
 ## Features
 
-The App includes the following features:
+The app includes the following features:
 
 - Syntax highlighting helps parsing the regex.
 - Operand ranges are shown on hover.
 
 ![Regex string](./docs/regex.png)
 
-- Additional information on each token is shown on hover in a separate box.
+- Additional information about each token is shown on hover in a separate box.
 
 ![Info box](./docs/info.png)
 
@@ -44,9 +49,10 @@ The App includes the following features:
 
 ![Syntax errors](./docs/warnings.png)
 
-- A graph based on the nondeterministic finite automaton (NFA) for the regex is built and updated as the user types the regex.
+- The app displays a graph based on the nondeterministic finite automaton for the regex.
 - Quantifiers are indicated through colors and tags to keep the graph simpler and more readable.
-- Technically the nodes of this graph are the edges of the NFA and vice-versa. This transformation also aims for more readability.
+- Technically the nodes of this graph are the edges of the NFA and vice-versa.
+- This transformation also aims to improve the readability of the graph.
 
 ![Graph](./docs/graph.png)
 
@@ -56,7 +62,7 @@ The App includes the following features:
 
 ![Run](./docs/run.png)
 
-- Syntax highlighting of the test string also helps track the progression of the search.
+- Syntax highlighting of the test string helps track the progression of the search.
 
 ![Test string](./docs/test_string.png)
 
@@ -76,7 +82,7 @@ Install all the dependencies with [yarn](https://classic.yarnpkg.com/en/):
 yarn install
 ```
 
-The App also requires the [RegExpLore Server](https://github.com/milesAwayAlex/regexplore-server) to be installed separately.
+The app also requires the [RegExpLore Server](https://github.com/milesAwayAlex/regexplore-server) to be installed separately.
 
 For better user experience, we recommend the production build. First generate a new build:
 
