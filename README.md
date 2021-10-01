@@ -1,7 +1,5 @@
 # RegExpLore
 
-**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The app includes a custom regex engine, syntax highlighting, graph visualization, step-by-step execution mode, and more!
-
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
@@ -12,7 +10,7 @@
 
 ## About
 
-**RegExpLore** is designed to help users better understand how regular expressions operate. Various types of information is provided and updated as the user types a regex or interacts with it. Features include:
+**RegExpLore** is a regular expression visualizer and debugger built with [React](https://reactjs.org/), [Express](https://expressjs.com/) and [Material UI](https://mui.com/). The app is designed to help users better understand how regular expressions operate, by providing various types of information as they type a regex or interact with it. Features include:
 
 - syntax highlighting for both the regex and the test string,
 - specific information on each token,
@@ -21,7 +19,7 @@
 - a graph visualization, and
 - a step-by-step execution mode for debugging.
 
-Under the hood, RegExpLore leverages a **custom regex engine** to compile the regex and generate extra information about it. All the React components, including the syntax highlighted editor and the graph visualization, are coded from scratch.
+RegExpLore leverages a custom regular expression engine to compile the regex and generate extra information about it. All the React components including the syntax highlighted editor and the graph visualization are coded from scratch.
 
 ![Application](./docs/all.png)
 
