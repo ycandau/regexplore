@@ -3,6 +3,7 @@
 - [About](#about)
 - [Features](#features)
 - [Installation](#installation)
+- [Links](#links)
 - [Dependencies](#dependencies)
 - [Development dependencies](#development-dependencies)
 
@@ -93,6 +94,13 @@ Then run it:
 ```shell
 npx serve -s build
 ```
+
+---
+
+## Links
+
+- [The shunting-yard algorithm](https://en.wikipedia.org/wiki/Shunting-yard_algorithm): Convert the regex into Reverse Polish Notation.
+- [Ken Thompson's algorithm](https://swtch.com/~rsc/regexp/regexp1.html): Build a non-deterministic finite automata to run the regex.
 
 ---
 
