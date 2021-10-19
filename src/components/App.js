@@ -1,10 +1,10 @@
 //------------------------------------------------------------------------------
 // Imports
 
-/*eslint no-unused-vars: "off" */
-
+// React
 import { useEffect, useState } from 'react';
 
+// Components
 import Header from './Header';
 import Editor from './Editor';
 import InfoBox from './InfoBox';
@@ -16,6 +16,7 @@ import Page from './Page';
 import TagSelector from './TagSelector';
 import TestStrField from './TestStrField';
 
+// Material UI
 import darkTheme from '../mui-themes/base-dark';
 import lightTheme from '../mui-themes/base-light';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -26,15 +27,15 @@ import {
   makeStyles,
 } from '@material-ui/core/styles';
 
+// Fonts
 import '@fontsource/roboto';
 import '@fontsource/fira-mono';
 
+// Custom hooks
 import useApplicationData from '../hooks/useApplicationData';
 
 //------------------------------------------------------------------------------
 // Styles
-
-const serverAddr = 'http://localhost:8080/';
 
 const useStyles = makeStyles((theme) => ({
   gridContainer: {
@@ -46,39 +47,41 @@ const useStyles = makeStyles((theme) => ({
     height: 'calc(100vh - 64px)',
   },
   editorBox: {
-    gridColumn: '1/2',
-    gridRow: '1/2',
+    gridColumn: '1',
+    gridRow: '1',
   },
   testStrBox: {
-    gridColumn: '1/2',
-    gridRow: '2/3',
+    gridColumn: '1',
+    gridRow: '2',
   },
   infoBox: {
-    gridColumn: '2/3',
+    gridColumn: '2',
     gridRow: '1/3',
     height: '100%',
   },
   logBox: {
-    gridColumn: '2/3',
-    gridRow: '3/4',
+    gridColumn: '2',
+    gridRow: '3',
     overflowY: 'hidden',
     height: '100%',
   },
   saveBox: {
-    gridColumn: '1/2',
-    gridRow: '3/4',
+    gridColumn: '1',
+    gridRow: '3',
     overflow: 'hidden',
   },
   regexCards: {
-    gridColumn: '1/2',
+    gridColumn: '1',
   },
   regexCardBox: {
     paddingBlock: theme.spacing(1),
   },
   tagSelectBox: {
-    gridColumn: '2/3',
+    gridColumn: '2',
   },
 }));
+
+const serverAddr = process.env.REACT_APP_API_BASE_URL;
 
 //------------------------------------------------------------------------------
 // App and state
