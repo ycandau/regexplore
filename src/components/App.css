@@ -2,12 +2,6 @@ html {
   box-sizing: border-box;
 }
 
-*,
-*:before,
-*:after {
-  box-sizing: inherit;
-}
-
 #app {
   text-align: center;
   width: 100%;
@@ -16,9 +10,6 @@ html {
   display: grid;
   grid-template-columns: 3fr 1fr;
   grid-template-rows: 1fr 1fr 2fr 3fr;
-
-  font-family: 'Fira Mono', monospace;
-  font-family: 'Open Sans', sans-serif;
 }
 
 #nav {
